@@ -225,51 +225,62 @@ int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t size, u
     return ODIN_SUCCESS;
 }
 
-// int write_value_bool(ODIN_parameter_t *parameter, bool data)
-// {
-//     uint8_t value = data ? 1 : 0;
-//     return write_value(parameter, &value, 1);
-// }
-
-// int write_value_uint8(ODIN_parameter_t *parameter, uint8_t data)
-// {
-//     return write_value(parameter, &data, 1);
-// }
-
-// int write_value_uint16(OD_parameter_t *parameter, uint16_t data)
-// {
-//     return write_value(parameter, &data, 2);
-// }
 
 int write_value_uint16(ODIN_parameter_t *parameter, uint16_t data, uint16_t access_group)
 {
     return ODIN_parameter_write(parameter, &data, 2, access_group);
 }
 
-// int read_value_bool(OD_parameter_t *parameter, bool *data)
-// {
-//     uint8_t value;
-//     int ret = read_value(parameter, &value, 1);
-//     *data = value == 1;
-//     return ret;
-// }
-
-// int read_value_uint8(OD_parameter_t *parameter, uint8_t *data)
-// {
-//     return read_value(parameter, data, 1);
-// }
-
 int read_value_uint16(ODIN_parameter_t *parameter, uint16_t *data, uint16_t access_group)
 {
     return ODIN_parameter_read(parameter, data, 2, access_group);
 }
+int write_value_int16(ODIN_parameter_t *parameter, int16_t data, uint16_t access_group)
+{
+    return ODIN_parameter_write(parameter, &data, 2, access_group);
+}
 
-// int read_value_int16(OD_parameter_t *parameter, int16_t *data)
-// {
-//     return read_value(parameter, data, 2);
-// }
+int read_value_int16(ODIN_parameter_t *parameter, int16_t *data, uint16_t access_group)
+{
+    return ODIN_parameter_read(parameter, data, 2, access_group);
+}
 
-// int read_value_float(OD_parameter_t *parameter, float *data)
-// {
-//     return read_value(parameter, data, 4);
-// }
+int write_value_float(ODIN_parameter_t *parameter, float data, uint16_t access_group)
+{
+    return ODIN_parameter_write(parameter, &data, 4, access_group);
+}
+
+int read_value_float(ODIN_parameter_t *parameter, float *data, uint16_t access_group)
+{
+    return ODIN_parameter_read(parameter, data, 4, access_group);
+}
+
+int write_value_uint8(ODIN_parameter_t *parameter, uint8_t data, uint16_t access_group)
+{
+    return ODIN_parameter_write(parameter, &data, 1, access_group);
+}
+
+int read_value_uint8(ODIN_parameter_t *parameter, uint8_t *data, uint16_t access_group)
+{
+    return ODIN_parameter_read(parameter, data, 1, access_group);
+}
+
+int write_value_int8(ODIN_parameter_t *parameter, int8_t data, uint16_t access_group)
+{
+    return ODIN_parameter_write(parameter, &data, 1, access_group);
+}
+
+int read_value_int8(ODIN_parameter_t *parameter, int8_t *data, uint16_t access_group)
+{
+    return ODIN_parameter_read(parameter, data, 1, access_group);
+}
+
+int write_value_bool(ODIN_parameter_t *parameter, bool data, uint16_t access_group)
+{
+    return ODIN_parameter_write(parameter, &data, 1, access_group);
+}
+
+int read_value_bool(ODIN_parameter_t *parameter, bool *data, uint16_t access_group)
+{
+    return ODIN_parameter_read(parameter, data, 1, access_group);
+}

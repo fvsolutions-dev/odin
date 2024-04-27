@@ -64,7 +64,7 @@ typedef struct
 int ODIN_parameter_read(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group);
 int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group);
 bool ODIN_check_access(ODIN_parameter_t *parameter, uint16_t access_group, uint16_t operation);
-const char * ODIN_error_to_string(int error);
+const char *ODIN_error_to_string(int error);
 
 // Basic parameter retrieval
 ODIN_parameter_group_t *ODIN_find_group_by_name(ODIN_store_t *OD, const char *name);
@@ -74,16 +74,15 @@ ODIN_parameter_t *ODIN_find_parameter_by_id(ODIN_store_t *OD, uint32_t index);
 
 int read_value_uint16(ODIN_parameter_t *parameter, uint16_t *data, uint16_t access_group);
 int write_value_uint16(ODIN_parameter_t *parameter, uint16_t data, uint16_t access_group);
-
-// Utility functions to read and write values
-// int write_value_bool(OD_parameter_t *parameter, bool data);
-// int write_value_uint8(OD_parameter_t *parameter, uint8_t data);
-// int write_value_int16(OD_parameter_t *parameter, int16_t data);
-// int write_value_uint16(OD_parameter_t *parameter, uint16_t data);
-// int read_value_bool(OD_parameter_t *parameter, bool *data);
-// int read_value_uint8(OD_parameter_t *parameter, uint8_t *data);
-// int read_value_int16(OD_parameter_t *parameter, int16_t *data);
-// int read_value_uint16(OD_parameter_t *parameter, uint16_t *data);
-// int read_value_float(OD_parameter_t *parameter, float *data);
+int read_value_int16(ODIN_parameter_t *parameter, int16_t *data, uint16_t access_group);
+int write_value_int16(ODIN_parameter_t *parameter, int16_t data, uint16_t access_group);
+int read_value_float(ODIN_parameter_t *parameter, float *data, uint16_t access_group);
+int write_value_float(ODIN_parameter_t *parameter, float data, uint16_t access_group);
+int read_value_bool(ODIN_parameter_t *parameter, bool *data, uint16_t access_group);
+int write_value_bool(ODIN_parameter_t *parameter, bool data, uint16_t access_group);
+int read_value_uint8(ODIN_parameter_t *parameter, uint8_t *data, uint16_t access_group);
+int write_value_uint8(ODIN_parameter_t *parameter, uint8_t data, uint16_t access_group);
+int read_value_int8(ODIN_parameter_t *parameter, int8_t *data, uint16_t access_group);
+int write_value_int8(ODIN_parameter_t *parameter, int8_t data, uint16_t access_group);
 
 #endif
