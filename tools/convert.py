@@ -77,7 +77,7 @@ def generate_source(config: ConfigModel) -> str:
     return file
 
 
-NAME = "output"
+NAME = "ODin"
 
 
 @click.command()
