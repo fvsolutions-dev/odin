@@ -63,16 +63,16 @@ void test_direct_access()
 
     // Increment the device id
     uint16_t data;
-    read_value_uint16(test_parameter, &data, ODIN_ACCESS_INTERNAL);
+    ODIN_parameter_read_as_uint16(test_parameter, &data, ODIN_ACCESS_INTERNAL);
     data++;
-    write_value_uint16(test_parameter, data, ODIN_ACCESS_INTERNAL);
+    ODIN_parameter_write_as_uint16(test_parameter, data, ODIN_ACCESS_INTERNAL);
 
     // Dump parameter
     ODIN_dump_parameter(test_parameter, false, ODIN_ACCESS_INTERNAL);
 
     // Check if the value was incremented
     uint16_t readback_data = 0;
-    read_value_uint16(test_parameter, &readback_data, ODIN_ACCESS_INTERNAL);
+    ODIN_parameter_read_as_uint16(test_parameter, &readback_data, ODIN_ACCESS_INTERNAL);
 
     assert(readback_data == data);
 }
@@ -88,16 +88,16 @@ void test_access_control()
 
     uint16_t read_data = 0xBEEF;
 
-    assert(read_value_uint16(test_parameter, &read_data, NULL) == ODIN_ERROR_PERMISSION_DENIED);
+    assert(ODIN_parameter_read_as_uint16(test_parameter, &read_data, NULL) == ODIN_ERROR_PERMISSION_DENIED);
     assert(read_data == 0xBEEF);
 
-    assert(write_value_uint16(test_parameter, 0xDEAD, NULL) == ODIN_ERROR_PERMISSION_DENIED);
+    assert(ODIN_parameter_write_as_uint16(test_parameter, 0xDEAD, NULL) == ODIN_ERROR_PERMISSION_DENIED);
     assert(*internal_reference == 0xF0F0);
 
-    assert(read_value_uint16(test_parameter, &read_data, ODIN_ACCESS_INTERNAL) == ODIN_SUCCESS);
+    assert(ODIN_parameter_read_as_uint16(test_parameter, &read_data, ODIN_ACCESS_INTERNAL) == ODIN_SUCCESS);
     assert(read_data == 0xF0F0);
 
-    assert(write_value_uint16(test_parameter, 0xDEAD, ODIN_ACCESS_INTERNAL) == ODIN_SUCCESS);
+    assert(ODIN_parameter_write_as_uint16(test_parameter, 0xDEAD, ODIN_ACCESS_INTERNAL) == ODIN_SUCCESS);
     assert(*internal_reference == 0xDEAD);
 }
 

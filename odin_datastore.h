@@ -72,17 +72,17 @@ ODIN_parameter_group_t *ODIN_find_group_by_id(ODIN_store_t *OD, uint16_t index);
 ODIN_parameter_t *ODIN_find_parameter_by_name(ODIN_store_t *OD, const char *group_name, const char *parameter_name);
 ODIN_parameter_t *ODIN_find_parameter_by_id(ODIN_store_t *OD, uint32_t index);
 
-int read_value_uint16(ODIN_parameter_t *parameter, uint16_t *data, uint16_t access_group);
-int write_value_uint16(ODIN_parameter_t *parameter, uint16_t data, uint16_t access_group);
-int read_value_int16(ODIN_parameter_t *parameter, int16_t *data, uint16_t access_group);
-int write_value_int16(ODIN_parameter_t *parameter, int16_t data, uint16_t access_group);
-int read_value_float(ODIN_parameter_t *parameter, float *data, uint16_t access_group);
-int write_value_float(ODIN_parameter_t *parameter, float data, uint16_t access_group);
-int read_value_bool(ODIN_parameter_t *parameter, bool *data, uint16_t access_group);
-int write_value_bool(ODIN_parameter_t *parameter, bool data, uint16_t access_group);
-int read_value_uint8(ODIN_parameter_t *parameter, uint8_t *data, uint16_t access_group);
-int write_value_uint8(ODIN_parameter_t *parameter, uint8_t data, uint16_t access_group);
-int read_value_int8(ODIN_parameter_t *parameter, int8_t *data, uint16_t access_group);
-int write_value_int8(ODIN_parameter_t *parameter, int8_t data, uint16_t access_group);
+int ODIN_parameter_read_as_uint16(ODIN_parameter_t *parameter, uint16_t *data, uint16_t access_group);
+int ODIN_parameter_write_as_uint16(ODIN_parameter_t *parameter, uint16_t data, uint16_t access_group);
+int ODIN_parameter_read_as_int16(ODIN_parameter_t *parameter, int16_t *data, uint16_t access_group);
+int ODIN_parameter_write_as_int16(ODIN_parameter_t *parameter, int16_t data, uint16_t access_group);
+int ODIN_parameter_read_as_float(ODIN_parameter_t *parameter, float *data, uint16_t access_group);
+int ODIN_parameter_write_as_float(ODIN_parameter_t *parameter, float data, uint16_t access_group);
+int ODIN_parameter_read_as_bool(ODIN_parameter_t *parameter, bool *data, uint16_t access_group);
+int ODIN_parameter_write_as_bool(ODIN_parameter_t *parameter, bool data, uint16_t access_group);
+int ODIN_parameter_read_as_uint8(ODIN_parameter_t *parameter, uint8_t *data, uint16_t access_group);
+int ODIN_parameter_write_as_uint8(ODIN_parameter_t *parameter, uint8_t data, uint16_t access_group);
+int ODIN_parameter_read_as_int8(ODIN_parameter_t *parameter, int8_t *data, uint16_t access_group);
+int ODIN_parameter_write_as_int8(ODIN_parameter_t *parameter, int8_t data, uint16_t access_group);
 
 #endif
