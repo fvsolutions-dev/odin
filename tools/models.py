@@ -34,6 +34,11 @@ class ParameterModel(BaseModel):
     persistent: bool = False
 
     @property
+    def qualified_id(self) -> int:
+        assert self._group_id is not None
+        return (self._group_id << 16) | self.id
+    
+    @property
     def variable_reference(self):
         assert self._parmeter_store_name
         assert self._name
