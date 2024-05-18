@@ -11,6 +11,7 @@ ODIN_STORE_TYPE = "ODIN_store_t"
 ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
 ODIN_GROUP_TYPE = "ODIN_parameter_group_t"
 ODIN_ENCODING_TYPE_PREFIX = "ODIN_ENCODING_"
+ODIN_TYPE_PREFIX = "ODIN_ELEMENT_TYPE_"
 
 
 def escape_string(s: str) -> str:
@@ -18,6 +19,33 @@ def escape_string(s: str) -> str:
     return s.replace('"', '\\"').replace("\n", "\\n").replace("\t", "\\t")
 
 
+class ValidationParameterExtensionModel(BaseModel):
+    type: Literal["limit_value"]
+    min: float | None = None
+    max: float | None = None
+
+    def as_literal(self) -> FormattedLiteral:
+        if self.min is None:
+            self.min = -float("inf")
+        if self.max is None:
+            self.max = float("inf")
+            
+        return FormattedLiteral(
+            f"(ODIN_extension_t[]){{ {{ .ops = &range_validator_extension, .data = &(range_parameter_t){{ .max = {self.max}, .min = {self.min} }} }} }}"
+            , string_formatter=str
+        )
+
+class ReferenceParameterExtensionModel(BaseModel):
+    type: Literal["reference"]
+    reference: str
+    offset: float  = 0.0
+    scale: float = 1.0
+
+    def as_literal(self) -> FormattedLiteral:
+        return FormattedLiteral(
+            f"(ODIN_extension_t[]){{ {{ .ops = &parameter_mapping_extension, .data = &(mapped_parameter_t){{ .reference = {self.reference}, .offset = {self.offset}, .scale = {self.scale} }} }} }}"
+            , string_formatter=str
+        )
 class ParameterModel(BaseModel):
     id: int
     _group_id: int | None = None
@@ -32,7 +60,9 @@ class ParameterModel(BaseModel):
     length: int | None = None
     default: Union[int, float, str, bool, List[int], List[float], List[str], List[bool]]
     persistent: bool = False
+    extension: ValidationParameterExtensionModel | ReferenceParameterExtensionModel | None = None
 
+    
     @property
     def qualified_id(self) -> int:
         assert self._group_id is not None
@@ -60,14 +90,37 @@ class ParameterModel(BaseModel):
             array=[self.length] if self.length else None,
         )
 
+    @property
+    def primitive_type(self) -> str:
+        if self.primitive == "uint8_t":
+            return "UINT"
+        elif self.primitive == "int8_t":
+            return "INT"
+        elif self.primitive == "int16_t":
+            return "INT"
+        elif self.primitive == "uint16_t":
+            return "UINT"
+        elif self.primitive == "int32_t":
+            return "INT"
+        elif self.primitive == "uint32_t":
+            return "UINT"
+        elif self.primitive == "float":
+            return "FLOAT"
+        else:
+            return "OTHER"
+    
+
     def as_parameter(self, access_opts: "AccessOptionsGenerator") -> Dict:
         assert self._group_id is not None
         id = (self._group_id << 16) | self.id
-        return {
+        data =  {
             "index": FormattedLiteral(id, int_formatter=hex),
             "access": access_opts.as_literal(self),
             "format": FormattedLiteral(
                 f"{ODIN_ENCODING_TYPE_PREFIX}{self.format}", string_formatter=str
+            ),
+            "type": FormattedLiteral(
+                f"{ODIN_TYPE_PREFIX}{self.primitive_type}", string_formatter=str
             ),
             "data": FormattedLiteral(
                 f"&{self.variable_reference}", string_formatter=str
@@ -78,6 +131,11 @@ class ParameterModel(BaseModel):
             "name": self._name,
             "description": escape_string(self.description),
         }
+
+        if self.extension:
+            data["extension"] = self.extension.as_literal()
+
+        return data    
 
     def as_odin_parameter(self) -> cc.Variable:
         var = cc.Variable(

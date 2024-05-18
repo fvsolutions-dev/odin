@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-
+#include "odin/extensions.h"
 #ifndef ODIN_H
 #define ODIN_H
 
@@ -22,17 +22,34 @@ enum ODIN_string_encoding_format_t
     ODIN_ENCODING_UINT8_ARRAY, // Encoding as array of unsigned 8 bit integers (any length)
 };
 
-typedef struct
+
+enum ODIN_element_type_t
+{
+    ODIN_ELEMENT_TYPE_FLOAT,
+    ODIN_ELEMENT_TYPE_BOOL,
+    ODIN_ELEMENT_TYPE_INT,
+    ODIN_ELEMENT_TYPE_UINT,
+    ODIN_ELEMENT_TYPE_BLOB,
+    ODIN_ELEMENT_TYPE_OTHER
+};
+
+
+
+
+typedef struct ODIN_parameter_t
 {
     const uint32_t index;                            // Full index of parameter
     const uint16_t access;                           // 2 bytes
-    void const *data;                                // pointer to data
+    void *data;                                // pointer to data
     const uint16_t size;                             // size of data
-    const enum ODIN_string_encoding_format_t format; // format of data
+    const enum ODIN_element_type_t type;             // type of data
+    const enum ODIN_string_encoding_format_t format; // formater of data used to serialize and deserialize to string
     const char *description;                         // description of data, can be NULL
     const char *name;                                // name of data
-    void *extension;                                 // extension data, can be NULL
+    ODIN_extension_t *extension;                     // extension info, can be NULL
 } ODIN_parameter_t;
+
+
 
 typedef struct
 {
@@ -84,5 +101,8 @@ int ODIN_parameter_read_as_uint8(ODIN_parameter_t *parameter, uint8_t *data, uin
 int ODIN_parameter_write_as_uint8(ODIN_parameter_t *parameter, uint8_t data, uint16_t access_group);
 int ODIN_parameter_read_as_int8(ODIN_parameter_t *parameter, int8_t *data, uint16_t access_group);
 int ODIN_parameter_write_as_int8(ODIN_parameter_t *parameter, int8_t data, uint16_t access_group);
+
+int ODIN_parameter_get_number(ODIN_parameter_t *parameter, const uint8_t *param_data, size_t param_size, float *data);
+int ODIN_parameter_set_number(ODIN_parameter_t *parameter, uint8_t *param_data, size_t param_size, float data);
 
 #endif

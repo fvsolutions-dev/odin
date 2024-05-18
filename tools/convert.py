@@ -55,7 +55,7 @@ def generate_source(config: ConfigModel) -> str:
     # Generate the output.c file
     cw = CodeWriter()
     cw.add_line("#include <stdint.h>")
-    cw.add_line('#include "output.h"')
+    cw.add_line('#include "ODin.h"')
     cw.add_line('#include "odin_datastore.h"')
     cw.add_line("")
 
