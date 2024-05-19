@@ -253,131 +253,105 @@ int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t size, u
 
 int ODIN_parameter_get_number(ODIN_parameter_t *parameter, const uint8_t *param_data, size_t param_size, float *data)
 {
-    LOG_INFO(TAG, "Checking size %d == %d", param_size, parameter->size);
+    LOG_DEBUG(TAG, "Checking size %d == %d", param_size, parameter->size);
     if (param_size != parameter->size)
     {
         return ODIN_ERROR_SIZE_MISMATCH;
     }
-
-    if(parameter->type == ODIN_ELEMENT_TYPE_FLOAT)
+    
+    switch (parameter->type)
     {
-        if(parameter->size == 4)
-        {
-            (*data) = *((float *)param_data);
-            return ODIN_SUCCESS;
-        }
+    case ODIN_ELEMENT_TYPE_FLOAT:
+        (*data) = *((float *)param_data);
+        return ODIN_SUCCESS;
 
+    case ODIN_ELEMENT_TYPE_DOUBLE:
+        (*data) = *((double *)param_data);
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_INT8:
+        (*data) = (float)(*((int8_t *)param_data));
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_UINT8:
+        (*data) = (float)(*((uint8_t *)param_data));
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_INT16:
+        (*data) = (float)(*((int16_t *)param_data));
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_UINT16:
+        (*data) = (float)(*((uint16_t *)param_data));
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_INT32:
+        (*data) = (float)(*((int32_t *)param_data));
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_UINT32:
+        (*data) = (float)(*((uint32_t *)param_data));
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_BOOL:
+        (*data) = (float)(*((bool *)param_data));
+        return ODIN_SUCCESS;
+
+    default:
+        return ODIN_ERROR;
     }
-
-    if(parameter->type == ODIN_ELEMENT_TYPE_UINT)
-    {
-        if (parameter->size == 4)
-        {
-            (*data) = (float)(*((uint32_t *)param_data));
-            return ODIN_SUCCESS;
-        }
-
-        if (parameter->size == 2)
-        {
-            (*data) = (float)(*((uint16_t *)param_data));
-            return ODIN_SUCCESS;
-        }
-
-        if (parameter->size == 1)
-        {
-            (*data) = (float)(*((uint8_t *)param_data));
-            return ODIN_SUCCESS;
-        }
-
-    }
-
-    if(parameter->type == ODIN_ELEMENT_TYPE_INT)
-    {
-        if (parameter->size == 4)
-        {
-            (*data) = (float)(*((int32_t *)param_data));
-            return ODIN_SUCCESS;
-        }
-
-        if (parameter->size == 2)
-        {
-            (*data) = (float)(*((int16_t *)param_data));
-            return ODIN_SUCCESS;
-        }
-
-        if (parameter->size == 1)
-        {
-            (*data) = (float)(*((int8_t *)param_data));
-            return ODIN_SUCCESS;
-        }
-    }
-
-    return ODIN_ERROR;
 }
 
-int ODIN_parameter_set_number(ODIN_parameter_t *parameter, uint8_t *param_data, size_t param_size, float data)
+int ODIN_parameter_set_number(ODIN_parameter_t *parameter, uint8_t *buffer, size_t size, float data)
 {
-    LOG_INFO(TAG, "Checking size %d == %d", param_size, parameter->size);
-    
-    if (param_size != parameter->size)
+    LOG_DEBUG(TAG, "Checking size %d >= %d", size, parameter->size);
+
+    if (size < parameter->size)
     {
         return ODIN_ERROR_SIZE_MISMATCH;
     }
 
-    if(parameter->type == ODIN_ELEMENT_TYPE_FLOAT)
+    switch (parameter->type)
     {
-        if(parameter->size == 4)
-        {
-            *((float *)param_data) = data;
-            return ODIN_SUCCESS;
-        }
+    case ODIN_ELEMENT_TYPE_FLOAT:
+        *((float *)buffer) = data;
+        return ODIN_SUCCESS;
 
+    case ODIN_ELEMENT_TYPE_DOUBLE:
+        *((double *)buffer) = data;
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_INT8:
+        *((int8_t *)buffer) = (int8_t)data;
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_UINT8:
+        *((uint8_t *)buffer) = (uint8_t)data;
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_INT16:
+        *((int16_t *)buffer) = (int16_t)data;
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_UINT16:
+        *((uint16_t *)buffer) = (uint16_t)data;
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_INT32:
+        *((int32_t *)buffer) = (int32_t)data;
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_UINT32:
+        *((uint32_t *)buffer) = (uint32_t)data;
+        return ODIN_SUCCESS;
+
+    case ODIN_ELEMENT_TYPE_BOOL:
+        *((bool *)buffer) = data;
+        return ODIN_SUCCESS;
+
+    default:
+        return ODIN_ERROR;
     }
-
-    if(parameter->type == ODIN_ELEMENT_TYPE_UINT)
-    {
-        if (parameter->size == 4)
-        {
-            *((uint32_t *)param_data) = (uint32_t)data;
-            return ODIN_SUCCESS;
-        }
-
-        if (parameter->size == 2)
-        {
-            *((uint16_t *)param_data) = (uint16_t)data;
-            return ODIN_SUCCESS;
-        }
-
-        if (parameter->size == 1)
-        {
-            *((uint8_t *)param_data) = (uint8_t)data;
-            return ODIN_SUCCESS;
-        }
-
-    }
-
-    if(parameter->type == ODIN_ELEMENT_TYPE_INT)
-    {
-        if (parameter->size == 4)
-        {
-            *((int32_t *)param_data) = (int32_t)data;
-            return ODIN_SUCCESS;
-        }
-
-        if (parameter->size == 2)
-        {
-            *((int16_t *)param_data) = (int16_t)data;
-            return ODIN_SUCCESS;
-        }
-
-        if (parameter->size == 1)
-        {
-            *((int8_t *)param_data) = (int8_t)data;
-            return ODIN_SUCCESS;
-        }
-    }
-
-    return ODIN_ERROR;
 }
 
 int ODIN_parameter_write_as_uint16(ODIN_parameter_t *parameter, uint16_t data, uint16_t access_group)

@@ -139,7 +139,7 @@ void test_parameter_protobuff_buffer_collection_serialisation()
         &ODIN_params.device_information.device_name,
         &ODIN_params.device_information.manufacturer_id,
         &ODIN_params.device_information.system_harwdare_revision,
-        &ODIN_params.trainer_configuration_1.configured_resistance};
+        &ODIN_params.zwift_trainer_configuration_1.configured_resistance};
 
     int param_count = sizeof(test_parameters) / sizeof(ODIN_parameter_t *);
     parameter_collection_encode_operation_t operation;

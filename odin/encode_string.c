@@ -20,75 +20,79 @@ static const char *TAG = "ODIN_STR";
  */
 int ODIN_read_as_string(ODIN_parameter_t *parameter, char *output, uint8_t size, uint16_t access_group)
 {
-    if (parameter == 0)
-    {
-        return ODIN_ERROR_NO_PARAMETER;
-    }
 
-    if (!ODIN_check_access(parameter, access_group, ODIN_READ_ACCESS))
+    uint8_t buffer[128];
+    int ret = ODIN_parameter_read(parameter, buffer, sizeof(buffer), access_group);
+    if (ret != ODIN_SUCCESS)
     {
-        return ODIN_ERROR_PERMISSION_DENIED;
+        return ret;
     }
 
     int len = 0;
     switch (parameter->format)
     {
-
-    case ODIN_ENCODING_INT:
-        if (parameter->size == 1)
-            len = snprintf(output, size, "%02X", *(int8_t *)parameter->data);
-        else if (parameter->size == 2)
-            len = snprintf(output, size, "%04X", *(int16_t *)parameter->data);
-        else if (parameter->size == 4)
-            len = snprintf(output, size, "%08lX", *(int32_t *)parameter->data);
-        break;
-
-    case ODIN_ENCODING_UINT:
-        if (parameter->size == 1)
-            len = snprintf(output, size, "%u", *(uint8_t *)parameter->data);
-        else if (parameter->size == 2)
-            len = snprintf(output, size, "%u", *(uint16_t *)parameter->data);
-        else if (parameter->size == 4)
-            len = snprintf(output, size, "%lu", *(uint32_t *)parameter->data);
-        break;
-
-    case ODIN_ENCODING_FLOAT:
-        if (parameter->size == 4)
-            len = snprintf(output, size, "%f", *(float *)parameter->data);
-        else if (parameter->size == 8)
-            len = snprintf(output, size, "%f", *(double *)parameter->data);
-        break;
-
-    case ODIN_ENCODING_UTF8:
-        // Here we assume that the data is a null terminated string
-        len = snprintf(output, size, "%s", (char *)parameter->data);
-        break;
-
-    case ODIN_ENCODING_HEX_LSB:
-        len = snprintf(output, size, "0x");
-        for (int i = 0; i < parameter->size; i++)
+    case ODIN_ENCODING_NUMBER:
+        switch (parameter->type)
         {
-            len += snprintf(output + len, size - len, "%02X", ((uint8_t *)parameter->data)[i]);
+        case ODIN_ELEMENT_TYPE_UINT8:
+            len = snprintf(output, size, "%u", *(uint8_t *)buffer);
+            break;
+        case ODIN_ELEMENT_TYPE_INT8:
+            len = snprintf(output, size, "%d", *(int8_t *)buffer);
+            break;
+
+        case ODIN_ELEMENT_TYPE_UINT16:
+            len = snprintf(output, size, "%u", *(uint16_t *)buffer);
+            break;
+        case ODIN_ELEMENT_TYPE_INT16:
+            len = snprintf(output, size, "%d", *(int16_t *)buffer);
+            break;
+
+        case ODIN_ELEMENT_TYPE_UINT32:
+            len = snprintf(output, size, "%lu", *(uint32_t *)buffer);
+            break;
+        case ODIN_ELEMENT_TYPE_INT32:
+            len = snprintf(output, size, "%ld", *(int32_t *)buffer);
+            break;
+
+        default:
+            return ODIN_ERROR_UNSUPPORTED_FORMAT;
         }
+
+        break;
+    case ODIN_ENCODING_DECIMAL:
+        switch (parameter->type)
+        {
+        case ODIN_ELEMENT_TYPE_FLOAT:
+            len = snprintf(output, size, "%.5f", *(float *)buffer);
+            break;
+        case ODIN_ELEMENT_TYPE_DOUBLE:
+            len = snprintf(output, size, "%.5f", *(double *)buffer);
+            break;
+        default:
+            return ODIN_ERROR_UNSUPPORTED_FORMAT;
+        }
+        break;
+
+    case ODIN_ENCODING_STRING:
+        // Not assuming null terminated string
+        len = snprintf(output, size, "%.*s", parameter->size, (char *)buffer);
         break;
 
     case ODIN_ENCODING_HEX:
-    case ODIN_ENCODING_HEX_MSB:
         len = snprintf(output, size, "0x");
-        for (int i = parameter->size - 1; i >= 0; i--)
+        for (int i = 0; i < parameter->size; i++)
         {
-            len += snprintf(output + len, size - len, "%02X", ((uint8_t *)parameter->data)[i]);
+            len += snprintf(output + len, size - len, "%02X", ((uint8_t *)buffer)[i]);
         }
         break;
-
-    case ODIN_ENCODING_NONE:
     default:
-        len = snprintf(output, size, "No printable format for data");
-        break;
+        return ODIN_ERROR_UNSUPPORTED_FORMAT;
     }
 
     return len;
 }
+
 /**
  * @brief Ingest a parameter from a human readable string
  *
@@ -109,7 +113,7 @@ int ODIN_write_to_string(ODIN_parameter_t *parameter, char *input, uint16_t acce
     {
         return ODIN_ERROR_PERMISSION_DENIED;
     }
-
+#if 0
     switch (parameter->format)
     {
     case ODIN_ENCODING_INT:
@@ -195,5 +199,6 @@ int ODIN_write_to_string(ODIN_parameter_t *parameter, char *input, uint16_t acce
     default:
         return ODIN_ERROR_UNSUPPORTED_FORMAT;
     }
+#endif
     return ODIN_SUCCESS;
 }

@@ -12,40 +12,42 @@
 enum ODIN_string_encoding_format_t
 {
     ODIN_ENCODING_NONE,        // Encoding not defined
-    ODIN_ENCODING_UINT,        // Encoding as unsigned integer (up to 32 bits number)
-    ODIN_ENCODING_INT,         // Encoding as signed integer (up to 32 bits number)
+    ODIN_ENCODING_NUMBER,      // Encoding as number (up to 64 bits number)
+    ODIN_ENCODING_DECIMAL,     // Encoding as decimal number
     ODIN_ENCODING_HEX,         // Encoding as hexadecimal (any length)
-    ODIN_ENCODING_HEX_LSB,     // Encoding as hexadecimal with least significant byte first (any length)
-    ODIN_ENCODING_HEX_MSB,     // Encoding as hexadecimal with most significant byte first (any length)
-    ODIN_ENCODING_FLOAT,       // Encoding as float (32 bits)
-    ODIN_ENCODING_UTF8,        // Encoding as UTF8 string (any length), automatically null terminated if its not
-    ODIN_ENCODING_UINT8_ARRAY, // Encoding as array of unsigned 8 bit integers (any length)
+    ODIN_ENCODING_STRING,        // Encoding as UTF8 string (any length), automatically null terminated if its not
 };
 
-
+/**
+ * @brief Enum for the different element types
+ * It defines the type of the data
+ */
 enum ODIN_element_type_t
 {
+    ODIN_ELEMENT_TYPE_UINT8,
+    ODIN_ELEMENT_TYPE_INT8,
+    ODIN_ELEMENT_TYPE_UINT16,
+    ODIN_ELEMENT_TYPE_INT16,
+    ODIN_ELEMENT_TYPE_UINT32,
+    ODIN_ELEMENT_TYPE_INT32,
     ODIN_ELEMENT_TYPE_FLOAT,
+    ODIN_ELEMENT_TYPE_DOUBLE,
+    ODIN_ELEMENT_TYPE_CHAR,
     ODIN_ELEMENT_TYPE_BOOL,
-    ODIN_ELEMENT_TYPE_INT,
-    ODIN_ELEMENT_TYPE_UINT,
-    ODIN_ELEMENT_TYPE_BLOB,
-    ODIN_ELEMENT_TYPE_OTHER
 };
-
 
 
 
 typedef struct ODIN_parameter_t
 {
+    const char *name;                                // name of data
     const uint32_t index;                            // Full index of parameter
-    const uint16_t access;                           // 2 bytes
-    void *data;                                // pointer to data
-    const uint16_t size;                             // size of data
+    const uint16_t access;                           // 2 bytes, defines the access rights of the parameter
+    const uint16_t size;                             // size of data in bytes
+    void *data;                                      // pointer to actual data, can be NULL
     const enum ODIN_element_type_t type;             // type of data
     const enum ODIN_string_encoding_format_t format; // formater of data used to serialize and deserialize to string
     const char *description;                         // description of data, can be NULL
-    const char *name;                                // name of data
     ODIN_extension_t *extension;                     // extension info, can be NULL
 } ODIN_parameter_t;
 

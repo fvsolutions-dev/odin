@@ -6,11 +6,11 @@ static const char *TAG = "ODIN_EXT";
 
 int range_validator_float(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group)
 {
-    LOG_INFO(TAG, "Range validator");
-    LOG_INFO(TAG, "Parameter name: %s", parameter->name);
+    LOG_DEBUG(TAG, "Range validator");
+    LOG_DEBUG(TAG, "Parameter name: %s", parameter->name);
 
     range_parameter_t *range = (range_parameter_t *)parameter->extension->data;
-    LOG_INFO(TAG, "Range: %f - %f", range->min, range->max);
+    LOG_DEBUG(TAG, "Range: %f - %f", range->min, range->max);
 
     float value;
     int rc = ODIN_parameter_get_number(parameter, data, size, &value);
@@ -18,7 +18,7 @@ int range_validator_float(ODIN_parameter_t *parameter, void *data, size_t size, 
     {
         return rc;
     }
-    LOG_INFO(TAG, "Value: %f", value);
+    LOG_DEBUG(TAG, "Value: %f", value);
 
     if (value < range->min || value > range->max)
     {
@@ -34,8 +34,8 @@ ODIN_extension_ops_t range_validator_extension = {
 
 int mapped_read(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group)
 {
-    LOG_INFO(TAG, "Mapped read");
-    LOG_INFO(TAG, "Parameter name: %s", parameter->name);
+    LOG_DEBUG(TAG, "Mapped read");
+    LOG_DEBUG(TAG, "Parameter name: %s", parameter->name);
 
     mapped_parameter_t *mapped_parameter = (mapped_parameter_t *)parameter->extension->data;
 
@@ -50,7 +50,7 @@ int mapped_read(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t a
     // Scale and offset
     value = value * mapped_parameter->scale + mapped_parameter->offset;
 
-    LOG_INFO(TAG, "Mapped value: %f", value);
+    LOG_DEBUG(TAG, "Mapped value: %f", value);
 
     // Copy to param
     return ODIN_parameter_set_number(parameter, data, size, value);
@@ -58,8 +58,8 @@ int mapped_read(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t a
 
 int mapped_write(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group)
 {
-    LOG_INFO(TAG, "Mapped write");
-    LOG_INFO(TAG, "Parameter name: %s", parameter->name);
+    LOG_DEBUG(TAG, "Mapped write");
+    LOG_DEBUG(TAG, "Parameter name: %s", parameter->name);
     mapped_parameter_t *mapped_parameter = (mapped_parameter_t *)parameter->extension->data;
 
     // Get number from parameter
@@ -69,11 +69,11 @@ int mapped_write(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t 
     {
         return rc;
     }
-    LOG_INFO(TAG, "GOot value: %f", value);
+    LOG_DEBUG(TAG, "GOot value: %f", value);
 
     // Scale and offset
     value = (value - mapped_parameter->offset) / mapped_parameter->scale;
-    LOG_INFO(TAG, "Mapped value: %f", value);
+    LOG_DEBUG(TAG, "Mapped value: %f", value);
 
     // Do the original write
     uint8_t buffer[8];

@@ -29,45 +29,124 @@ class ValidationParameterExtensionModel(BaseModel):
             self.min = -float("inf")
         if self.max is None:
             self.max = float("inf")
-            
+
         return FormattedLiteral(
-            f"(ODIN_extension_t[]){{ {{ .ops = &range_validator_extension, .data = &(range_parameter_t){{ .max = {self.max}, .min = {self.min} }} }} }}"
-            , string_formatter=str
+            f"(ODIN_extension_t[]){{ {{ .ops = &range_validator_extension, .data = &(range_parameter_t){{ .max = {self.max}, .min = {self.min} }} }} }}",
+            string_formatter=str,
         )
+
 
 class ReferenceParameterExtensionModel(BaseModel):
     type: Literal["reference"]
     reference: str
-    offset: float  = 0.0
+    offset: float = 0.0
     scale: float = 1.0
 
     def as_literal(self) -> FormattedLiteral:
         return FormattedLiteral(
-            f"(ODIN_extension_t[]){{ {{ .ops = &parameter_mapping_extension, .data = &(mapped_parameter_t){{ .reference = {self.reference}, .offset = {self.offset}, .scale = {self.scale} }} }} }}"
-            , string_formatter=str
+            f"(ODIN_extension_t[]){{ {{ .ops = &parameter_mapping_extension, .data = &(mapped_parameter_t){{ .reference = &{self.reference}, .offset = {self.offset}, .scale = {self.scale} }} }} }}",
+            string_formatter=str,
         )
+
+
+class CTypeEnum(StrEnum):
+    UINT8 = "uint8_t"
+    INT8 = "int8_t"
+    INT16 = "int16_t"
+    UINT16 = "uint16_t"
+    INT32 = "int32_t"
+    UINT32 = "uint32_t"
+    UINT64 = "uint64_t"
+    INT64 = "int64_t"
+    FLOAT = "float"
+    DOUBLE = "double"
+    CHAR = "char"
+    BOOL = "bool"
+
+    @property
+    def prefix(self) -> str:
+        return "ODIN_ELEMENT_TYPE_"
+
+    @property
+    def odin_type(self) -> str:
+        return f"{self.prefix}{self.name}"
+
+    def sizeof(self,length:int|None) -> str:
+        if length is None:
+            return f"sizeof({self.value})"
+        else:
+            return f"sizeof({self.value})*{length}"
+        
+
+class CFormatEnum(StrEnum):
+    NUMBER = "number"
+    DECIMAL = "decimal"
+    STRING = "string"
+    HEX = "hex"
+    AUTO = "auto"
+
+    @property
+    def prefix(self) -> str:
+        return "ODIN_ENCODING_"
+    
+    @property
+    def odin_type(self) -> str:
+        return f"{self.prefix}{self.name}"
+    
+    def odin_type_conv(self, primitive: CTypeEnum, length: int | None) -> str:
+        if self != CFormatEnum.AUTO:
+            return self.odin_type
+        
+        if primitive in [CTypeEnum.UINT8, CTypeEnum.INT8, CTypeEnum.UINT16, CTypeEnum.INT16, CTypeEnum.UINT32, CTypeEnum.INT32]:
+            return CFormatEnum.NUMBER.odin_type
+        elif primitive in [CTypeEnum.FLOAT, CTypeEnum.DOUBLE]:
+            return CFormatEnum.DECIMAL.odin_type
+        elif primitive == CTypeEnum.CHAR:
+            return CFormatEnum.STRING.odin_type
+        elif primitive == CTypeEnum.BOOL:
+            return CFormatEnum.NUMBER.odin_type
+        else:
+            raise ValueError(f"Unsupported primitive type {primitive}")
+    
+
 class ParameterModel(BaseModel):
     id: int
     _group_id: int | None = None
     _parmeter_store_name: str | None = None
     _variable_store_name: str | None = None
     _group_name: str | None = None
+    _is_reference: bool = False
+
     _name: str | None = None
     access_permissions: Dict[str, str] = Field(default_factory=dict)
     description: str
-    primitive: str
-    format: str
+    primitive: CTypeEnum
+    format: CFormatEnum = Field(
+        default=CFormatEnum.AUTO,
+        description="The format of the data. If set to 'auto', the format will be determined based on the primitive type.",
+    )
     length: int | None = None
-    default: Union[int, float, str, bool, List[int], List[float], List[str], List[bool]]
+    default: Union[
+        int, float, str, bool, List[int], List[float], List[str], List[bool]
+    ] = 0
     persistent: bool = False
-    extension: ValidationParameterExtensionModel | ReferenceParameterExtensionModel | None = None
+    extension: (
+        ValidationParameterExtensionModel | ReferenceParameterExtensionModel | None
+    ) = None
 
-    
+    @model_validator(mode="after")
+    def check_reference(self) -> "ParameterModel":
+        if self.extension and isinstance(
+            self.extension, ReferenceParameterExtensionModel
+        ):
+            self._is_reference = True
+        return self
+
     @property
     def qualified_id(self) -> int:
         assert self._group_id is not None
         return (self._group_id << 16) | self.id
-    
+
     @property
     def variable_reference(self):
         assert self._parmeter_store_name
@@ -90,43 +169,42 @@ class ParameterModel(BaseModel):
             array=[self.length] if self.length else None,
         )
 
-    @property
-    def primitive_type(self) -> str:
-        if self.primitive == "uint8_t":
-            return "UINT"
-        elif self.primitive == "int8_t":
-            return "INT"
-        elif self.primitive == "int16_t":
-            return "INT"
-        elif self.primitive == "uint16_t":
-            return "UINT"
-        elif self.primitive == "int32_t":
-            return "INT"
-        elif self.primitive == "uint32_t":
-            return "UINT"
-        elif self.primitive == "float":
-            return "FLOAT"
-        else:
-            return "OTHER"
-    
+    # @property
+    # def primitive_type(self) -> str:
+    #     if self.primitive == "uint8_t":
+    #         return "UINT"
+    #     elif self.primitive == "int8_t":
+    #         return "INT"
+    #     elif self.primitive == "int16_t":
+    #         return "INT"
+    #     elif self.primitive == "uint16_t":
+    #         return "UINT"
+    #     elif self.primitive == "int32_t":
+    #         return "INT"
+    #     elif self.primitive == "uint32_t":
+    #         return "UINT"
+    #     elif self.primitive == "float":
+    #         return "FLOAT"
+    #     else:
+    #         return "OTHER"
 
     def as_parameter(self, access_opts: "AccessOptionsGenerator") -> Dict:
         assert self._group_id is not None
         id = (self._group_id << 16) | self.id
-        data =  {
+        data = {
             "index": FormattedLiteral(id, int_formatter=hex),
             "access": access_opts.as_literal(self),
             "format": FormattedLiteral(
-                f"{ODIN_ENCODING_TYPE_PREFIX}{self.format}", string_formatter=str
+                self.format.odin_type_conv(self.primitive, self.length), string_formatter=str
             ),
             "type": FormattedLiteral(
-                f"{ODIN_TYPE_PREFIX}{self.primitive_type}", string_formatter=str
+                self.primitive.odin_type, string_formatter=str
             ),
             "data": FormattedLiteral(
                 f"&{self.variable_reference}", string_formatter=str
             ),
             "size": FormattedLiteral(
-                f"sizeof({self.variable_reference})", string_formatter=str
+                self.primitive.sizeof(self.length), string_formatter=str
             ),
             "name": self._name,
             "description": escape_string(self.description),
@@ -135,7 +213,10 @@ class ParameterModel(BaseModel):
         if self.extension:
             data["extension"] = self.extension.as_literal()
 
-        return data    
+        if self._is_reference:
+            data["data"] = FormattedLiteral("NULL", string_formatter=str)
+
+        return data
 
     def as_odin_parameter(self) -> cc.Variable:
         var = cc.Variable(
@@ -144,7 +225,10 @@ class ParameterModel(BaseModel):
         )
         return var
 
-    def as_ram_parameter(self) -> cc.Variable:
+    def as_ram_parameter(self) -> cc.Variable | None:
+        if self._is_reference:
+            return None
+
         var = cc.Variable(
             name=self._name,
             primitive=self.primitive,
@@ -269,6 +353,8 @@ class ConfigModel(BaseModel):
         for group_name, device_group in self.datastore.items():
             values_dict[group_name] = {}
             for parameter_name, parameter in device_group.data.items():
+                if parameter._is_reference:
+                    continue
                 values_dict[group_name][parameter_name] = parameter.default
 
         return cc.Variable(
@@ -285,7 +371,9 @@ class ConfigModel(BaseModel):
         for group_name, device_group in self.datastore.items():
             group_struct = StructVariable(var_name=group_name)
             for parameter in device_group.data.values():
-                group_struct.add_variable(parameter.as_ram_parameter())
+                param = parameter.as_ram_parameter()
+                if param:
+                    group_struct.add_variable(param)
             struct.add_struct(group_struct)
 
         return struct
