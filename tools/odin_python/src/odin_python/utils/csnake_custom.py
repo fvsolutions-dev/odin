@@ -1,11 +1,13 @@
-from csnake import CodeWriter, CodeWriterLite, FormattedLiteral, Variable
+from csnake import CodeWriterLite
 import csnake as cc
-from typing import Dict, List, Union
-
+from typing import Union
 
 class StructVariable(cc.Struct):
+    """Custom implementation of a struct to allow recursive struct generation
+    """
+    
     def add_struct(self, struct: cc.Struct):
-        self.variables.append(struct)
+        self.variables.append(struct)  # type: ignore
 
     def __init__(self, name: str = "", typedef: bool = False, var_name: str = ""):
         self.var_name = var_name
@@ -23,7 +25,7 @@ class StructVariable(cc.Struct):
 
         for var in self.variables:
             if isinstance(var, cc.Struct):
-                writer.add_lines(var.generate_declaration(indent=4).code)
+                writer.add_lines(var.generate_declaration(indent=4).code)  # type: ignore
             else:
                 writer.add_line(var.declaration)
 

@@ -1,11 +1,18 @@
-from enum import Enum
-from typing import Any, Dict, List, Literal, Union
+from typing import Dict, List, Literal, Union
 
 import csnake as cc
 from csnake import CodeWriter, FormattedLiteral
-from csnake_custom import StructVariable
 from pydantic import BaseModel, Field, model_validator
 from strenum import StrEnum
+
+from .extensions import (
+    EXENSIONS,
+    ReferenceParameterExtensionModel,
+    ValidationParameterExtensionModel,
+)
+from .types import CFormatEnum, CTypeEnum
+from .utils.csnake_custom import StructVariable
+from .utils.string import escape_string
 
 ODIN_STORE_TYPE = "ODIN_store_t"
 ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
@@ -14,110 +21,26 @@ ODIN_ENCODING_TYPE_PREFIX = "ODIN_ENCODING_"
 ODIN_TYPE_PREFIX = "ODIN_ELEMENT_TYPE_"
 
 
-def escape_string(s: str) -> str:
-    # add excape characters for all the special characters (newline, tab, etc)
-    return s.replace('"', '\\"').replace("\n", "\\n").replace("\t", "\\t")
+class CNames(BaseModel):
+    datastore_name: str = "ODIN_datastore"
+    ram_params_name: str = "ODIN_ram"
+    params_name: str = "ODIN_params"
 
-
-class ValidationParameterExtensionModel(BaseModel):
-    type: Literal["limit_value"]
-    min: float | None = None
-    max: float | None = None
-
-    def as_literal(self) -> FormattedLiteral:
-        if self.min is None:
-            self.min = -float("inf")
-        if self.max is None:
-            self.max = float("inf")
-
-        return FormattedLiteral(
-            f"(ODIN_extension_t[]){{ {{ .ops = &range_validator_extension, .data = &(range_parameter_t){{ .max = {self.max}, .min = {self.min} }} }} }}",
-            string_formatter=str,
-        )
-
-
-class ReferenceParameterExtensionModel(BaseModel):
-    type: Literal["reference"]
-    reference: str
-    offset: float = 0.0
-    scale: float = 1.0
-
-    def as_literal(self) -> FormattedLiteral:
-        return FormattedLiteral(
-            f"(ODIN_extension_t[]){{ {{ .ops = &parameter_mapping_extension, .data = &(mapped_parameter_t){{ .reference = &{self.reference}, .offset = {self.offset}, .scale = {self.scale} }} }} }}",
-            string_formatter=str,
-        )
-
-
-class CTypeEnum(StrEnum):
-    UINT8 = "uint8_t"
-    INT8 = "int8_t"
-    INT16 = "int16_t"
-    UINT16 = "uint16_t"
-    INT32 = "int32_t"
-    UINT32 = "uint32_t"
-    UINT64 = "uint64_t"
-    INT64 = "int64_t"
-    FLOAT = "float"
-    DOUBLE = "double"
-    CHAR = "char"
-    BOOL = "bool"
-
-    @property
-    def prefix(self) -> str:
-        return "ODIN_ELEMENT_TYPE_"
-
-    @property
-    def odin_type(self) -> str:
-        return f"{self.prefix}{self.name}"
-
-    def sizeof(self,length:int|None) -> str:
-        if length is None:
-            return f"sizeof({self.value})"
-        else:
-            return f"sizeof({self.value})*{length}"
-        
-
-class CFormatEnum(StrEnum):
-    NUMBER = "number"
-    DECIMAL = "decimal"
-    STRING = "string"
-    HEX = "hex"
-    AUTO = "auto"
-
-    @property
-    def prefix(self) -> str:
-        return "ODIN_ENCODING_"
-    
-    @property
-    def odin_type(self) -> str:
-        return f"{self.prefix}{self.name}"
-    
-    def odin_type_conv(self, primitive: CTypeEnum, length: int | None) -> str:
-        if self != CFormatEnum.AUTO:
-            return self.odin_type
-        
-        if primitive in [CTypeEnum.UINT8, CTypeEnum.INT8, CTypeEnum.UINT16, CTypeEnum.INT16, CTypeEnum.UINT32, CTypeEnum.INT32]:
-            return CFormatEnum.NUMBER.odin_type
-        elif primitive in [CTypeEnum.FLOAT, CTypeEnum.DOUBLE]:
-            return CFormatEnum.DECIMAL.odin_type
-        elif primitive == CTypeEnum.CHAR:
-            return CFormatEnum.STRING.odin_type
-        elif primitive == CTypeEnum.BOOL:
-            return CFormatEnum.NUMBER.odin_type
-        else:
-            raise ValueError(f"Unsupported primitive type {primitive}")
-    
 
 class ParameterModel(BaseModel):
-    id: int
+    """Stores all the information for a parameter."""
+
     _group_id: int | None = None
-    _parmeter_store_name: str | None = None
-    _variable_store_name: str | None = None
+    _variable_names: CNames | None = None
+
+    # _ram_params_name: str | None = None
+    # _variable_store_name: str | None = None
     _group_name: str | None = None
     _is_reference: bool = False
-
     _name: str | None = None
+
+    id: int
+
     access_permissions: Dict[str, str] = Field(default_factory=dict)
     description: str
     primitive: CTypeEnum
@@ -130,9 +53,7 @@ class ParameterModel(BaseModel):
         int, float, str, bool, List[int], List[float], List[str], List[bool]
     ] = 0
     persistent: bool = False
-    extension: (
-        ValidationParameterExtensionModel | ReferenceParameterExtensionModel | None
-    ) = None
+    extension: EXENSIONS | None = None
 
     @model_validator(mode="after")
     def check_reference(self) -> "ParameterModel":
@@ -149,17 +70,17 @@ class ParameterModel(BaseModel):
 
     @property
     def variable_reference(self):
-        assert self._parmeter_store_name
+        assert self._variable_names
         assert self._name
         assert self._group_name
-        return f"{self._parmeter_store_name}.{self._group_name}.{self._name}"
+        return f"{self._variable_names.ram_params_name}.{self._group_name}.{self._name}"
 
     @property
     def parameter_reference(self):
         assert self._name
         assert self._group_name
-        assert self._variable_store_name
-        return f"{self._variable_store_name}.{self._group_name}.{self._name}"
+        assert self._variable_names
+        return f"{self._variable_names.params_name}.{self._group_name}.{self._name}"
 
     def as_variable(self) -> cc.Variable:
         assert self._name
@@ -169,25 +90,6 @@ class ParameterModel(BaseModel):
             array=[self.length] if self.length else None,
         )
 
-    # @property
-    # def primitive_type(self) -> str:
-    #     if self.primitive == "uint8_t":
-    #         return "UINT"
-    #     elif self.primitive == "int8_t":
-    #         return "INT"
-    #     elif self.primitive == "int16_t":
-    #         return "INT"
-    #     elif self.primitive == "uint16_t":
-    #         return "UINT"
-    #     elif self.primitive == "int32_t":
-    #         return "INT"
-    #     elif self.primitive == "uint32_t":
-    #         return "UINT"
-    #     elif self.primitive == "float":
-    #         return "FLOAT"
-    #     else:
-    #         return "OTHER"
-
     def as_parameter(self, access_opts: "AccessOptionsGenerator") -> Dict:
         assert self._group_id is not None
         id = (self._group_id << 16) | self.id
@@ -195,10 +97,11 @@ class ParameterModel(BaseModel):
             "index": FormattedLiteral(id, int_formatter=hex),
             "access": access_opts.as_literal(self),
             "format": FormattedLiteral(
-                self.format.odin_type_conv(self.primitive, self.length), string_formatter=str
+                self.format.odin_type_conv(self.primitive, self.length),
+                string_formatter=str,
             ),
             "type": FormattedLiteral(
-                self.primitive.odin_type, string_formatter=str
+                self.primitive.odin_type_define, string_formatter=str
             ),
             "data": FormattedLiteral(
                 f"&{self.variable_reference}", string_formatter=str
@@ -241,7 +144,7 @@ class ParameterModel(BaseModel):
 class DeviceGroupModel(BaseModel):
     id: int
     _name: str | None = None
-    _store_name: str | None = None
+    _variable_names: CNames | None = None
 
     description: str
     data: Dict[str, ParameterModel]
@@ -255,7 +158,8 @@ class DeviceGroupModel(BaseModel):
     @property
     def group_reference(self):
         assert self._name
-        return f"{self._store_name}_{self._name}"
+        assert self._variable_names
+        return f"{self._variable_names.datastore_name}_{self._name}"
 
     def as_struct(self) -> cc.Struct:
         assert self._name
@@ -311,25 +215,28 @@ class PermissionDefModel(BaseModel):
     force: str | None = None
 
 
-class ConfigModel(BaseModel):
-    access_groups: Dict[str, PermissionDefModel]
-    param_def_name: str = "ODIN_params"
-    store_name: str = "ODIN_store"
-    ram_store_name: str = "ODIN_ram"
-
-    datastore: Dict[str, DeviceGroupModel]
+class MainModel(BaseModel):
+    access_groups: Dict[str, PermissionDefModel] = Field(
+        description="Defines the access groups."
+    )
+    variable_names: CNames = Field(
+        description="Defines the names of the variables.", default_factory=CNames
+    )
+    datastore: Dict[str, DeviceGroupModel] = Field(
+        description="Holds all the parameters."
+    )
 
     @model_validator(mode="after")
-    def populate_names(self) -> "ConfigModel":
+    def populate_names(self):
+        """Populate the names of the groups and parameters."""
         for group_name, device_group in self.datastore.items():
             device_group._name = group_name
-            device_group._store_name = self.store_name
+            device_group._variable_names = self.variable_names
             for parameter_name, parameter in device_group.data.items():
                 parameter._name = parameter_name
                 parameter._group_name = device_group._name
-                parameter._variable_store_name = self.param_def_name
-                parameter._parmeter_store_name = self.ram_store_name
                 parameter._group_id = device_group.id
+                parameter._variable_names = self.variable_names
 
                 # Add the access permissions to the parameter
                 for name, perms in device_group.access_permissions.items():
@@ -342,11 +249,11 @@ class ConfigModel(BaseModel):
 
     @property
     def ram_store_type(self) -> str:
-        return f"{self.ram_store_name}_t"
+        return f"{self.variable_names.ram_params_name}_t"
 
     @property
     def datastore_type(self) -> str:
-        return f"{self.param_def_name}_t"
+        return f"{self.variable_names.params_name}_t"
 
     def as_variable(self) -> cc.Variable:
         values_dict = {}
@@ -358,7 +265,7 @@ class ConfigModel(BaseModel):
                 values_dict[group_name][parameter_name] = parameter.default
 
         return cc.Variable(
-            name=self.ram_store_name,
+            name=self.variable_names.ram_params_name,
             primitive=self.ram_store_type,
             value=values_dict,
             comment="Value storage for the ODIN RAM data store.",
@@ -384,7 +291,7 @@ class ConfigModel(BaseModel):
             groups[group_name] = device_group.as_parameter_group(acces_opt)
 
         var = cc.Variable(
-            self.param_def_name, primitive=self.datastore_type, value=groups
+            self.variable_names.params_name, primitive=self.datastore_type, value=groups
         )
         return var
 
@@ -404,7 +311,7 @@ class ConfigModel(BaseModel):
         ]
 
         return cc.Variable(
-            name=self.store_name,
+            name=self.variable_names.datastore_name,
             primitive=ODIN_STORE_TYPE,
             value={
                 "count": len(self.datastore),
@@ -455,7 +362,7 @@ class AccessOptions:
 class AccessOptionsGenerator:
     access_groups: Dict[str, AccessOptions]
 
-    def __init__(self, config: ConfigModel):
+    def __init__(self, config: MainModel):
         self.access_groups = {}
         base_shift = 4
         base_shift_offset = 2

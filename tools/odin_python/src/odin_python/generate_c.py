@@ -1,24 +1,15 @@
 import os
-from enum import Enum
-from typing import Any, Dict, List, Literal, Union
 
 import click
-import csnake as cc
-from csnake import CodeWriter, CodeWriterLite, FormattedLiteral, Variable
-from csnake_custom import StructVariable
-from models import (
-    AccessOptions,
+from csnake import CodeWriter
+from .models import (
     AccessOptionsGenerator,
-    ConfigModel,
-    DeviceGroupModel,
-    ParameterModel,
+    MainModel,
 )
-from pydantic import BaseModel
 from pydantic_yaml import parse_yaml_file_as
-from strenum import StrEnum
 
 
-def generate_header(config: ConfigModel) -> str:
+def generate_header(config: MainModel) -> str:
     # Generate the output.h file
     cw = CodeWriter()
     cw.add_line("#include <stdint.h>")
@@ -51,12 +42,12 @@ def generate_header(config: ConfigModel) -> str:
     return str(cw)
 
 
-def generate_source(config: ConfigModel) -> str:
+def generate_source(config: MainModel) -> str:
     # Generate the output.c file
     cw = CodeWriter()
     cw.add_line("#include <stdint.h>")
-    cw.add_line('#include "ODin.h"')
     cw.add_line('#include "odin_datastore.h"')
+    cw.add_line('#include "ODin.h"')
     cw.add_line("")
 
     opt_gen = AccessOptionsGenerator(config)
@@ -84,14 +75,14 @@ NAME = "ODin"
 @click.argument("input_file")
 @click.argument("output_dir")
 @click.option("name", "--name", default=NAME, help="Name of the output files")
-def main(input_file: str, output_dir: str, name: str) -> None:
+def cli(input_file: str, output_dir: str, name: str) -> None:
     assert os.path.exists(input_file), f"Input file {input_file} does not exist"
     assert os.path.exists(output_dir), f"Output directory {output_dir} does not exist"
     # Check if the input file is a valid yaml file
     assert input_file.endswith(".yaml"), "Input file must be a yaml file"
     print(f"Converting {input_file} to {output_dir}")
 
-    config: ConfigModel = parse_yaml_file_as(ConfigModel, input_file)
+    config: MainModel = parse_yaml_file_as(MainModel, input_file)
 
     # Write to file
     with open(os.path.join(output_dir, f"{name}.h"), "w") as f:
@@ -105,4 +96,4 @@ def main(input_file: str, output_dir: str, name: str) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    cli()

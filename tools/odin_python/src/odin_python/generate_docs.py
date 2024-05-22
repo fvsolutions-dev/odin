@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 import os
-import subprocess
 from typing import Dict, Union
 
-import click
-import pydantic
-from models import ConfigModel, ParameterModel
+from .models import MainModel, ParameterModel
 from pydantic_yaml import parse_yaml_file_as
 
 
@@ -54,7 +51,7 @@ def get_group_id(parameter: ParameterModel) -> str:
     return f"{parameter.id:#06x}"
 
 
-def generate_md_file(output_path: str, data: ConfigModel):
+def generate_md_file(output_path: str, data: MainModel):
     from mdutils import MdUtils
 
     mdFile = MdUtils(file_name=output_path, title="Tilt bike object dictionary")
@@ -120,10 +117,10 @@ def generate_md_file(output_path: str, data: ConfigModel):
             #         f" **Primitive**: {format_primitive(parameter)}",
             #         f" **Length**: {parameter.length}",
             #         f" **Format**: {parameter.format}",
-                    
+
             #     ]
             # )
-            
+
             mdFile.new_paragraph(f"**Description** \n {parameter.description}")
             mdFile.new_line()
 
@@ -138,7 +135,7 @@ def generate_md_file(output_path: str, data: ConfigModel):
 def main():
     input_file = r"D:\projects\mouverti\esp_gatt_test\bleprph\main\app_datastore\datastore_config.yaml"
 
-    config: ConfigModel = parse_yaml_file_as(ConfigModel, input_file)
+    config: MainModel = parse_yaml_file_as(MainModel, input_file)
 
     output_name = "output.md"
     outFile = generate_md_file(output_name, config)
