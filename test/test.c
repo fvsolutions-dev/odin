@@ -228,4 +228,49 @@ void test_encoding_decoding_all()
     }
 }
 
+
+void test_validation()
+{
+    ODIN_parameter_t *test_parameter = &ODIN_params.bike_data.tilt_value;
+
+    assert(ODIN_parameter_write_as_float(test_parameter, 0, 0xFFFF) == ODIN_SUCCESS);
+    assert(ODIN_parameter_write_as_float(test_parameter, 40, 0xFFFF) != ODIN_SUCCESS);
+    assert(ODIN_parameter_write_as_float(test_parameter, -40, 0xFFFF) != ODIN_SUCCESS);
+    assert(ODIN_parameter_write_as_float(test_parameter, 30, 0xFFFF) == ODIN_SUCCESS);
+
+}
+
+
+void test_reference()
+{
+    ODIN_parameter_t *test_parameter = &ODIN_params.zwift_trainer_configuration_1.simulated_wind;
+    ODIN_parameter_t *test_referenced_parameter = &ODIN_params.bike_configuration.simulated_wind;
+    float * internal_referenced_reference = &ODIN_ram.bike_configuration.simulated_wind;
+
+    // Set internal reference to known value
+    *internal_referenced_reference = 12;
+
+    int16_t read_data;
+    int ret = ODIN_parameter_read_as_int16(test_parameter, &read_data, 0xFFFF);
+    ESP_LOGI(TAG, "Read returned %d", ret);
+    assert(ret == ODIN_SUCCESS);
+    ESP_LOGI(TAG, "Read data: %d", read_data);
+
+    // Assume the value is 100x
+    assert(read_data == 1200);
+
+
+    // Write to the parameter
+    ret = ODIN_parameter_write_as_int16(test_parameter, 100, 0xFFFF);
+    ESP_LOGI(TAG, "Write returned %d", ret);
+    assert(ret == ODIN_SUCCESS);
+
+    // Check the internal reference
+    ESP_LOGI(TAG, "Internal reference: %f", *internal_referenced_reference);
+    assert(*internal_referenced_reference == 1);
+
+    // Write out of range
+    assert( ODIN_parameter_write_as_int16(test_parameter, 20000, 0xFFFF) != ODIN_SUCCESS);
+
+}
 #endif

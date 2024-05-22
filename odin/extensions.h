@@ -30,8 +30,6 @@ typedef struct
     float offset;
     float scale;
 } mapped_parameter_t;
-
-
 extern ODIN_extension_ops_t range_validator_extension;
 extern ODIN_extension_ops_t parameter_mapping_extension;
 
