@@ -1,0 +1,22 @@
+access_groups:
+  internal: { force: RW }
+  other: {force: RW}
+
+datastore:
+  test_data:
+    id: 0xA
+    description: |
+      Group description
+
+    access_permissions:
+      other: RW
+
+    data:
+      variable:
+        id: 0x1
+        primitive: uint16_t
+        description: |
+          something
+        default: 0
+
+
