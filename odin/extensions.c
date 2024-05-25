@@ -78,7 +78,7 @@ int mapped_write(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t 
     // Do the original write
     uint8_t buffer[8];
     int ret = ODIN_parameter_set_number(mapped_parameter->reference, buffer, mapped_parameter->reference->size, value);
-    if (ret != ODIN_SUCCESS)
+    if (ret < 0)
     {
         return ret;
     }

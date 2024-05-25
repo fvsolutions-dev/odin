@@ -23,7 +23,7 @@ int ODIN_read_as_string(ODIN_parameter_t *parameter, char *output, uint8_t size,
 
     uint8_t buffer[128];
     int ret = ODIN_parameter_read(parameter, buffer, sizeof(buffer), access_group);
-    if (ret != ODIN_SUCCESS)
+    if (ret < 0)
     {
         return ret;
     }
@@ -55,6 +55,10 @@ int ODIN_read_as_string(ODIN_parameter_t *parameter, char *output, uint8_t size,
             len = snprintf(output, size, "%ld", *(int32_t *)buffer);
             break;
 
+        case ODIN_ELEMENT_TYPE_BOOL:
+            len = snprintf(output, size, "%s", (*(bool *)buffer) ? "true" : "false");
+            break;
+            
         default:
             return ODIN_ERROR_UNSUPPORTED_FORMAT;
         }

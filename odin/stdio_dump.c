@@ -30,6 +30,7 @@ void ODIN_dump_parameter_group(ODIN_parameter_group_t *group, bool compact, uint
         ODIN_dump_parameter(group->parameters[i], compact, access_group);
     }
 }
+
 void ODIN_dump_parameter(ODIN_parameter_t *parameter, bool compact, uint16_t access_group)
 {
     if (parameter == NULL)
@@ -60,7 +61,6 @@ void ODIN_dump_parameter(ODIN_parameter_t *parameter, bool compact, uint16_t acc
             printf("Description:\n" ANSI_BLK "%s" ANSI_RESET "\n", parameter->description);
     }
 }
-
 
 void ODIN_log_parameter_access(ODIN_parameter_t *parameter, const char *operation, uint16_t access_group)
 {

@@ -18,6 +18,7 @@ def generate_header(config: MainModel) -> str:
 
     opt_gen = AccessOptionsGenerator(config)
     opt_gen.add_define_macros(cw)
+    opt_gen.add_log_reference(cw)
 
     # Add the variable struct
     cw.add_struct(config.as_variable_struct())
@@ -50,7 +51,10 @@ def generate_source(config: MainModel) -> str:
     cw.add_line('#include "ODin.h"')
     cw.add_line("")
 
+
     opt_gen = AccessOptionsGenerator(config)
+    # Create opt_gen
+    opt_gen.add_log_values(cw)
 
     # Add reference definitions
     for group in config.datastore.values():

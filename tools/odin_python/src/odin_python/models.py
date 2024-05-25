@@ -213,6 +213,7 @@ class DeviceGroupModel(BaseModel):
 
 class PermissionDefModel(BaseModel):
     force: str | None = None
+    log: str | None = None
 
 
 class MainModel(BaseModel):
@@ -332,11 +333,21 @@ class AccessType(StrEnum):
             return "ODIN_READ_ACCESS"
         if self == AccessType.WRITE:
             return "ODIN_WRITE_ACCESS"
-
+        
+    @staticmethod
+    def to_access_type_list( opts: str) -> List["AccessType"]:
+        # input R or RW or W
+        acces = []
+        if "R" in opts:
+            acces.append(AccessType.READ)
+        if "W" in opts:
+            acces.append(AccessType.WRITE)
+        return acces
 
 class AccessOptions:
     base_shift: int
     name: str
+    options: PermissionDefModel
 
     @property
     def prefix(self) -> str:
@@ -393,3 +404,27 @@ class AccessOptionsGenerator:
                 )
 
             cw.add_line("")
+
+    def add_log_values(self, cw: CodeWriter):
+
+        log_items = []
+        for group_name, access_group in self.access_groups.items():
+            if not access_group.options.log:
+                continue
+
+            for access_type in AccessType.to_access_type_list(access_group.options.log):
+                log_items.append(
+                    f"{access_type.to_flag(access_group.name)}"
+                )
+
+        if len(log_items) == 0:
+            log_items.append(0)
+            
+        cw.add_line(
+            f"uint32_t ODIN_access_log_values = {' | '.join([item for item in log_items])};"
+        )
+        cw.add_line("")
+
+    def add_log_reference(self, cw: CodeWriter):
+        cw.add_line("extern uint32_t ODIN_access_log_values;")
+        cw.add_line("")

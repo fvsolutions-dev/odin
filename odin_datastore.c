@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "odin_datastore.h"
 #include "srv_logging.h"
+#include "odin/stdio_dump.h"
 
 const char *TAG = "ODIBN";
 
@@ -99,6 +100,18 @@ bool ODIN_check_access(ODIN_parameter_t *parameter, uint16_t access_group, uint1
     return true;
 }
 
+void ODIN_conditionally_log_access(ODIN_parameter_t *parameter, uint16_t access_group, uint16_t operation)
+{
+    extern uint32_t ODIN_access_log_values;
+    // printf("op: %08X %d %08lX\n", access_group, operation, ODIN_access_log_values);
+    if (!((access_group << operation) & ODIN_access_log_values))
+    {
+        return;
+    }
+
+    ODIN_log_parameter_access(parameter, operation == ODIN_READ_ACCESS ? "READ" : "WRITE", access_group);
+}
+
 const char *ODIN_error_to_string(int error)
 {
     switch (error)
@@ -191,7 +204,7 @@ int ODIN_parameter_read(ODIN_parameter_t *parameter, void *data, size_t size, ui
     memcpy(data, parameter->data, parameter->size);
 
     // Log the access
-    // log_parameter_access(parameter, ACCES_READ);
+    ODIN_conditionally_log_access(parameter, access_group, ODIN_READ_ACCESS);
 
     return parameter->size;
 }
@@ -225,7 +238,7 @@ int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t size, u
     if (parameter->extension != NULL && parameter->extension->ops->validate != NULL)
     {
         int rc = parameter->extension->ops->validate(parameter, data, size, access_group);
-        if (rc != ODIN_SUCCESS)
+        if (rc < 0)
         {
             return rc;
         }
@@ -234,19 +247,19 @@ int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t size, u
     if (parameter->extension != NULL && parameter->extension->ops->write != NULL)
     {
         int rc = parameter->extension->ops->write(parameter, data, size, access_group);
-        if (rc != ODIN_SUCCESS)
+        if (rc < 0)
         {
             return rc;
         }
-
-        return ODIN_SUCCESS;
+    }
+    else
+    {
+        // Copy the data into the parameter
+        memcpy(parameter->data, data, parameter->size);
     }
 
-    // Copy the data into the parameter
-    memcpy(parameter->data, data, parameter->size);
-
     // Log the access
-    // log_parameter_access(parameter, ACCES_WRITE);
+    ODIN_conditionally_log_access(parameter, access_group, ODIN_WRITE_ACCESS);
 
     return ODIN_SUCCESS;
 }
@@ -258,7 +271,7 @@ int ODIN_parameter_get_number(ODIN_parameter_t *parameter, const uint8_t *param_
     {
         return ODIN_ERROR_SIZE_MISMATCH;
     }
-    
+
     switch (parameter->type)
     {
     case ODIN_ELEMENT_TYPE_FLOAT:
@@ -356,6 +369,11 @@ int ODIN_parameter_set_number(ODIN_parameter_t *parameter, uint8_t *buffer, size
 
 int ODIN_parameter_write_as_uint16(ODIN_parameter_t *parameter, uint16_t data, uint16_t access_group)
 {
+    if (parameter->type != ODIN_ELEMENT_TYPE_UINT16)
+    {
+        return ODIN_ERROR;
+    }
+    
     return ODIN_parameter_write(parameter, &data, 2, access_group);
 }
 
