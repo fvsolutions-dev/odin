@@ -14,7 +14,7 @@ int range_validator_float(ODIN_parameter_t *parameter, void *data, size_t size, 
 
     float value;
     int rc = ODIN_parameter_get_number(parameter, data, size, &value);
-    if (rc != ODIN_SUCCESS)
+    if (rc < 0)
     {
         return rc;
     }
@@ -42,7 +42,7 @@ int mapped_read(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t a
     // Get number from parameter
     float value = 0;
     int rc = ODIN_parameter_get_number(mapped_parameter->reference, mapped_parameter->reference->data, mapped_parameter->reference->size, &value);
-    if (rc != ODIN_SUCCESS)
+    if (rc < 0)
     {
         return rc;
     }
@@ -65,7 +65,7 @@ int mapped_write(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t 
     // Get number from parameter
     float value = -1;
     int rc = ODIN_parameter_get_number(parameter, data, size, &value);
-    if (rc != ODIN_SUCCESS)
+    if (rc < 0)
     {
         return rc;
     }
@@ -77,7 +77,7 @@ int mapped_write(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t 
 
     // Do the original write
     uint8_t buffer[8];
-    int ret =  ODIN_parameter_set_number(mapped_parameter->reference, buffer, mapped_parameter->reference->size, value);
+    int ret = ODIN_parameter_set_number(mapped_parameter->reference, buffer, mapped_parameter->reference->size, value);
     if (ret != ODIN_SUCCESS)
     {
         return ret;

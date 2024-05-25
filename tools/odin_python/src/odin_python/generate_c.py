@@ -52,6 +52,15 @@ def generate_source(config: MainModel) -> str:
 
     opt_gen = AccessOptionsGenerator(config)
 
+    # Add reference definitions
+    for group in config.datastore.values():
+        for param in group.data.values():
+            if param.extension:
+                value = param.extension.required_references()
+                if value:
+                    cw.add_line(value)
+    cw.add_line("")
+
     cw.add_variable_initialization(config.as_variable())
     cw.add_line("")
 

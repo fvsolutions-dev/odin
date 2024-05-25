@@ -95,6 +95,10 @@ int ODIN_parameter_read_as_uint16(ODIN_parameter_t *parameter, uint16_t *data, u
 int ODIN_parameter_write_as_uint16(ODIN_parameter_t *parameter, uint16_t data, uint16_t access_group);
 int ODIN_parameter_read_as_int16(ODIN_parameter_t *parameter, int16_t *data, uint16_t access_group);
 int ODIN_parameter_write_as_int16(ODIN_parameter_t *parameter, int16_t data, uint16_t access_group);
+int ODIN_parameter_write_as_uint32(ODIN_parameter_t *parameter, uint32_t data, uint16_t access_group);
+int ODIN_parameter_read_as_uint32(ODIN_parameter_t *parameter, uint32_t *data, uint16_t access_group);
+int ODIN_parameter_write_as_int32(ODIN_parameter_t *parameter, int32_t data, uint16_t access_group);
+int ODIN_parameter_read_as_int32(ODIN_parameter_t *parameter, int32_t *data, uint16_t access_group);
 int ODIN_parameter_read_as_float(ODIN_parameter_t *parameter, float *data, uint16_t access_group);
 int ODIN_parameter_write_as_float(ODIN_parameter_t *parameter, float data, uint16_t access_group);
 int ODIN_parameter_read_as_bool(ODIN_parameter_t *parameter, bool *data, uint16_t access_group);

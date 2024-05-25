@@ -22,7 +22,7 @@ ODIN_TYPE_PREFIX = "ODIN_ELEMENT_TYPE_"
 
 
 class CNames(BaseModel):
-    datastore_name: str = "ODIN_datastore"
+    datastore_name: str = "ODIN_store"
     ram_params_name: str = "ODIN_ram"
     params_name: str = "ODIN_params"
 

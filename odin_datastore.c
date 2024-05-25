@@ -193,7 +193,7 @@ int ODIN_parameter_read(ODIN_parameter_t *parameter, void *data, size_t size, ui
     // Log the access
     // log_parameter_access(parameter, ACCES_READ);
 
-    return ODIN_SUCCESS;
+    return parameter->size;
 }
 
 /**
@@ -263,39 +263,39 @@ int ODIN_parameter_get_number(ODIN_parameter_t *parameter, const uint8_t *param_
     {
     case ODIN_ELEMENT_TYPE_FLOAT:
         (*data) = *((float *)param_data);
-        return ODIN_SUCCESS;
+        return sizeof(float);
 
     case ODIN_ELEMENT_TYPE_DOUBLE:
         (*data) = *((double *)param_data);
-        return ODIN_SUCCESS;
+        return sizeof(double);
 
     case ODIN_ELEMENT_TYPE_INT8:
         (*data) = (float)(*((int8_t *)param_data));
-        return ODIN_SUCCESS;
+        return sizeof(int8_t);
 
     case ODIN_ELEMENT_TYPE_UINT8:
         (*data) = (float)(*((uint8_t *)param_data));
-        return ODIN_SUCCESS;
+        return sizeof(uint8_t);
 
     case ODIN_ELEMENT_TYPE_INT16:
         (*data) = (float)(*((int16_t *)param_data));
-        return ODIN_SUCCESS;
+        return sizeof(int16_t);
 
     case ODIN_ELEMENT_TYPE_UINT16:
         (*data) = (float)(*((uint16_t *)param_data));
-        return ODIN_SUCCESS;
+        return sizeof(uint16_t);
 
     case ODIN_ELEMENT_TYPE_INT32:
         (*data) = (float)(*((int32_t *)param_data));
-        return ODIN_SUCCESS;
+        return sizeof(int32_t);
 
     case ODIN_ELEMENT_TYPE_UINT32:
         (*data) = (float)(*((uint32_t *)param_data));
-        return ODIN_SUCCESS;
+        return sizeof(uint32_t);
 
     case ODIN_ELEMENT_TYPE_BOOL:
         (*data) = (float)(*((bool *)param_data));
-        return ODIN_SUCCESS;
+        return sizeof(bool);
 
     default:
         return ODIN_ERROR;
@@ -315,39 +315,39 @@ int ODIN_parameter_set_number(ODIN_parameter_t *parameter, uint8_t *buffer, size
     {
     case ODIN_ELEMENT_TYPE_FLOAT:
         *((float *)buffer) = data;
-        return ODIN_SUCCESS;
+        return sizeof(float);
 
     case ODIN_ELEMENT_TYPE_DOUBLE:
         *((double *)buffer) = data;
-        return ODIN_SUCCESS;
+        return sizeof(double);
 
     case ODIN_ELEMENT_TYPE_INT8:
         *((int8_t *)buffer) = (int8_t)data;
-        return ODIN_SUCCESS;
+        return sizeof(int8_t);
 
     case ODIN_ELEMENT_TYPE_UINT8:
         *((uint8_t *)buffer) = (uint8_t)data;
-        return ODIN_SUCCESS;
+        return sizeof(uint8_t);
 
     case ODIN_ELEMENT_TYPE_INT16:
         *((int16_t *)buffer) = (int16_t)data;
-        return ODIN_SUCCESS;
+        return sizeof(int16_t);
 
     case ODIN_ELEMENT_TYPE_UINT16:
         *((uint16_t *)buffer) = (uint16_t)data;
-        return ODIN_SUCCESS;
+        return sizeof(uint16_t);
 
     case ODIN_ELEMENT_TYPE_INT32:
         *((int32_t *)buffer) = (int32_t)data;
-        return ODIN_SUCCESS;
+        return sizeof(int32_t);
 
     case ODIN_ELEMENT_TYPE_UINT32:
         *((uint32_t *)buffer) = (uint32_t)data;
-        return ODIN_SUCCESS;
+        return sizeof(uint32_t);
 
     case ODIN_ELEMENT_TYPE_BOOL:
         *((bool *)buffer) = data;
-        return ODIN_SUCCESS;
+        return sizeof(bool);
 
     default:
         return ODIN_ERROR;
@@ -371,6 +371,26 @@ int ODIN_parameter_write_as_int16(ODIN_parameter_t *parameter, int16_t data, uin
 int ODIN_parameter_read_as_int16(ODIN_parameter_t *parameter, int16_t *data, uint16_t access_group)
 {
     return ODIN_parameter_read(parameter, data, 2, access_group);
+}
+
+int ODIN_parameter_write_as_uint32(ODIN_parameter_t *parameter, uint32_t data, uint16_t access_group)
+{
+    return ODIN_parameter_write(parameter, &data, 4, access_group);
+}
+
+int ODIN_parameter_read_as_uint32(ODIN_parameter_t *parameter, uint32_t *data, uint16_t access_group)
+{
+    return ODIN_parameter_read(parameter, data, 4, access_group);
+}
+
+int ODIN_parameter_write_as_int32(ODIN_parameter_t *parameter, int32_t data, uint16_t access_group)
+{
+    return ODIN_parameter_write(parameter, &data, 4, access_group);
+}
+
+int ODIN_parameter_read_as_int32(ODIN_parameter_t *parameter, int32_t *data, uint16_t access_group)
+{
+    return ODIN_parameter_read(parameter, data, 4, access_group);
 }
 
 int ODIN_parameter_write_as_float(ODIN_parameter_t *parameter, float data, uint16_t access_group)
