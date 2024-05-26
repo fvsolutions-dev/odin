@@ -23,7 +23,7 @@ void ODIN_dump_parameter_group(ODIN_parameter_group_t *group, bool compact, uint
     {
         return;
     }
-    printf(ANSI_BMAG "Group: '%s'" ANSI_RESET "\n", group->name);
+    printf(ANSI_BMAG "Group: '%s'" ANSI_RESET "\r\n", group->name);
 
     for (int i = 0; i < group->count; i++)
     {
@@ -42,23 +42,23 @@ void ODIN_dump_parameter(ODIN_parameter_t *parameter, bool compact, uint16_t acc
     int len = ODIN_encode_to_string(parameter, buffer, sizeof(buffer), access_group);
     if (len <= 0)
     {
-        printf("Error: %s\n", ODIN_error_to_string(len));
+        printf("Error: %s\r\n", ODIN_error_to_string(len));
         return;
     }
 
     if (compact)
     {
-        printf(" %-25s: %s\n", parameter->name, buffer);
+        printf(" %-25s: %s\r\n", parameter->name, buffer);
     }
     else
     {
-        printf("Parameter: '" ANSI_BCYN "%s" ANSI_RESET "'\n", parameter->name);
-        printf("Value:     %s\n", buffer);
-        printf("Data:      %p\n", parameter->data);
-        printf("Size:      %d\n", parameter->size);
-        printf("Access:    %04X\n", parameter->access);
+        printf("Parameter: '" ANSI_BCYN "%s" ANSI_RESET "'\r\n", parameter->name);
+        printf("Value:     %s\r\n", buffer);
+        printf("Data:      %p\r\n", parameter->data);
+        printf("Size:      %d\r\n", parameter->size);
+        printf("Access:    %04X\r\n", parameter->access);
         if (parameter->description != NULL)
-            printf("Description:\n" ANSI_BLK "%s" ANSI_RESET "\n", parameter->description);
+            printf("Description:\r\n" ANSI_BLK "%s" ANSI_RESET "\r\n", parameter->description);
     }
 }
 
@@ -76,5 +76,5 @@ void ODIN_log_parameter_access(ODIN_parameter_t *parameter, const char *operatio
         sprintf(buffer, "Error");
     }
 
-    printf(ANSI_BMAG "%s: %s = %s" ANSI_RESET "\n", operation, parameter->name, buffer);
+    printf(ANSI_BMAG "%s: %s = %s" ANSI_RESET "\r\n", operation, parameter->name, buffer);
 }
