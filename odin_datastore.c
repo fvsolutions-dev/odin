@@ -114,7 +114,7 @@ void ODIN_conditionally_log_access(ODIN_parameter_t *parameter, uint16_t access_
         return;
     }
 
-    ODIN_log_parameter_access(parameter, operation == ODIN_READ_ACCESS ? "READ" : "WRITE", NULL);
+    ODIN_log_parameter_access(parameter, operation == ODIN_READ_ACCESS ? "READ" : "WRITE", 0);
 }
 
 const char *ODIN_error_to_string(int error)

@@ -5,7 +5,7 @@
 // #undef LOG_LEVEL
 // #define LOG_LEVEL LOG_LEVEL_DEBUG
 
-static const char *TAG = "ODIN_EXT";
+__attribute__((unused)) static const char *TAG = "ODIN_EXT";
 
 int range_validator_float(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group)
 {
