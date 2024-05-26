@@ -5,6 +5,8 @@
 #ifndef ODIN_H
 #define ODIN_H
 
+#define ODIN_ERR_CHECK_RET(x) { int err = x; if (err != ODIN_SUCCESS) { return err; } }
+
 /**
  * @brief Enum for the different encoding formats
  * It defines the way the data is printed and parsed to
@@ -75,6 +77,7 @@ typedef struct
 #define ODIN_ERROR_SIZE_MISMATCH -2
 #define ODIN_ERROR_PERMISSION_DENIED -3
 #define ODIN_ERROR_UNSUPPORTED_FORMAT -4
+#define ODIN_ERROR_NOT_SUPPORTED -5
 
 #define ODIN_READ_ACCESS 0
 #define ODIN_WRITE_ACCESS 1
@@ -82,8 +85,14 @@ typedef struct
 // Basic access
 int ODIN_parameter_read(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group);
 int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group);
+
+// acces with conversion
+int ODIN_parameter_read_float(ODIN_parameter_t *parameter, const uint8_t *param_data, size_t param_size, float *data);
+int ODIN_parameter_write_float(ODIN_parameter_t *parameter, uint8_t *param_data, size_t param_size, float data);
+
 bool ODIN_check_access(ODIN_parameter_t *parameter, uint16_t access_group, uint16_t operation);
 const char *ODIN_error_to_string(int error);
+int ODIN_parameter_get_primitive_size(ODIN_parameter_t *parameter);
 
 // Basic parameter retrieval
 ODIN_parameter_group_t *ODIN_find_group_by_name(ODIN_store_t *OD, const char *name);
@@ -91,24 +100,5 @@ ODIN_parameter_group_t *ODIN_find_group_by_id(ODIN_store_t *OD, uint16_t index);
 ODIN_parameter_t *ODIN_find_parameter_by_name(ODIN_store_t *OD, const char *group_name, const char *parameter_name);
 ODIN_parameter_t *ODIN_find_parameter_by_id(ODIN_store_t *OD, uint32_t index);
 
-int ODIN_parameter_read_as_uint16(ODIN_parameter_t *parameter, uint16_t *data, uint16_t access_group);
-int ODIN_parameter_write_as_uint16(ODIN_parameter_t *parameter, uint16_t data, uint16_t access_group);
-int ODIN_parameter_read_as_int16(ODIN_parameter_t *parameter, int16_t *data, uint16_t access_group);
-int ODIN_parameter_write_as_int16(ODIN_parameter_t *parameter, int16_t data, uint16_t access_group);
-int ODIN_parameter_write_as_uint32(ODIN_parameter_t *parameter, uint32_t data, uint16_t access_group);
-int ODIN_parameter_read_as_uint32(ODIN_parameter_t *parameter, uint32_t *data, uint16_t access_group);
-int ODIN_parameter_write_as_int32(ODIN_parameter_t *parameter, int32_t data, uint16_t access_group);
-int ODIN_parameter_read_as_int32(ODIN_parameter_t *parameter, int32_t *data, uint16_t access_group);
-int ODIN_parameter_read_as_float(ODIN_parameter_t *parameter, float *data, uint16_t access_group);
-int ODIN_parameter_write_as_float(ODIN_parameter_t *parameter, float data, uint16_t access_group);
-int ODIN_parameter_read_as_bool(ODIN_parameter_t *parameter, bool *data, uint16_t access_group);
-int ODIN_parameter_write_as_bool(ODIN_parameter_t *parameter, bool data, uint16_t access_group);
-int ODIN_parameter_read_as_uint8(ODIN_parameter_t *parameter, uint8_t *data, uint16_t access_group);
-int ODIN_parameter_write_as_uint8(ODIN_parameter_t *parameter, uint8_t data, uint16_t access_group);
-int ODIN_parameter_read_as_int8(ODIN_parameter_t *parameter, int8_t *data, uint16_t access_group);
-int ODIN_parameter_write_as_int8(ODIN_parameter_t *parameter, int8_t data, uint16_t access_group);
-
-int ODIN_parameter_get_number(ODIN_parameter_t *parameter, const uint8_t *param_data, size_t param_size, float *data);
-int ODIN_parameter_set_number(ODIN_parameter_t *parameter, uint8_t *param_data, size_t param_size, float data);
 
 #endif

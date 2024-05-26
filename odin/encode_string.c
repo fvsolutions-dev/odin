@@ -18,12 +18,18 @@ static const char *TAG = "ODIN_STR";
  *
  * @return int Length of the string
  */
-int ODIN_read_as_string(ODIN_parameter_t *parameter, char *output, uint8_t size, uint16_t access_group)
+int ODIN_encode_to_string(ODIN_parameter_t *parameter, char *output, uint8_t size, uint16_t access_group)
 {
 
     uint8_t buffer[128];
-    int ret = ODIN_parameter_read(parameter, buffer, sizeof(buffer), access_group);
-    if (ret < 0)
+    if (parameter->size > sizeof(buffer))
+    {
+        LOG_ERR(TAG, "Parameter size is too large");
+        return ODIN_ERROR_SIZE_MISMATCH;
+    }
+
+    int ret = ODIN_parameter_read(parameter, buffer, parameter->size, access_group);
+    if (ret != ODIN_SUCCESS)
     {
         return ret;
     }
@@ -98,7 +104,7 @@ int ODIN_read_as_string(ODIN_parameter_t *parameter, char *output, uint8_t size,
 }
 
 /**
- * @brief Ingest a parameter from a human readable string
+ * @brief Parse a string and write it to a parameter
  *
  * @param parameter Pointer to the parameter
  * @param input Pointer to the buffer to store the string, must be null terminated
@@ -106,8 +112,11 @@ int ODIN_read_as_string(ODIN_parameter_t *parameter, char *output, uint8_t size,
  *
  * @return int Length of the string
  */
-int ODIN_write_to_string(ODIN_parameter_t *parameter, char *input, uint16_t access_group)
+int ODIN_decode_from_string(ODIN_parameter_t *parameter, char *input, uint16_t access_group)
 {
+        return ODIN_ERROR_NOT_SUPPORTED;
+#if 0
+
     if (parameter == 0)
     {
         return ODIN_ERROR_NO_PARAMETER;
@@ -117,7 +126,6 @@ int ODIN_write_to_string(ODIN_parameter_t *parameter, char *input, uint16_t acce
     {
         return ODIN_ERROR_PERMISSION_DENIED;
     }
-#if 0
     switch (parameter->format)
     {
     case ODIN_ENCODING_INT:

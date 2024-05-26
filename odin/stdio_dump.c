@@ -39,7 +39,7 @@ void ODIN_dump_parameter(ODIN_parameter_t *parameter, bool compact, uint16_t acc
     }
 
     char buffer[MAX_VALUE_LENGTH];
-    int len = ODIN_read_as_string(parameter, buffer, sizeof(buffer), access_group);
+    int len = ODIN_encode_to_string(parameter, buffer, sizeof(buffer), access_group);
     if (len <= 0)
     {
         printf("Error: %s\n", ODIN_error_to_string(len));
@@ -70,7 +70,7 @@ void ODIN_log_parameter_access(ODIN_parameter_t *parameter, const char *operatio
     }
 
     char buffer[MAX_VALUE_LENGTH];
-    int len = ODIN_read_as_string(parameter, buffer, sizeof(buffer), access_group);
+    int len = ODIN_encode_to_string(parameter, buffer, sizeof(buffer), access_group);
     if (len <= 0)
     {
         sprintf(buffer, "Error");

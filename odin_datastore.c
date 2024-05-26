@@ -90,6 +90,11 @@ bool ODIN_check_access(ODIN_parameter_t *parameter, uint16_t access_group, uint1
     {
         return false;
     }
+    
+    if (access_group == 0)
+    {
+        return true;
+    }
 
     // Check if the operation is allowed
     if (!((access_group << operation) & parameter->access))
@@ -103,13 +108,13 @@ bool ODIN_check_access(ODIN_parameter_t *parameter, uint16_t access_group, uint1
 void ODIN_conditionally_log_access(ODIN_parameter_t *parameter, uint16_t access_group, uint16_t operation)
 {
     extern uint32_t ODIN_access_log_values;
-    // printf("op: %08X %d %08lX\n", access_group, operation, ODIN_access_log_values);
+
     if (!((access_group << operation) & ODIN_access_log_values))
     {
         return;
     }
 
-    ODIN_log_parameter_access(parameter, operation == ODIN_READ_ACCESS ? "READ" : "WRITE", access_group);
+    ODIN_log_parameter_access(parameter, operation == ODIN_READ_ACCESS ? "READ" : "WRITE", NULL);
 }
 
 const char *ODIN_error_to_string(int error)
@@ -128,6 +133,9 @@ const char *ODIN_error_to_string(int error)
         return "Permission denied";
     case ODIN_ERROR_UNSUPPORTED_FORMAT:
         return "Unsupported format";
+    case ODIN_ERROR_NOT_SUPPORTED:
+        return "Not supported";
+        
     case ODIN_ERROR:
         return "General error";
     default:
@@ -184,29 +192,38 @@ int ODIN_parameter_read(ODIN_parameter_t *parameter, void *data, size_t size, ui
     }
 
     // Check if the size is correct
-    if (size < parameter->size)
+    if (size != parameter->size)
     {
+        LOG_ERR(TAG, "Read size mismatch, (%d != %d), parameter %s", size, parameter->size, parameter->name);
         return ODIN_ERROR_SIZE_MISMATCH;
     }
 
     // Check if the permission is allowed
     if (!ODIN_check_access(parameter, access_group, ODIN_READ_ACCESS))
     {
+        LOG_ERR(TAG, "Permission denied, parameter %s", parameter->name);
         return ODIN_ERROR_PERMISSION_DENIED;
     }
 
     if (parameter->extension != NULL && parameter->extension->ops->read != NULL)
     {
-        return parameter->extension->ops->read(parameter, data, size, access_group);
+        int ret = parameter->extension->ops->read(parameter, data, size, access_group);
+        if (ret)
+        {
+            LOG_ERR(TAG, "Extension read failed, error %d ,parameter %s", ret, parameter->name);
+        }
+        return ret;
+    }
+    else
+    {
+        // Copy the data to the buffer
+        memcpy(data, parameter->data, parameter->size);
+
+        // Log the access
+        ODIN_conditionally_log_access(parameter, access_group, ODIN_READ_ACCESS);
     }
 
-    // Copy the data to the buffer
-    memcpy(data, parameter->data, parameter->size);
-
-    // Log the access
-    ODIN_conditionally_log_access(parameter, access_group, ODIN_READ_ACCESS);
-
-    return parameter->size;
+    return ODIN_SUCCESS;
 }
 
 /**
@@ -225,12 +242,16 @@ int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t size, u
     {
         return ODIN_ERROR_NO_PARAMETER;
     }
+
     if (size != parameter->size)
     {
+        LOG_ERR(TAG, "Write size mismatch, (%d != %d), parameter %s", size, parameter->size, parameter->name);
         return ODIN_ERROR_SIZE_MISMATCH;
     }
+
     if (!ODIN_check_access(parameter, access_group, ODIN_WRITE_ACCESS))
     {
+        LOG_ERR(TAG, "Permission denied, parameter %s", parameter->name);
         return ODIN_ERROR_PERMISSION_DENIED;
     }
 
@@ -238,7 +259,7 @@ int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t size, u
     if (parameter->extension != NULL && parameter->extension->ops->validate != NULL)
     {
         int rc = parameter->extension->ops->validate(parameter, data, size, access_group);
-        if (rc < 0)
+        if (rc != ODIN_SUCCESS)
         {
             return rc;
         }
@@ -247,8 +268,9 @@ int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t size, u
     if (parameter->extension != NULL && parameter->extension->ops->write != NULL)
     {
         int rc = parameter->extension->ops->write(parameter, data, size, access_group);
-        if (rc < 0)
+        if (rc != ODIN_SUCCESS)
         {
+            LOG_ERR(TAG, "Extension write failed, error %d ,parameter %s", rc, parameter->name);
             return rc;
         }
     }
@@ -256,17 +278,26 @@ int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t size, u
     {
         // Copy the data into the parameter
         memcpy(parameter->data, data, parameter->size);
-    }
 
-    // Log the access
-    ODIN_conditionally_log_access(parameter, access_group, ODIN_WRITE_ACCESS);
+        // Log the access
+        ODIN_conditionally_log_access(parameter, access_group, ODIN_WRITE_ACCESS);
+    }
 
     return ODIN_SUCCESS;
 }
 
-int ODIN_parameter_get_number(ODIN_parameter_t *parameter, const uint8_t *param_data, size_t param_size, float *data)
+/**
+ * @brief Method to read a parameter as a floating point number
+ *
+ * @param parameter Pointer to the parameter
+ * @param data Pointer to the data buffer
+ * @param size Size of the data buffer
+ * @param access_group Access group
+ *
+ * @return int error code
+ */
+int ODIN_parameter_read_float(ODIN_parameter_t *parameter, const uint8_t *param_data, size_t param_size, float *data)
 {
-    LOG_DEBUG(TAG, "Checking size %d == %d", param_size, parameter->size);
     if (param_size != parameter->size)
     {
         return ODIN_ERROR_SIZE_MISMATCH;
@@ -276,27 +307,27 @@ int ODIN_parameter_get_number(ODIN_parameter_t *parameter, const uint8_t *param_
     {
     case ODIN_ELEMENT_TYPE_FLOAT:
         (*data) = *((float *)param_data);
-        return sizeof(float);
+        break;
 
     case ODIN_ELEMENT_TYPE_DOUBLE:
         (*data) = *((double *)param_data);
-        return sizeof(double);
+        break;
 
     case ODIN_ELEMENT_TYPE_INT8:
         (*data) = (float)(*((int8_t *)param_data));
-        return sizeof(int8_t);
+        break;
 
     case ODIN_ELEMENT_TYPE_UINT8:
         (*data) = (float)(*((uint8_t *)param_data));
-        return sizeof(uint8_t);
+        break;
 
     case ODIN_ELEMENT_TYPE_INT16:
         (*data) = (float)(*((int16_t *)param_data));
-        return sizeof(int16_t);
+        break;
 
     case ODIN_ELEMENT_TYPE_UINT16:
         (*data) = (float)(*((uint16_t *)param_data));
-        return sizeof(uint16_t);
+        break;
 
     case ODIN_ELEMENT_TYPE_INT32:
         (*data) = (float)(*((int32_t *)param_data));
@@ -308,17 +339,27 @@ int ODIN_parameter_get_number(ODIN_parameter_t *parameter, const uint8_t *param_
 
     case ODIN_ELEMENT_TYPE_BOOL:
         (*data) = (float)(*((bool *)param_data));
-        return sizeof(bool);
+        break;
 
     default:
         return ODIN_ERROR;
     }
+
+    return ODIN_SUCCESS;
 }
 
-int ODIN_parameter_set_number(ODIN_parameter_t *parameter, uint8_t *buffer, size_t size, float data)
+/**
+ * @brief Method to set a parameter as a floating point number
+ *
+ * @param parameter Pointer to the parameter
+ * @param buffer Pointer to the data buffer
+ * @param size Size of the data buffer
+ * @param data Data to set
+ *
+ * @return int error code
+ */
+int ODIN_parameter_write_float(ODIN_parameter_t *parameter, uint8_t *buffer, size_t size, float data)
 {
-    LOG_DEBUG(TAG, "Checking size %d >= %d", size, parameter->size);
-
     if (size < parameter->size)
     {
         return ODIN_ERROR_SIZE_MISMATCH;
@@ -328,125 +369,67 @@ int ODIN_parameter_set_number(ODIN_parameter_t *parameter, uint8_t *buffer, size
     {
     case ODIN_ELEMENT_TYPE_FLOAT:
         *((float *)buffer) = data;
-        return sizeof(float);
+        break;
 
     case ODIN_ELEMENT_TYPE_DOUBLE:
         *((double *)buffer) = data;
-        return sizeof(double);
+        break;
 
     case ODIN_ELEMENT_TYPE_INT8:
         *((int8_t *)buffer) = (int8_t)data;
-        return sizeof(int8_t);
+        break;
 
     case ODIN_ELEMENT_TYPE_UINT8:
         *((uint8_t *)buffer) = (uint8_t)data;
-        return sizeof(uint8_t);
+        break;
 
     case ODIN_ELEMENT_TYPE_INT16:
         *((int16_t *)buffer) = (int16_t)data;
-        return sizeof(int16_t);
+        break;
 
     case ODIN_ELEMENT_TYPE_UINT16:
         *((uint16_t *)buffer) = (uint16_t)data;
-        return sizeof(uint16_t);
+        break;
 
     case ODIN_ELEMENT_TYPE_INT32:
         *((int32_t *)buffer) = (int32_t)data;
-        return sizeof(int32_t);
+        break;
 
     case ODIN_ELEMENT_TYPE_UINT32:
         *((uint32_t *)buffer) = (uint32_t)data;
-        return sizeof(uint32_t);
+        break;
 
     case ODIN_ELEMENT_TYPE_BOOL:
         *((bool *)buffer) = data;
-        return sizeof(bool);
+        break;
 
     default:
         return ODIN_ERROR;
     }
+    return ODIN_SUCCESS;
 }
 
-int ODIN_parameter_write_as_uint16(ODIN_parameter_t *parameter, uint16_t data, uint16_t access_group)
+int ODIN_parameter_get_primitive_size(ODIN_parameter_t *parameter)
 {
-    if (parameter->type != ODIN_ELEMENT_TYPE_UINT16)
+    switch (parameter->type)
     {
-        return ODIN_ERROR;
+    case ODIN_ELEMENT_TYPE_UINT8:
+    case ODIN_ELEMENT_TYPE_INT8:
+        return 1;
+    case ODIN_ELEMENT_TYPE_UINT16:
+    case ODIN_ELEMENT_TYPE_INT16:
+        return 2;
+    case ODIN_ELEMENT_TYPE_UINT32:
+    case ODIN_ELEMENT_TYPE_INT32:
+    case ODIN_ELEMENT_TYPE_FLOAT:
+        return 4;
+    case ODIN_ELEMENT_TYPE_DOUBLE:
+        return 8;
+    case ODIN_ELEMENT_TYPE_CHAR:
+        return 1;
+    case ODIN_ELEMENT_TYPE_BOOL:
+        return 1;
+    default:
+        return 0;
     }
-    
-    return ODIN_parameter_write(parameter, &data, 2, access_group);
-}
-
-int ODIN_parameter_read_as_uint16(ODIN_parameter_t *parameter, uint16_t *data, uint16_t access_group)
-{
-    return ODIN_parameter_read(parameter, data, 2, access_group);
-}
-int ODIN_parameter_write_as_int16(ODIN_parameter_t *parameter, int16_t data, uint16_t access_group)
-{
-    return ODIN_parameter_write(parameter, &data, 2, access_group);
-}
-
-int ODIN_parameter_read_as_int16(ODIN_parameter_t *parameter, int16_t *data, uint16_t access_group)
-{
-    return ODIN_parameter_read(parameter, data, 2, access_group);
-}
-
-int ODIN_parameter_write_as_uint32(ODIN_parameter_t *parameter, uint32_t data, uint16_t access_group)
-{
-    return ODIN_parameter_write(parameter, &data, 4, access_group);
-}
-
-int ODIN_parameter_read_as_uint32(ODIN_parameter_t *parameter, uint32_t *data, uint16_t access_group)
-{
-    return ODIN_parameter_read(parameter, data, 4, access_group);
-}
-
-int ODIN_parameter_write_as_int32(ODIN_parameter_t *parameter, int32_t data, uint16_t access_group)
-{
-    return ODIN_parameter_write(parameter, &data, 4, access_group);
-}
-
-int ODIN_parameter_read_as_int32(ODIN_parameter_t *parameter, int32_t *data, uint16_t access_group)
-{
-    return ODIN_parameter_read(parameter, data, 4, access_group);
-}
-
-int ODIN_parameter_write_as_float(ODIN_parameter_t *parameter, float data, uint16_t access_group)
-{
-    return ODIN_parameter_write(parameter, &data, 4, access_group);
-}
-
-int ODIN_parameter_read_as_float(ODIN_parameter_t *parameter, float *data, uint16_t access_group)
-{
-    return ODIN_parameter_read(parameter, data, 4, access_group);
-}
-
-int ODIN_parameter_write_as_uint8(ODIN_parameter_t *parameter, uint8_t data, uint16_t access_group)
-{
-    return ODIN_parameter_write(parameter, &data, 1, access_group);
-}
-
-int ODIN_parameter_read_as_uint8(ODIN_parameter_t *parameter, uint8_t *data, uint16_t access_group)
-{
-    return ODIN_parameter_read(parameter, data, 1, access_group);
-}
-
-int ODIN_parameter_write_as_int8(ODIN_parameter_t *parameter, int8_t data, uint16_t access_group)
-{
-    return ODIN_parameter_write(parameter, &data, 1, access_group);
-}
-
-int ODIN_parameter_read_as_int8(ODIN_parameter_t *parameter, int8_t *data, uint16_t access_group)
-{
-    return ODIN_parameter_read(parameter, data, 1, access_group);
-}
-
-int ODIN_parameter_write_as_bool(ODIN_parameter_t *parameter, bool data, uint16_t access_group)
-{
-    return ODIN_parameter_write(parameter, &data, 1, access_group);
-}
-
-int ODIN_parameter_read_as_bool(ODIN_parameter_t *parameter, bool *data, uint16_t access_group)
-{
-    return ODIN_parameter_read(parameter, data, 1, access_group);
 }
