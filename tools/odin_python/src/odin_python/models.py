@@ -4,6 +4,7 @@ import csnake as cc
 from csnake import CodeWriter, FormattedLiteral
 from pydantic import BaseModel, Field, model_validator
 from strenum import StrEnum
+import struct
 
 from .extensions import (
     EXENSIONS,
@@ -13,6 +14,7 @@ from .extensions import (
 from .types import CFormatEnum, CTypeEnum
 from .utils.csnake_custom import StructVariable
 from .utils.string import escape_string
+from pydantic_yaml import parse_yaml_file_as
 
 ODIN_STORE_TYPE = "ODIN_store_t"
 ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
@@ -140,6 +142,32 @@ class ParameterModel(BaseModel):
         )
         return var
 
+    def to_values(self, data: bytes):
+        if self.length is not None:
+            return data
+        
+        if self.primitive == CTypeEnum.UINT8:
+            return struct.unpack("B", data)[0]
+        if self.primitive == CTypeEnum.INT8:
+            return struct.unpack("b", data)[0]
+        if self.primitive == CTypeEnum.UINT16:
+            return struct.unpack("H", data)[0]
+        if self.primitive == CTypeEnum.INT16:
+            return struct.unpack("h", data)[0]
+        if self.primitive == CTypeEnum.UINT32:
+            return struct.unpack("I", data)[0]
+        if self.primitive == CTypeEnum.INT32:
+            return struct.unpack("i", data)[0]
+        if self.primitive == CTypeEnum.UINT64:
+            return struct.unpack("Q", data)[0]
+        if self.primitive == CTypeEnum.INT64:
+            return struct.unpack("q", data)[0]
+        if self.primitive == CTypeEnum.FLOAT:
+            return struct.unpack("f", data)[0]
+        if self.primitive == CTypeEnum.DOUBLE:
+            return struct.unpack("d", data)[0]
+        if self.primitive == CTypeEnum.BOOL:
+            return bool(data[0])
 
 class DeviceGroupModel(BaseModel):
     id: int
@@ -320,6 +348,10 @@ class MainModel(BaseModel):
             },
         )
 
+    @classmethod
+    def from_file(cls, file_path: str) -> "MainModel":
+        return parse_yaml_file_as(MainModel, file_path)
+
 
 class AccessType(StrEnum):
     READ = "READ"
@@ -333,9 +365,9 @@ class AccessType(StrEnum):
             return "ODIN_READ_ACCESS"
         if self == AccessType.WRITE:
             return "ODIN_WRITE_ACCESS"
-        
+
     @staticmethod
-    def to_access_type_list( opts: str) -> List["AccessType"]:
+    def to_access_type_list(opts: str) -> List["AccessType"]:
         # input R or RW or W
         acces = []
         if "R" in opts:
@@ -343,6 +375,7 @@ class AccessType(StrEnum):
         if "W" in opts:
             acces.append(AccessType.WRITE)
         return acces
+
 
 class AccessOptions:
     base_shift: int
@@ -406,20 +439,17 @@ class AccessOptionsGenerator:
             cw.add_line("")
 
     def add_log_values(self, cw: CodeWriter):
-
         log_items = []
         for group_name, access_group in self.access_groups.items():
             if not access_group.options.log:
                 continue
 
             for access_type in AccessType.to_access_type_list(access_group.options.log):
-                log_items.append(
-                    f"{access_type.to_flag(access_group.name)}"
-                )
+                log_items.append(f"{access_type.to_flag(access_group.name)}")
 
         if len(log_items) == 0:
             log_items.append(0)
-            
+
         cw.add_line(
             f"uint32_t ODIN_access_log_values = {' | '.join([item for item in log_items])};"
         )
