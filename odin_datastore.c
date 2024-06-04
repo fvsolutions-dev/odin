@@ -245,7 +245,7 @@ int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t size, u
 
     if (size != parameter->size)
     {
-        LOG_ERR(TAG, "Write size mismatch, (%d != %d), parameter %s", size, parameter->size, parameter->name);
+        LOG_ERR(TAG, "Write size mismatch, (%d != %d), parameter '%s'", size, parameter->size, parameter->name);
         return ODIN_ERROR_SIZE_MISMATCH;
     }
 
