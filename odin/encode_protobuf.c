@@ -258,7 +258,7 @@ int ODIN_protobuff_import_from_file(ODIN_store_t *store, const char *filename, u
     if (file == NULL)
     {
         LOG_ERR(TAG, "Failed to open file %s", filename);
-        return ODIN_ERROR;
+        return ODIN_ERR_FILE_NOT_FOUND;
     }
 
     // Determine the file size
