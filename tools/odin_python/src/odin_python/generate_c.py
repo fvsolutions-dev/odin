@@ -80,33 +80,3 @@ def generate_source(config: MainModel) -> str:
     file = str(cw)
     return file
 
-
-NAME = "ODin"
-
-
-@click.command()
-@click.argument("input_file")
-@click.argument("output_dir")
-@click.option("name", "--name", default=NAME, help="Name of the output files")
-def cli(input_file: str, output_dir: str, name: str) -> None:
-    assert os.path.exists(input_file), f"Input file {input_file} does not exist"
-    assert os.path.exists(output_dir), f"Output directory {output_dir} does not exist"
-    # Check if the input file is a valid yaml file
-    assert input_file.endswith(".yaml"), "Input file must be a yaml file"
-    print(f"Converting {input_file} to {output_dir}")
-
-    config: MainModel = parse_yaml_file_as(MainModel, input_file)
-
-    # Write to file
-    with open(os.path.join(output_dir, f"{name}.h"), "w") as f:
-        f.write(generate_header(config))
-
-    # Write to file
-    with open(os.path.join(output_dir, f"{name}.c"), "w") as f:
-        f.write(generate_source(config))
-
-    print("Conversion complete")
-
-
-if __name__ == "__main__":
-    cli()
