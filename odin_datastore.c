@@ -6,7 +6,7 @@
 #include "srv_logging.h"
 #include "odin/stdio_dump.h"
 
-const char *TAG = "ODIBN";
+const char *TAG = "ODIN";
 
 /**
  * @brief Method to find a ODIN group by name
