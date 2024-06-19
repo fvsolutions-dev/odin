@@ -251,6 +251,12 @@ class MainModel(BaseModel):
     variable_names: CNames = Field(
         description="Defines the names of the variables.", default_factory=CNames
     )
+
+    groups: Dict[str, List[str]] = Field(
+        description="Defines the groups and the parameters that belong to them.",
+        default_factory=dict,
+    )
+
     datastore: Dict[str, DeviceGroupModel] = Field(
         description="Holds all the parameters."
     )
