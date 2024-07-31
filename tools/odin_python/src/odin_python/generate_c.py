@@ -44,6 +44,8 @@ def generate_header(config: MainModel) -> str:
     cw = CodeWriter()
     cw.add_line("#include <stdint.h>")
     cw.add_line('#include "odin_datastore.h"')
+    cw.add_line('#ifndef ODIN_DATASTORE_H_')
+    cw.add_line('#define ODIN_DATASTORE_H_')
     cw.add_line("")
 
     opt_gen = AccessOptionsGenerator(config)
@@ -76,6 +78,7 @@ def generate_header(config: MainModel) -> str:
         _group = convert_to_virtual_group(config, group_name, parameters)
         cw.add_variable_declaration(_group.as_reference(), extern=True)
 
+    cw.add_line("#endif")
 
     return str(cw)
 
