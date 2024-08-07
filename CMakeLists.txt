@@ -6,4 +6,4 @@ idf_component_register(SRCS "odin_datastore.c"
                             "odin/stdio_dump.c"
                             "odin/extensions.c"
                             INCLUDE_DIRS "."
-                            REQUIRES nanopb srv_logging)
+                            REQUIRES nanopb logging)
