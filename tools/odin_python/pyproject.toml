@@ -6,8 +6,8 @@ authors = ["floris vernieuwe <floris@vernieuwe.eu>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.11"
-csnake = "^0.3.5"
+python = ">=3.9,<3.13"
+csnake = "^0.4"
 poetry = "^1.8.3"
 click = "^8.1.7"
 strenum = "^0.4.15"
