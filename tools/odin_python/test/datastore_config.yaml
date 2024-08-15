@@ -12,7 +12,7 @@ datastore:
       other: RW
 
     data:
-      variable:
+      customn_variable:
         id: 0x1
         primitive: uint16_t
         description: |
@@ -20,3 +20,9 @@ datastore:
         default: 0
 
 
+      variable:
+        id: 0x1
+        primitive: uint16_t
+        description: |
+          something
+        default: 0

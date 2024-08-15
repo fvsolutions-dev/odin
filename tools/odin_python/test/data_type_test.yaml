@@ -1,0 +1,58 @@
+types:
+  button_state:
+    type: enumerator
+    values:
+      PRESSED: 0
+      RELEASED: 1
+
+  event_type:
+    type: enumerator
+    values:
+      UNKNOWN: 0
+      PRESSED: 1
+      RELEASE: 2
+      UNDEFINED: 3
+
+  button_field:
+    type: structured
+    structure:
+      button_state:
+        primitive: button_state
+        length_bits: 1
+        description: "State of the button"
+        default: RELEASED
+
+      event_type:
+        primitive: event_type
+        length_bits: 2
+        description: "Type of the event"
+        default: UNKNOWN
+
+      reserved:
+        primitive: uint8_t
+        length_bits: 1
+        default: 0
+
+      nonce:
+        primitive: uint8_t
+        length_bits: 4
+        description: "Random number"
+        default: 0
+
+variables:
+  button1_state:
+    id: 0x1
+    primitive: button_field
+    description: |
+      the state of button 1
+
+    default:
+      { button_state: PRESSED, event_type: PRESSED, reserved: 0, nonce: 2 }
+
+  simple_float:
+    id: 0x1
+    primitive: float
+    description: |
+      A floating point number
+
+    default: 1.23
