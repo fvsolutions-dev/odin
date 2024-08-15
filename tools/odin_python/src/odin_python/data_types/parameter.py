@@ -7,7 +7,8 @@ from pydantic import BaseModel, Field, PrivateAttr
 
 from .types import StandardCTypesEnum
 from typing import Any, Dict
-from .data_types import StructDataType, EnumDataType
+from .data_types import Structure, Enumerator, DataTypeABC
+
 
 class ParameterModel(BaseModel):
     """Stores all the information for a parameter."""
@@ -15,8 +16,8 @@ class ParameterModel(BaseModel):
     _name: str = PrivateAttr()
     _group_name: str = PrivateAttr()
     _group_id: int = PrivateAttr()
-    _types: Dict[str, StructDataType | EnumDataType] = PrivateAttr()
-    
+    _types: Dict[str, Structure | Enumerator] = PrivateAttr()
+
     id: int
     primitive: StandardCTypesEnum | str = Field(union_mode="left_to_right")
 
@@ -31,14 +32,14 @@ class ParameterModel(BaseModel):
                 value=self.default,
             )
         else:
-            
-            type = self._types[self.primitive]
-            
-            model = type.to_model(self._types)
+            type: DataTypeABC = self._types[self.primitive]
+
+            model = type.model
             print(model, self.primitive)
-             
+            c = type.initialise_model(self.default)
+
             # Initialize the model with the default value
-            
+
             # print(value.to_string())
             return cc.Variable(
                 name=self._name,

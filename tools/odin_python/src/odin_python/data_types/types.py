@@ -4,6 +4,7 @@ import csnake as cc
 from csnake import CodeWriter, FormattedLiteral
 from pydantic import BaseModel, Field, model_validator
 from strenum import StrEnum
+from typing import Any
 
 from ..extensions import (
     EXENSIONS,
@@ -74,7 +75,8 @@ class StandardCTypesEnum(StrEnum):
         if self == StandardCTypesEnum.BOOL:
             return struct.pack('?', data)
     
-    def to_type(self) -> Type:
+    @property
+    def model(self) -> Type:
         if self in [StandardCTypesEnum.UINT8, StandardCTypesEnum.INT8]:
             return int
         if self in [StandardCTypesEnum.UINT16, StandardCTypesEnum.INT16]:
@@ -93,7 +95,12 @@ class StandardCTypesEnum(StrEnum):
             return bool
         raise ValueError(f"Unsupported primitive type {self}")
         
+    def initialise_model(self, value: Any):
+        if value is None:
+            return None
         
+        return self.model(value)
+    
 class CFormatEnum(StrEnum):
     NUMBER = "number"
     DECIMAL = "decimal"

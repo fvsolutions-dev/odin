@@ -13,9 +13,41 @@ types:
       RELEASE: 2
       UNDEFINED: 3
 
+  button_field_sub:
+    type: structured
+    structure:
+      button_state:
+        primitive: button_state
+        length_bits: 1
+        description: "State of the button"
+        default: RELEASED
+
+      event_type:
+        primitive: event_type
+        length_bits: 2
+        description: "Type of the event"
+        default: UNKNOWN
+
+      reserved:
+        primitive: uint8_t
+        length_bits: 1
+        # default: 0
+
+      nonce:
+        primitive: uint8_t
+        length_bits: 4
+        description: "Random number"
+        default: 0
+
   button_field:
     type: structured
     structure:
+      test:
+        primitive: button_field_sub
+        length_bits: 8
+        description: "Test field"
+        default: { nonce: 60, button_state: PRESSED }
+
       button_state:
         primitive: button_state
         length_bits: 1
@@ -47,7 +79,7 @@ variables:
       the state of button 1
 
     default:
-      { button_state: PRESSED, event_type: PRESSED, reserved: 0, nonce: 2 }
+      {nonce: 2 }
 
   simple_float:
     id: 0x1
