@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Union
+from typing import Dict, List, Union
 
 import csnake as cc
 from csnake import CodeWriter, FormattedLiteral
@@ -9,7 +9,6 @@ import struct
 from .extensions import (
     EXENSIONS,
     ReferenceParameterExtensionModel,
-    ValidationParameterExtensionModel,
 )
 from .types import CFormatEnum, CTypeEnum
 from .utils.csnake_custom import StructVariable

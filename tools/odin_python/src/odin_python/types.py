@@ -1,16 +1,7 @@
-from typing import Dict, List, Literal, Union
+from typing import Union
 
-import csnake as cc
-from csnake import CodeWriter, FormattedLiteral
-from pydantic import BaseModel, Field, model_validator
 from strenum import StrEnum
 
-from .extensions import (
-    EXENSIONS,
-    ReferenceParameterExtensionModel,
-    ValidationParameterExtensionModel,
-)
-from .utils.csnake_custom import StructVariable
 import struct
 
 

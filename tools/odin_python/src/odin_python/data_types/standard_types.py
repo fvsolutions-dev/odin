@@ -1,19 +1,12 @@
-from typing import Dict, List, Literal, Union
+from typing import Union
 
 import csnake as cc
-from csnake import CodeWriter, FormattedLiteral
-from pydantic import BaseModel, Field, model_validator
 from strenum import StrEnum
 from typing import Any
 
-from ..extensions import (
-    EXENSIONS,
-    ReferenceParameterExtensionModel,
-    ValidationParameterExtensionModel,
-)
-from ..utils.csnake_custom import StructVariable
 import struct
 from typing import Type
+
 
 class StandardCTypesEnum(StrEnum):
     UINT8 = "uint8_t"
@@ -39,42 +32,59 @@ class StandardCTypesEnum(StrEnum):
         else:
             return f"sizeof({self.value})*{length}"
 
-    def to_python_primitive(self,data:bytes) -> Union[int,float,str,bool]:
+    def to_c_object(
+        self, name: str, default: Any, length: int | None = None
+    ) -> cc.Variable:
+        return cc.Variable(
+            name=name,
+            primitive=self.value,
+            value=default,
+            array=[length] if length is not None else None,
+        )
+
+    def to_c_value(self, value: Any) -> str:
+        return str(value)
+
+    def to_python_primitive(self, data: bytes) -> Union[int, float, str, bool]:
         if self in [StandardCTypesEnum.UINT8, StandardCTypesEnum.INT8]:
-            return struct.unpack('b', data)[0]
+            return struct.unpack("b", data)[0]
         if self in [StandardCTypesEnum.UINT16, StandardCTypesEnum.INT16]:
-            return struct.unpack('h', data)[0]
+            return struct.unpack("h", data)[0]
         if self in [StandardCTypesEnum.UINT32, StandardCTypesEnum.INT32]:
-            return struct.unpack('i', data)[0]
+            return struct.unpack("i", data)[0]
         if self in [StandardCTypesEnum.UINT64, StandardCTypesEnum.INT64]:
-            return struct.unpack('q', data)[0]
+            return struct.unpack("q", data)[0]
         if self == StandardCTypesEnum.FLOAT:
-            return struct.unpack('f', data)[0]
+            return struct.unpack("f", data)[0]
         if self == StandardCTypesEnum.DOUBLE:
-            return struct.unpack('d', data)[0]
+            return struct.unpack("d", data)[0]
         if self == StandardCTypesEnum.CHAR:
-            return struct.unpack('c', data)[0]
+            return struct.unpack("c", data)[0]
         if self == StandardCTypesEnum.BOOL:
-            return struct.unpack('?', data)[0]
-    
-    def to_c_primitive(self,data:Union[int,float,str,bool]) -> bytes:
+            return struct.unpack("?", data)[0]
+
+        raise ValueError(f"Unsupported primitive type {self}")
+
+    def to_c_primitive(self, data: Union[int, float, str, bool]) -> bytes:
         if self in [StandardCTypesEnum.UINT8, StandardCTypesEnum.INT8]:
-            return struct.pack('b', data)
+            return struct.pack("b", data)
         if self in [StandardCTypesEnum.UINT16, StandardCTypesEnum.INT16]:
-            return struct.pack('h', data)
+            return struct.pack("h", data)
         if self in [StandardCTypesEnum.UINT32, StandardCTypesEnum.INT32]:
-            return struct.pack('i', data)
+            return struct.pack("i", data)
         if self in [StandardCTypesEnum.UINT64, StandardCTypesEnum.INT64]:
-            return struct.pack('q', data)
+            return struct.pack("q", data)
         if self == StandardCTypesEnum.FLOAT:
-            return struct.pack('f', data)
+            return struct.pack("f", data)
         if self == StandardCTypesEnum.DOUBLE:
-            return struct.pack('d', data)
+            return struct.pack("d", data)
         if self == StandardCTypesEnum.CHAR:
-            return struct.pack('c', data)
+            return struct.pack("c", data)
         if self == StandardCTypesEnum.BOOL:
-            return struct.pack('?', data)
-    
+            return struct.pack("?", data)
+
+        raise ValueError(f"Unsupported primitive type {self}")
+
     @property
     def model(self) -> Type:
         if self in [StandardCTypesEnum.UINT8, StandardCTypesEnum.INT8]:
@@ -94,13 +104,14 @@ class StandardCTypesEnum(StrEnum):
         if self == StandardCTypesEnum.BOOL:
             return bool
         raise ValueError(f"Unsupported primitive type {self}")
-        
+
     def initialise_model(self, value: Any):
         if value is None:
             return None
-        
+
         return self.model(value)
-    
+
+
 class CFormatEnum(StrEnum):
     NUMBER = "number"
     DECIMAL = "decimal"

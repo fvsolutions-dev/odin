@@ -1,6 +1,6 @@
 access_groups:
   internal: { force: RW }
-  other: {force: RW}
+  other: { force: RW }
 
 datastore:
   test_data:
@@ -18,7 +18,6 @@ datastore:
         description: |
           something
         default: 0
-
 
       variable:
         id: 0x1

@@ -1,51 +1,45 @@
-import csnake as cc
+from typing import Any, Dict
+
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 # from .models import AccessOptionsGenerator, MainModel, DeviceGroupModel
-from pydantic_yaml import parse_yaml_file_as
-from typing import List
-from pydantic import BaseModel, Field, PrivateAttr
 
-from .types import StandardCTypesEnum
-from typing import Any, Dict
-from .data_types import Structure, Enumerator, DataTypeABC
+from ..data_types.custom_enum import EnumeratorDataType
+from ..data_types.custom_structure import GenericDataType, StructureDataType
+from ..data_types.standard_types import StandardCTypesEnum
 
 
 class ParameterModel(BaseModel):
     """Stores all the information for a parameter."""
 
+    model_config = ConfigDict(extra="forbid")
+
     _name: str = PrivateAttr()
     _group_name: str = PrivateAttr()
     _group_id: int = PrivateAttr()
-    _types: Dict[str, Structure | Enumerator] = PrivateAttr()
+    _types: Dict[str, StructureDataType | EnumeratorDataType] = PrivateAttr()
 
     id: int
     primitive: StandardCTypesEnum | str = Field(union_mode="left_to_right")
 
-    default: Any
-    description: str = ""
+    default: Any | None = None
+    description: str | None = None
+
+    @property
+    def primitive_type(self) -> StandardCTypesEnum | GenericDataType:
+        if isinstance(self.primitive, StandardCTypesEnum):
+            return self.primitive
+        return self._types[self.primitive]
 
     def to_c_object(self):
-        if isinstance(self.primitive, StandardCTypesEnum):
-            return cc.Variable(
-                name=self._name,
-                primitive=self.primitive.value,
-                value=self.default,
-            )
-        else:
-            type: DataTypeABC = self._types[self.primitive]
+        return self.primitive_type.to_c_object(self._name, self.default)
 
-            model = type.model
-            print(model, self.primitive)
-            c = type.initialise_model(self.default)
 
-            # Initialize the model with the default value
+class ParameterArrayModel(ParameterModel):
+    length: int | None = None
 
-            # print(value.to_string())
-            return cc.Variable(
-                name=self._name,
-                primitive=self.primitive,
-                value=model.as_reference(self.default),
-            )
+    def to_c_object(self):
+        return self.primitive_type.to_c_object(self._name, self.default, self.length)
 
     # _variable_names: CNames | None = None
 

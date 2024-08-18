@@ -1,9 +1,6 @@
-import os
 
-import click
 from csnake import CodeWriter
 from .models import AccessOptionsGenerator, MainModel, DeviceGroupModel
-from pydantic_yaml import parse_yaml_file_as
 from typing import List
 
 
