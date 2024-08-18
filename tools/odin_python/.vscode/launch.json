@@ -8,7 +8,7 @@
             "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "test/tes_data_type.py",
+            "program": "test/test.py",
             "console": "integratedTerminal"
         }
     ]

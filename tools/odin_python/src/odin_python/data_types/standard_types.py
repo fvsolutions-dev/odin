@@ -32,7 +32,7 @@ class StandardCTypesEnum(StrEnum):
         else:
             return f"sizeof({self.value})*{length}"
 
-    def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+    def to_c_initialiser(self, types, name: str, default: Any) -> cc.Variable:
         return cc.Variable(
             name=name,
             primitive=self.value,
@@ -40,7 +40,7 @@ class StandardCTypesEnum(StrEnum):
         )
 
     def to_c_array_initaliser(
-        self, name: str, default: Any, length: int
+        self, types, name: str, default: Any, length: int
     ) -> cc.Variable:
         return cc.Variable(
             name=name,
@@ -49,7 +49,7 @@ class StandardCTypesEnum(StrEnum):
             array=[length],
         )
 
-    def to_c_value(self, value: Any) -> cc.TextModifier:
+    def to_c_value(self, types, value: Any) -> cc.TextModifier:
         return cc.TextModifier(str(value))
 
     def to_python_primitive(self, data: bytes) -> Union[int, float, str, bool]:

@@ -17,6 +17,6 @@ class CustomParameterExtensionModel(BaseModel):
             value,  # type: ignore
             string_formatter=str,
         )
-    
+
     def required_references(self) -> str:
         return f"extern ODIN_extension_ops_t {self.reference};"

@@ -1,0 +1,45 @@
+extensions:
+  - "test/configs/common/custom_types.yaml"
+
+groups:
+  test_group:
+    id: 0xA
+    description: "Group description"
+    
+    data:
+      state:
+        id: 0x1
+        primitive: state_t
+        description: |
+          the state of the left device
+
+      no_default_state:
+        id: 0x1
+        primitive: state_t
+        length: 5
+        description: |
+          the state of the left device
+
+      no_default_direction:
+        id: 0x1
+        primitive: direction_t
+        length: 5
+        description: |
+          A direction
+
+      partial_default_state:
+        id: 0x2
+        primitive: state_t
+        length: 4
+        description: |
+          the state of the left device
+
+        default:
+          - A_state: LEFT
+            value_test: 0x1
+          - A_state: RIGHT
+            value_test: 2
+          - A_state: UP
+            value_test: 3
+          - A_state: DOWN
+            value_test: 4

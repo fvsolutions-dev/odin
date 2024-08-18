@@ -17,7 +17,6 @@ class ParameterModel(BaseModel):
     _name: str = PrivateAttr()
     _group_name: str = PrivateAttr()
     _group_id: int = PrivateAttr()
-    _types: Dict[str, StructureDataType | EnumeratorDataType] = PrivateAttr()
 
     id: int
     primitive: StandardCTypesEnum | str = Field(union_mode="left_to_right")
@@ -25,21 +24,28 @@ class ParameterModel(BaseModel):
     default: Any | None = None
     description: str | None = None
 
-    @property
-    def primitive_type(self) -> StandardCTypesEnum | GenericDataType:
+    def primitive_type(self, types) -> StandardCTypesEnum | GenericDataType:
         if isinstance(self.primitive, StandardCTypesEnum):
             return self.primitive
-        return self._types[self.primitive]
+        return types[self.primitive]
 
-    def to_c_initialiser(self):
-        return self.primitive_type.to_c_initialiser(self._name, self.default)
+    def to_c_initialiser(
+        self, types: Dict[str, EnumeratorDataType | StructureDataType]
+    ) -> Any:
+        return self.primitive_type(types).to_c_initialiser(
+            types, self._name, self.default
+        )
 
 
 class ParameterArrayModel(ParameterModel):
     length: int
 
-    def to_c_initialiser(self):
-        return self.primitive_type.to_c_array_initaliser(self._name, self.default, self.length)
+    def to_c_initialiser(
+        self, types: Dict[str, EnumeratorDataType | StructureDataType]
+    ):
+        return self.primitive_type(types).to_c_array_initaliser(
+            types, self._name, self.default, self.length
+        )
 
     # _variable_names: CNames | None = None
 

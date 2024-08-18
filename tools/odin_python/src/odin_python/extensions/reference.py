@@ -11,9 +11,7 @@ class ReferenceParameterExtensionModel(BaseModel):
     scale: float = 1.0
 
     def as_literal(self) -> FormattedLiteral:
-        value = (
-            f"(ODIN_extension_t[]){{ {{ .ops = &parameter_mapping_extension, .data = &(mapped_parameter_t){{ .reference = &{self.reference}, .offset = {self.offset}, .scale = {self.scale} }} }} }}"
-        )
+        value = f"(ODIN_extension_t[]){{ {{ .ops = &parameter_mapping_extension, .data = &(mapped_parameter_t){{ .reference = &{self.reference}, .offset = {self.offset}, .scale = {self.scale} }} }} }}"
 
         return FormattedLiteral(
             value,  # type: ignore
@@ -22,4 +20,3 @@ class ReferenceParameterExtensionModel(BaseModel):
 
     def required_references(self) -> None:
         return None
-

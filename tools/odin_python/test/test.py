@@ -2,7 +2,11 @@ from parser import TestReader
 from pydantic_yaml import parse_yaml_file_as
 import os
 
-FILES = ["test/configs/single_variables.yaml", "test/configs/array_variables.yaml"]
+FILES = [
+    "test/configs/single_variables.yaml",
+    "test/configs/array_variables.yaml",
+    "test/configs/group_variables.yaml",
+]
 for file in FILES:
     model = parse_yaml_file_as(TestReader, file)
     file_name = file.split("/")[-1].split(".")[0]

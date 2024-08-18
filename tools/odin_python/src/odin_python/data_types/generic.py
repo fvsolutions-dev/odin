@@ -22,7 +22,7 @@ class GenericDataType(BaseModel, ABC):
 
     @abstractmethod
     def to_c_initialiser(
-        self, name: str, default: Dict[str, Any] | None
+        self, types: Dict[str, Any], name: str, default: Dict[str, Any] | None
     ) -> cc.Variable: ...
 
     """Convert the type to a C initialiser, used to initialise the type in C code
@@ -30,12 +30,15 @@ class GenericDataType(BaseModel, ABC):
 
     @abstractmethod
     def to_c_array_initaliser(
-        self, name: str, default: Dict[str, Any] | None, lenght: int
+        self,
+        types: Dict[str, Any],
+        name: str,
+        default: Dict[str, Any] | None,
+        lenght: int,
     ) -> cc.Variable: ...
 
     """Convert the type to a C array initialiser, used to initialise an array of the type in C code
     """
 
     @abstractmethod
-    def to_c_value(self, value: Any): ...
-    
+    def to_c_value(self, types: Dict[str, Any], value: Any): ...

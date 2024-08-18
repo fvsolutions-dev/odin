@@ -2,33 +2,38 @@ from typing import Dict
 
 from odin_python.data_types.custom_structure import StructureDataType
 from odin_python.data_types.custom_enum import EnumeratorDataType
-from odin_python.data_types.generic import GenericDataType
 from odin_python.parameter.parameter import ParameterModel, ParameterArrayModel
 from pydantic import BaseModel, model_validator, Field
 from pydantic_yaml import parse_yaml_file_as
 from typing import List
 import csnake as cc
+from odin_python.parameter.group import ParameterGroupModel
+from odin_python.parameter.store import ParameterStoreModel
 
 
 class TestReader(BaseModel):
     c_dependencies: List[str] = Field(default_factory=list)
 
     extensions: List[str] = Field(default_factory=list)
-    types: Dict[str, StructureDataType | EnumeratorDataType] = Field(default_factory=dict)
+    types: Dict[str, StructureDataType | EnumeratorDataType] = Field(
+        default_factory=dict
+    )
     variables: Dict[str, ParameterModel | ParameterArrayModel] = Field(
         default_factory=dict
     )
+    groups: Dict[str, ParameterGroupModel] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def populate_names(self):
         for k, v in self.types.items():
             v._typename = k
-            if isinstance(v, StructureDataType):
-                v._types = self.types
 
         for k, v in self.variables.items():
             v._name = k
-            v._types = self.types
+
+        for k, v in self.groups.items():
+            v._name = k
+
         return self
 
     @model_validator(mode="after")
@@ -53,12 +58,25 @@ class TestReader(BaseModel):
                 cw.add_enum(objs)
             # cw.add_variable_declaration(objs)
             cw.add_line("")
-            
+
+        datastore = ParameterStoreModel(name="ODIN_ram", groups=self.groups)
+        cw.add_struct(datastore.to_recursive_typedef(self.types))
+        # cw.add_struct(datastore.to_c_typedef(self.types))
         cw.add_line("")
+
+        cw.add_line("")
+
         for k, v in self.variables.items():
-            objs = v.to_c_initialiser()
+            objs = v.to_c_initialiser(self.types)
             cw.add_variable_initialization(objs)
             cw.add_line("")
+
+        # for k, v in self.groups.items():
+        #     objs = v.to_c_initialiser(self.types)
+        #     cw.add_variable_initialization(objs)
+        #     cw.add_line("")
+
+        cw.add_variable_initialization(datastore.to_c_initialiser(self.types))
 
         file = str(cw)
         with open(target, "w") as f:

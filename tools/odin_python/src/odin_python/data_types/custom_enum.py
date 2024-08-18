@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal
+from typing import Any, Dict, List, Literal
 
 import csnake as cc
 
@@ -29,22 +29,26 @@ class EnumeratorDataType(GenericDataType):
         return enum
 
     def to_c_array_initaliser(
-        self, name: str, default: List[str | int] | str | int | None, length: int
+        self,
+        types: Dict[str, Any],
+        name: str,
+        default: List[str | int] | str | int | None,
+        length: int,
     ) -> cc.Variable:
         if default is None or isinstance(default, (str, int)):
             if default is None:
                 default = self.default
-                
+
             assert default is not None, f"Default value not set for {name}"
-            
-            _default = [self.to_c_value(default)] * length
+
+            _default = [self.to_c_value(types, default)] * length
         else:
             if isinstance(default, (str, int)):
-                _default = [self.to_c_value(default)] * length
+                _default = [self.to_c_value(types, default)] * length
             assert (
                 len(default) == length
             ), f"Length of {name} only has {len(default)} default values, but {length} are required"
-            _default = [self.to_c_value(v) for v in default]
+            _default = [self.to_c_value(types, v) for v in default]
 
         assert _default is not None, f"Default value not set for {name}"
 
@@ -57,6 +61,7 @@ class EnumeratorDataType(GenericDataType):
 
     def to_c_initialiser(
         self,
+        types: Dict[str, Any],
         name: str,
         default: str | int | None,
     ) -> cc.Variable:
@@ -68,10 +73,10 @@ class EnumeratorDataType(GenericDataType):
         return cc.Variable(
             name=name,
             primitive=self._typename,
-            value=self.to_c_value(default),  # type: ignore
+            value=self.to_c_value(types, default),  # type: ignore
         )
 
-    def to_c_value(self, value: str | int) -> cc.TextModifier:
+    def to_c_value(self, types: Dict[str, Any], value: str | int) -> cc.TextModifier:
         for k, v in self.values.items():
             if k == value or v == value:
                 return cc.TextModifier(self.apply_prefix(k.upper()))  # type: ignore

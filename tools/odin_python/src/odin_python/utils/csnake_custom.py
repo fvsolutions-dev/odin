@@ -2,10 +2,10 @@ from csnake import CodeWriterLite
 import csnake as cc
 from typing import Union
 
+
 class StructVariable(cc.Struct):
-    """Custom implementation of a struct to allow recursive struct generation
-    """
-    
+    """Custom implementation of a struct to allow recursive struct generation"""
+
     def add_struct(self, struct: cc.Struct):
         self.variables.append(struct)  # type: ignore
 

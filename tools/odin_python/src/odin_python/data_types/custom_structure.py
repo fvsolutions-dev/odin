@@ -7,6 +7,7 @@ from .generic import GenericDataType
 from .standard_types import StandardCTypesEnum
 from .custom_enum import EnumeratorDataType
 
+
 class StructureDataType(GenericDataType):
     class Member(BaseModel):
         _name: str = PrivateAttr()
@@ -39,8 +40,6 @@ class StructureDataType(GenericDataType):
 
     structure: Dict[str, Member]
 
-    _types: "Dict[str, StructureDataType|EnumeratorDataType]" = PrivateAttr()
-
     def to_c_typedef(self) -> cc.Struct:
         var = cc.Struct(
             name=self._typename,
@@ -54,20 +53,28 @@ class StructureDataType(GenericDataType):
 
         return var
 
-    def to_c_value(self, value: Dict[str, Any] | None) -> Dict[str, cc.TextModifier]:
+    def to_c_value(
+        self,
+        types: "Dict[str, StructureDataType|EnumeratorDataType]",
+        value: Dict[str, Any] | None,
+    ) -> Dict[str, cc.TextModifier]:
         fields = {}
         for k, v in self.structure.items():
-            type = v.to_type(self._types)
+            type = v.to_type(types)
             if value is None:
-                fields[k] = type.to_c_value(v.default)
+                fields[k] = type.to_c_value(types, v.default)
             elif k in value:
-                fields[k] = type.to_c_value(value[k])
+                fields[k] = type.to_c_value(types, value[k])
             else:
-                fields[k] = type.to_c_value(v.default)
+                fields[k] = type.to_c_value(types, v.default)
         return fields
 
     def to_c_array_initaliser(
-        self, name: str, default_item: List[Dict[str, Any]] | None, lenght: int
+        self,
+        types: "Dict[str, StructureDataType|EnumeratorDataType]",
+        name: str,
+        default_item: List[Dict[str, Any]] | None,
+        lenght: int,
     ) -> cc.Variable:
         if default_item is not None:
             assert len(default_item) == lenght, f"Length of {name} is not {lenght}"
@@ -82,13 +89,13 @@ class StructureDataType(GenericDataType):
                 default = None
 
             for k, v in self.structure.items():
-                type = v.to_type(self._types)
+                type = v.to_type(types)
                 if default is None:
-                    value = type.to_c_value(v.default)
+                    value = type.to_c_value(types, v.default)
                 elif k in default:
-                    value = type.to_c_value(default[k])
+                    value = type.to_c_value(types, default[k])
                 else:
-                    value = type.to_c_value(v.default)
+                    value = type.to_c_value(types, v.default)
 
                 fields[k] = value
             values.append(fields)
@@ -101,16 +108,21 @@ class StructureDataType(GenericDataType):
         )
         return ret
 
-    def to_c_initialiser(self, name: str, default: Dict[str, Any] | None) -> cc.Variable:
+    def to_c_initialiser(
+        self,
+        types: "Dict[str, StructureDataType|EnumeratorDataType]",
+        name: str,
+        default: Dict[str, Any] | None,
+    ) -> cc.Variable:
         fields = {}
         for k, v in self.structure.items():
-            type = v.to_type(self._types)
+            type = v.to_type(types)
             if default is None:
-                value = type.to_c_value(v.default)
+                value = type.to_c_value(types, v.default)
             elif k in default:
-                value = type.to_c_value(default[k])
+                value = type.to_c_value(types, default[k])
             else:
-                value = type.to_c_value(v.default)
+                value = type.to_c_value(types, v.default)
 
             fields[k] = value
 

@@ -1,4 +1,3 @@
-
 from csnake import CodeWriter
 from .models import AccessOptionsGenerator, MainModel, DeviceGroupModel
 from typing import List
@@ -41,8 +40,8 @@ def generate_header(config: MainModel) -> str:
     cw = CodeWriter()
     cw.add_line("#include <stdint.h>")
     cw.add_line('#include "odin_datastore.h"')
-    cw.add_line('#ifndef ODIN_DATASTORE_H_')
-    cw.add_line('#define ODIN_DATASTORE_H_')
+    cw.add_line("#ifndef ODIN_DATASTORE_H_")
+    cw.add_line("#define ODIN_DATASTORE_H_")
     cw.add_line("")
 
     opt_gen = AccessOptionsGenerator(config)
@@ -68,7 +67,6 @@ def generate_header(config: MainModel) -> str:
         cw.add_variable_declaration(group.as_reference(), extern=True)
 
     cw.add_variable_declaration(config.as_reference(), extern=True)
-
 
     # Generate groups
     for group_name, parameters in config.groups.items():

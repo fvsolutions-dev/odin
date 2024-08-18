@@ -1,10 +1,11 @@
+import struct
 from typing import Dict, List, Union
 
 import csnake as cc
 from csnake import CodeWriter, FormattedLiteral
 from pydantic import BaseModel, Field, model_validator
+from pydantic_yaml import parse_yaml_file_as
 from strenum import StrEnum
-import struct
 
 from .extensions import (
     EXENSIONS,
@@ -13,7 +14,6 @@ from .extensions import (
 from .types import CFormatEnum, CTypeEnum
 from .utils.csnake_custom import StructVariable
 from .utils.string import escape_string
-from pydantic_yaml import parse_yaml_file_as
 
 ODIN_STORE_TYPE = "ODIN_store_t"
 ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
@@ -144,7 +144,7 @@ class ParameterModel(BaseModel):
     def to_values(self, data: bytes):
         if self.length is not None:
             return data
-        
+
         if self.primitive == CTypeEnum.UINT8:
             return struct.unpack("B", data)[0]
         if self.primitive == CTypeEnum.INT8:
@@ -167,6 +167,7 @@ class ParameterModel(BaseModel):
             return struct.unpack("d", data)[0]
         if self.primitive == CTypeEnum.BOOL:
             return bool(data[0])
+
 
 class DeviceGroupModel(BaseModel):
     id: int
