@@ -31,15 +31,15 @@ class ParameterModel(BaseModel):
             return self.primitive
         return self._types[self.primitive]
 
-    def to_c_object(self):
-        return self.primitive_type.to_c_object(self._name, self.default)
+    def to_c_initialiser(self):
+        return self.primitive_type.to_c_initialiser(self._name, self.default)
 
 
 class ParameterArrayModel(ParameterModel):
-    length: int | None = None
+    length: int
 
-    def to_c_object(self):
-        return self.primitive_type.to_c_object(self._name, self.default, self.length)
+    def to_c_initialiser(self):
+        return self.primitive_type.to_c_array_initaliser(self._name, self.default, self.length)
 
     # _variable_names: CNames | None = None
 

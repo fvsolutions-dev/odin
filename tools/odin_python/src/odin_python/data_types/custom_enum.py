@@ -8,6 +8,7 @@ from .generic import GenericDataType
 class EnumeratorDataType(GenericDataType):
     type: Literal["enumerator"]
     values: Dict[str, int]
+    default: str | int | None = None
 
     @property
     def prefix(self):
@@ -27,24 +28,47 @@ class EnumeratorDataType(GenericDataType):
 
         return enum
 
-    def to_c_object(
-        self,
-        name: str,
-        default: str | int | None,
-        length: int | None = None,
+    def to_c_array_initaliser(
+        self, name: str, default: List[str | int] | str | int | None, length: int
     ) -> cc.Variable:
-        assert default is not None, f"Default value not set for {name}"
-
-        if isinstance(default, List):
-            default = [self.to_c_value(v) for v in default]
+        if default is None or isinstance(default, (str, int)):
+            if default is None:
+                default = self.default
+                
+            assert default is not None, f"Default value not set for {name}"
+            
+            _default = [self.to_c_value(default)] * length
         else:
-            default = self.to_c_value(default)
+            if isinstance(default, (str, int)):
+                _default = [self.to_c_value(default)] * length
+            assert (
+                len(default) == length
+            ), f"Length of {name} only has {len(default)} default values, but {length} are required"
+            _default = [self.to_c_value(v) for v in default]
+
+        assert _default is not None, f"Default value not set for {name}"
 
         return cc.Variable(
             name=name,
             primitive=self._typename,
-            value=default,  # type: ignore
-            array=[length] if length is not None else None,
+            value=_default,  # type: ignore
+            array=[length],
+        )
+
+    def to_c_initialiser(
+        self,
+        name: str,
+        default: str | int | None,
+    ) -> cc.Variable:
+        if default is None:
+            default = self.default
+
+        assert default is not None, f"Default value not set for {name}"
+
+        return cc.Variable(
+            name=name,
+            primitive=self._typename,
+            value=self.to_c_value(default),  # type: ignore
         )
 
     def to_c_value(self, value: str | int) -> cc.TextModifier:

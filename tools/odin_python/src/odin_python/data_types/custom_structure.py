@@ -1,11 +1,11 @@
-from typing import Any, Dict, Literal
+from typing import Any, Dict, List, Literal
 
 import csnake as cc
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
 from .generic import GenericDataType
 from .standard_types import StandardCTypesEnum
-
+from .custom_enum import EnumeratorDataType
 
 class StructureDataType(GenericDataType):
     class Member(BaseModel):
@@ -39,7 +39,7 @@ class StructureDataType(GenericDataType):
 
     structure: Dict[str, Member]
 
-    _types: "Dict[str, GenericDataType]" = PrivateAttr()
+    _types: "Dict[str, StructureDataType|EnumeratorDataType]" = PrivateAttr()
 
     def to_c_typedef(self) -> cc.Struct:
         var = cc.Struct(
@@ -66,22 +66,21 @@ class StructureDataType(GenericDataType):
                 fields[k] = type.to_c_value(v.default)
         return fields
 
-    def to_c_object_arr(
-        self, name: str, default_item: Dict[str, Any] | None, lenght: int
+    def to_c_array_initaliser(
+        self, name: str, default_item: List[Dict[str, Any]] | None, lenght: int
     ) -> cc.Variable:
-        
         if default_item is not None:
             assert len(default_item) == lenght, f"Length of {name} is not {lenght}"
-        
+
         values = []
         for i in range(lenght):
             fields = {}
-            
+
             if default_item is not None:
                 default = default_item[i]
             else:
                 default = None
-                
+
             for k, v in self.structure.items():
                 type = v.to_type(self._types)
                 if default is None:
@@ -102,12 +101,7 @@ class StructureDataType(GenericDataType):
         )
         return ret
 
-    def to_c_object(
-        self, name: str, default: Dict[str, Any] | None, lenght: int | None = None
-    ) -> cc.Variable:
-        if lenght is not None:
-            return self.to_c_object_arr(name, default, lenght)
-
+    def to_c_initialiser(self, name: str, default: Dict[str, Any] | None) -> cc.Variable:
         fields = {}
         for k, v in self.structure.items():
             type = v.to_type(self._types)
@@ -124,7 +118,6 @@ class StructureDataType(GenericDataType):
             name=name,
             primitive=self._typename,
             value=fields,  # type: ignore
-            array=[lenght] if lenght is not None else None,
         )
         return ret
 

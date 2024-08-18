@@ -5,6 +5,7 @@ from pydantic import BaseModel, PrivateAttr
 import csnake as cc
 from typing import Dict
 
+
 class GenericDataType(BaseModel, ABC):
     """Base class for all data types
 
@@ -14,11 +15,27 @@ class GenericDataType(BaseModel, ABC):
     _typename: str = PrivateAttr()  # Name of the type
 
     @abstractmethod
-    def to_c_typedef(self): ...
+    def to_c_typedef(self) -> cc.Struct | cc.Enum: ...
+
+    """Convert the type to a C typedef, used to define the type in C code
+    """
 
     @abstractmethod
-    def to_c_object(self, name: str, default: Dict[str, Any] | None, lenght: int | None = None
+    def to_c_initialiser(
+        self, name: str, default: Dict[str, Any] | None
     ) -> cc.Variable: ...
+
+    """Convert the type to a C initialiser, used to initialise the type in C code
+    """
+
+    @abstractmethod
+    def to_c_array_initaliser(
+        self, name: str, default: Dict[str, Any] | None, lenght: int
+    ) -> cc.Variable: ...
+
+    """Convert the type to a C array initialiser, used to initialise an array of the type in C code
+    """
 
     @abstractmethod
     def to_c_value(self, value: Any): ...
+    
