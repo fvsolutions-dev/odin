@@ -4,6 +4,7 @@ from typing import Any
 from pydantic import BaseModel, PrivateAttr
 import csnake as cc
 from typing import Dict
+from .standard_types import CFormatEnum, CustomCTypesEnum
 
 
 class GenericDataType(BaseModel, ABC):
@@ -42,3 +43,11 @@ class GenericDataType(BaseModel, ABC):
 
     @abstractmethod
     def to_c_value(self, types: Dict[str, Any], value: Any): ...
+
+    @property
+    @abstractmethod
+    def default_format(self) -> "CFormatEnum": ...
+
+    @property
+    @abstractmethod
+    def element_type(self) -> CustomCTypesEnum: ...

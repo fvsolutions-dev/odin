@@ -1,7 +1,7 @@
 extensions:
   - "test/configs/common/custom_types.yaml"
 
-groups:
+datastore:
   test_group:
     id: 0xA
     description: "Group description"

@@ -1,0 +1,57 @@
+access_groups:
+  read_only_forced:
+    force: R #This group is forced to read only
+
+  default_interface:
+    #This group has no configuration
+
+  forced_access:
+    force: RW #This group is forced to read and write
+
+  read_by_default:
+    default: R #This group is read by default
+
+  write_by_default:
+    default: W #This group is write by default
+
+extensions:
+  - "test/configs/common/custom_types.yaml"
+
+variables:
+  unmodified_parameter:
+    id: 1
+    primitive: uint16_t
+    default: 0
+
+
+  read_only_parameter:
+    id: 1
+    primitive: uint16_t
+    default: 0
+    access_permissions:
+      default_interface: R
+      
+
+datastore:
+  unmodified_group:
+    id: 1
+    data:
+      unmodified_parameter:
+        id: 1
+        primitive: uint16_t
+        default: 0
+
+  
+      read_only_parameter:
+        id: 1
+        primitive: uint16_t
+        default: 0
+        access_permissions:
+          default_interface: R
+      
+      write_only_parameter:
+        id: 1
+        primitive: uint16_t
+        default: 0
+        access_permissions:
+          default_interface: R

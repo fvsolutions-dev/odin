@@ -3,8 +3,9 @@ from typing import Any, Dict, List, Literal
 import csnake as cc
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
+
 from .generic import GenericDataType
-from .standard_types import StandardCTypesEnum
+from .standard_types import CustomCTypesEnum, StandardCTypesEnum, CFormatEnum
 from .custom_enum import EnumeratorDataType
 
 
@@ -138,3 +139,11 @@ class StructureDataType(GenericDataType):
         for k, v in self.structure.items():
             v._name = k
         return self
+
+    @property
+    def default_format(self) -> CFormatEnum:
+        return CFormatEnum.HEX
+
+    @property
+    def element_type(self) -> CustomCTypesEnum:
+        return CustomCTypesEnum.STRUCTURED

@@ -1,15 +1,13 @@
 from typing import Dict
 
 import csnake as cc
-from pydantic import BaseModel, model_validator, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr
 
-# from .extensions import (
-#     EXENSIONS,
-#     ReferenceParameterExtensionModel,
-# )
-# from .types import CFormatEnum, CTypeEnum
-# from .utils.csnake_custom import StructVariable
-# from .utils.string import escape_string
+from odin_python.parameter.access import (
+    AccessConfigurations,
+    AccessOptionsType,
+    AccessOptionsTypeFactory,
+)
 from .parameter import ParameterModel, ParameterArrayModel
 
 from ..data_types.custom_structure import StructureDataType
@@ -25,17 +23,26 @@ class CNames(BaseModel):
 class ParameterGroupModel(BaseModel):
     id: int
     _name: str = PrivateAttr()
+    _parameter_location: str = PrivateAttr()
     # _variable_names: CNames | None = None
+    _access_configuration: AccessConfigurations = PrivateAttr()
 
-    description: str
+    description: str | None = None
     data: Dict[str, ParameterModel | ParameterArrayModel]
-    # access_permissions: Dict[str, str] = Field(default_factory=dict)
 
-    @model_validator(mode="after")
-    def populate_names(self):
+    access_permissions: AccessOptionsType = Field(
+        default_factory=AccessOptionsTypeFactory
+    )
+
+    def apply_naming(self):
         for k, v in self.data.items():
             v._name = k
-
+            v._parameter_location = f"{self._parameter_location}.{self._name}"
+            v._group_name = self._name
+            v._group_id = self.id
+            v._access_configuration = AccessConfigurations.inherit(
+                self._access_configuration, v.access_permissions
+            )
         return self
 
     @property
@@ -59,6 +66,18 @@ class ParameterGroupModel(BaseModel):
             primitive=self.c_type,
             value={
                 parameter_name: parameter.to_c_initialiser(types).value
+                for parameter_name, parameter in self.data.items()  # type: ignore
+            },
+        )
+
+    def to_c_odin_parameter_initialiser(
+        self, types: Dict[str, EnumeratorDataType | StructureDataType]
+    ) -> cc.Variable:
+        return cc.Variable(
+            name=self._name,
+            primitive=self.c_type,
+            value={
+                parameter_name: parameter.to_c_odin_parameter(types).value
                 for parameter_name, parameter in self.data.items()  # type: ignore
             },
         )

@@ -6,6 +6,8 @@ FILES = [
     "test/configs/single_variables.yaml",
     "test/configs/array_variables.yaml",
     "test/configs/group_variables.yaml",
+    "test/configs/muov/datastore_config.yaml",
+    "test/configs/permissions.yaml",
 ]
 for file in FILES:
     model = parse_yaml_file_as(TestReader, file)
@@ -15,5 +17,6 @@ for file in FILES:
     os.makedirs("test/output", exist_ok=True)
     model.generate_simple_file(output_file)
 
+    INCLUDE_DIR = "../.."
     # Test compulation as lib
-    os.system(f"gcc -c {output_file} -o test/output/{file_name}.o")
+    os.system(f"gcc -c {output_file} -I {INCLUDE_DIR} -o test/output/{file_name}.o")

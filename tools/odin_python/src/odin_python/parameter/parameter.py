@@ -2,11 +2,21 @@ from typing import Any, Dict
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
+from odin_python.parameter.access import (
+    AccessConfigurations,
+    AccessOptionsType,
+    AccessOptionsTypeFactory,
+)
+from odin_python.utils.string import escape_string
+
 # from .models import AccessOptionsGenerator, MainModel, DeviceGroupModel
 
 from ..data_types.custom_enum import EnumeratorDataType
 from ..data_types.custom_structure import GenericDataType, StructureDataType
 from ..data_types.standard_types import StandardCTypesEnum
+import csnake as cc
+
+ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
 
 
 class ParameterModel(BaseModel):
@@ -15,11 +25,17 @@ class ParameterModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     _name: str = PrivateAttr()
-    _group_name: str = PrivateAttr()
-    _group_id: int = PrivateAttr()
+    _group_name: str | None = PrivateAttr()
+    _group_id: int | None = PrivateAttr()
+    _parameter_location: str | None = PrivateAttr()
+    _access_configuration: AccessConfigurations = PrivateAttr()
 
     id: int
     primitive: StandardCTypesEnum | str = Field(union_mode="left_to_right")
+
+    access_permissions: AccessOptionsType = Field(
+        default_factory=AccessOptionsTypeFactory
+    )
 
     default: Any | None = None
     description: str | None = None
@@ -31,10 +47,75 @@ class ParameterModel(BaseModel):
 
     def to_c_initialiser(
         self, types: Dict[str, EnumeratorDataType | StructureDataType]
-    ) -> Any:
+    ) -> cc.Variable:
         return self.primitive_type(types).to_c_initialiser(
             types, self._name, self.default
         )
+
+    @property
+    def qualified_id(self) -> int:
+        return (
+            (self._group_id << 16) | self.id if self._group_id is not None else self.id
+        )
+
+    def to_c_odin_parameter(self, types, name_prefix: str | None = None) -> cc.Variable:
+        primitive_type = self.primitive_type(types)
+
+        paramter_location = (
+            f"{self._parameter_location}.{self._name}"
+            if self._parameter_location
+            else self._name
+        )
+        permission_flags = self._access_configuration.get_permission_flags()
+
+        return cc.Variable(
+            name=f"{name_prefix}{self._name}" if name_prefix else self._name,
+            primitive=ODIN_PARAMETER_TYPE,
+            value={
+                "index": cc.TextModifier(f"0x{self.qualified_id:08X}"),
+                "access": cc.TextModifier(
+                    "|".join(permission_flags) if permission_flags else "0"
+                ),
+                "format": cc.TextModifier(
+                    primitive_type.default_format.odin_type_macro
+                ),
+                "type": cc.TextModifier(primitive_type.element_type.odin_type_macro),
+                "data": cc.TextModifier(f"&{paramter_location}"),
+                "size": cc.TextModifier(f"sizeof({paramter_location})"),
+                "name": self._name,
+                "description": escape_string(self.description)
+                if self.description
+                else "No description",
+            },  # type: ignore
+        )
+
+        # data = {
+        #     "index": FormattedLiteral(id, int_formatter=hex),
+        #     "access": access_opts.as_literal(self),
+        #     "format": FormattedLiteral(
+        #         self.format.odin_type_conv(self.primitive, self.length),
+        #         string_formatter=str,
+        #     ),
+        #     "type": FormattedLiteral(
+        #         self.primitive.odin_type_macro, string_formatter=str
+        #     ),
+        #     "data": FormattedLiteral(
+        #         f"&{self.variable_reference}", string_formatter=str
+        #     ),
+        #     "size": FormattedLiteral(
+        #         self.primitive.sizeof(self.length), string_formatter=str
+        #     ),
+        #     "name": self._name,
+        #     "description": escape_string(self.description),
+        # }
+
+        # if self.extension:
+        #     data["extension"] = self.extension.as_literal()
+
+        # if self._is_reference:
+        #     data["data"] = FormattedLiteral("NULL", string_formatter=str)
+
+        # return data
 
 
 class ParameterArrayModel(ParameterModel):

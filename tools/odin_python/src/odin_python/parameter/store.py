@@ -10,15 +10,19 @@ from ..data_types.custom_structure import StructureDataType
 from .group import ParameterGroupModel
 
 
-
-
 class ParameterStoreModel(BaseModel):
-    name: str
+    ram_name: str
+    parameter_name: str
+
     groups: Dict[str, ParameterGroupModel]
 
     @property
     def c_type(self) -> str:
-        return f"{self.name}_t"
+        return f"{self.ram_name}_t"
+
+    @property
+    def odin_c_type(self) -> str:
+        return f"{self.parameter_name}_t"
 
     def to_recursive_typedef(
         self, types: Dict[str, EnumeratorDataType | StructureDataType]
@@ -50,13 +54,41 @@ class ParameterStoreModel(BaseModel):
         self, types: Dict[str, EnumeratorDataType | StructureDataType]
     ) -> cc.Variable:
         return cc.Variable(
-            name=self.name,
+            name=self.ram_name,
             primitive=self.c_type,
             value={
                 group_name: group.to_c_initialiser(types).value
                 for group_name, group in self.groups.items()  # type: ignore
             },
         )
+
+    def to_c_odin_parameter_initialiser(
+        self, types: Dict[str, EnumeratorDataType | StructureDataType]
+    ) -> cc.Variable:
+        return cc.Variable(
+            name=self.parameter_name,
+            primitive=self.odin_c_type,
+            value={
+                group_name: group.to_c_odin_parameter_initialiser(types).value
+                for group_name, group in self.groups.items()  # type: ignore
+            },
+        )
+
+    def to_recursive_odin_typedef(
+        self, types: Dict[str, EnumeratorDataType | StructureDataType]
+    ) -> cc.Struct:
+        struct = StructVariable(self.odin_c_type, typedef=True)
+
+        # Create the data structures for groups
+        for group_name, device_group in self.groups.items():
+            group_struct = StructVariable(var_name=group_name)
+
+            for parameter in device_group.data.values():
+                group_struct.add_variable(parameter.to_c_odin_parameter(types))
+
+            struct.add_struct(group_struct)
+
+        return struct
 
     # def as_variable_initialization(self) -> cc.Variable:
     #     assert self._name

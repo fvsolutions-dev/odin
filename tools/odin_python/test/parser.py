@@ -1,18 +1,31 @@
-from typing import Dict
+from typing import Dict, List
 
-from odin_python.data_types.custom_structure import StructureDataType
-from odin_python.data_types.custom_enum import EnumeratorDataType
-from odin_python.parameter.parameter import ParameterModel, ParameterArrayModel
-from pydantic import BaseModel, model_validator, Field
-from pydantic_yaml import parse_yaml_file_as
-from typing import List
 import csnake as cc
+from odin_python.data_types.custom_enum import EnumeratorDataType
+from odin_python.data_types.custom_structure import StructureDataType
+from odin_python.parameter.access import (
+    AccessConfigurationModel,
+    AccessConfigurationType,
+    AccessConfigurationTypeFactory,
+    AccessConfigurations,
+)
 from odin_python.parameter.group import ParameterGroupModel
+from odin_python.parameter.parameter import ParameterArrayModel, ParameterModel
 from odin_python.parameter.store import ParameterStoreModel
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
+from pydantic_yaml import parse_yaml_file_as
 
 
 class TestReader(BaseModel):
     c_dependencies: List[str] = Field(default_factory=list)
+
+    ram_location: str = "ODIN_ram"
+
+    access_groups: AccessConfigurationType = Field(
+        default_factory=AccessConfigurationTypeFactory
+    )
+
+    _access_configuration: AccessConfigurations = PrivateAttr()
 
     extensions: List[str] = Field(default_factory=list)
     types: Dict[str, StructureDataType | EnumeratorDataType] = Field(
@@ -21,18 +34,39 @@ class TestReader(BaseModel):
     variables: Dict[str, ParameterModel | ParameterArrayModel] = Field(
         default_factory=dict
     )
-    groups: Dict[str, ParameterGroupModel] = Field(default_factory=dict)
+    datastore: Dict[str, ParameterGroupModel] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def populate_names(self):
+        for k, v in self.access_groups.items():
+            if v is None:
+                v = AccessConfigurationModel()
+                self.access_groups[k] = v
+            v._name = k
+
+        self._access_configuration = AccessConfigurations.inherit(
+            self.access_groups, None
+        )
+
         for k, v in self.types.items():
             v._typename = k
 
         for k, v in self.variables.items():
             v._name = k
+            v._parameter_location = None
+            v._group_name = None
+            v._group_id = None
+            v._access_configuration = AccessConfigurations.inherit(
+                self._access_configuration, v.access_permissions
+            )
 
-        for k, v in self.groups.items():
+        for k, v in self.datastore.items():
             v._name = k
+            v._parameter_location = self.ram_location
+            v._access_configuration = AccessConfigurations.inherit(
+                self._access_configuration, v.access_permissions
+            )
+            v.apply_naming()
 
         return self
 
@@ -59,17 +93,26 @@ class TestReader(BaseModel):
             # cw.add_variable_declaration(objs)
             cw.add_line("")
 
-        datastore = ParameterStoreModel(name="ODIN_ram", groups=self.groups)
+        self._access_configuration.create_code(cw)
+
+        datastore = ParameterStoreModel(
+            ram_name=self.ram_location,
+            parameter_name="odin_params",
+            groups=self.datastore,
+        )
         cw.add_struct(datastore.to_recursive_typedef(self.types))
         # cw.add_struct(datastore.to_c_typedef(self.types))
+        cw.add_struct(datastore.to_recursive_odin_typedef(self.types))
         cw.add_line("")
 
         cw.add_line("")
 
         for k, v in self.variables.items():
-            objs = v.to_c_initialiser(self.types)
-            cw.add_variable_initialization(objs)
+            cw.add_variable_initialization(v.to_c_initialiser(self.types))
             cw.add_line("")
+            cw.add_variable_initialization(
+                v.to_c_odin_parameter(self.types, name_prefix="ODIN_")
+            )
 
         # for k, v in self.groups.items():
         #     objs = v.to_c_initialiser(self.types)
@@ -77,6 +120,9 @@ class TestReader(BaseModel):
         #     cw.add_line("")
 
         cw.add_variable_initialization(datastore.to_c_initialiser(self.types))
+        cw.add_variable_initialization(
+            datastore.to_c_odin_parameter_initialiser(self.types)
+        )
 
         file = str(cw)
         with open(target, "w") as f:

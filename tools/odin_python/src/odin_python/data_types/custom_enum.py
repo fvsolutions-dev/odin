@@ -4,6 +4,8 @@ import csnake as cc
 
 from .generic import GenericDataType
 
+from .standard_types import CFormatEnum, CustomCTypesEnum
+
 
 class EnumeratorDataType(GenericDataType):
     type: Literal["enumerator"]
@@ -82,3 +84,11 @@ class EnumeratorDataType(GenericDataType):
                 return cc.TextModifier(self.apply_prefix(k.upper()))  # type: ignore
 
         raise ValueError(f"Value {value} not found in {self._typename}")
+
+    @property
+    def default_format(self) -> "CFormatEnum":
+        return CFormatEnum.NUMBER
+
+    @property
+    def element_type(self) -> CustomCTypesEnum:
+        return CustomCTypesEnum.ENUMERATOR

@@ -5,10 +5,20 @@ from strenum import StrEnum
 from typing import Any
 
 import struct
-from typing import Type
 
 
-class StandardCTypesEnum(StrEnum):
+class CTypesEnum(StrEnum):
+    @property
+    def odin_type_macro(self) -> str:
+        return f"ODIN_ELEMENT_TYPE_{self.name}"
+
+
+class CustomCTypesEnum(CTypesEnum):
+    ENUMERATOR = "enumerator"
+    STRUCTURED = "structured"
+
+
+class StandardCTypesEnum(CTypesEnum):
     UINT8 = "uint8_t"
     INT8 = "int8_t"
     INT16 = "int16_t"
@@ -22,10 +32,6 @@ class StandardCTypesEnum(StrEnum):
     CHAR = "char"
     BOOL = "bool"
 
-    @property
-    def odin_type_define(self) -> str:
-        return f"ODIN_ELEMENT_TYPE_{self.name}"
-
     def sizeof(self, length: int | None) -> str:
         if length is None:
             return f"sizeof({self.value})"
@@ -36,7 +42,7 @@ class StandardCTypesEnum(StrEnum):
         return cc.Variable(
             name=name,
             primitive=self.value,
-            value=self.to_c_value(default),  # type: ignore
+            value=self.to_c_value(types, default),  # type: ignore
         )
 
     def to_c_array_initaliser(
@@ -92,31 +98,55 @@ class StandardCTypesEnum(StrEnum):
 
         raise ValueError(f"Unsupported primitive type {self}")
 
+    # @property
+    # def model(self) -> Type:
+    #     if self in [StandardCTypesEnum.UINT8, StandardCTypesEnum.INT8]:
+    #         return int
+    #     if self in [StandardCTypesEnum.UINT16, StandardCTypesEnum.INT16]:
+    #         return int
+    #     if self in [StandardCTypesEnum.UINT32, StandardCTypesEnum.INT32]:
+    #         return int
+    #     if self in [StandardCTypesEnum.UINT64, StandardCTypesEnum.INT64]:
+    #         return int
+    #     if self == StandardCTypesEnum.FLOAT:
+    #         return float
+    #     if self == StandardCTypesEnum.DOUBLE:
+    #         return float
+    #     if self == StandardCTypesEnum.CHAR:
+    #         return str
+    #     if self == StandardCTypesEnum.BOOL:
+    #         return bool
+    #     raise ValueError(f"Unsupported primitive type {self}")
+
+    # def initialise_model(self, value: Any):
+    #     if value is None:
+    #         return None
+
+    #     return self.model(value)
+
     @property
-    def model(self) -> Type:
-        if self in [StandardCTypesEnum.UINT8, StandardCTypesEnum.INT8]:
-            return int
-        if self in [StandardCTypesEnum.UINT16, StandardCTypesEnum.INT16]:
-            return int
-        if self in [StandardCTypesEnum.UINT32, StandardCTypesEnum.INT32]:
-            return int
-        if self in [StandardCTypesEnum.UINT64, StandardCTypesEnum.INT64]:
-            return int
-        if self == StandardCTypesEnum.FLOAT:
-            return float
-        if self == StandardCTypesEnum.DOUBLE:
-            return float
-        if self == StandardCTypesEnum.CHAR:
-            return str
-        if self == StandardCTypesEnum.BOOL:
-            return bool
+    def default_format(self) -> "CFormatEnum":
+        if self in [
+            StandardCTypesEnum.UINT8,
+            StandardCTypesEnum.INT8,
+            StandardCTypesEnum.UINT16,
+            StandardCTypesEnum.INT16,
+            StandardCTypesEnum.UINT32,
+            StandardCTypesEnum.INT32,
+        ]:
+            return CFormatEnum.NUMBER
+        elif self in [StandardCTypesEnum.FLOAT, StandardCTypesEnum.DOUBLE]:
+            return CFormatEnum.DECIMAL
+        elif self == StandardCTypesEnum.CHAR:
+            return CFormatEnum.STRING
+        elif self == StandardCTypesEnum.BOOL:
+            return CFormatEnum.NUMBER
+
         raise ValueError(f"Unsupported primitive type {self}")
 
-    def initialise_model(self, value: Any):
-        if value is None:
-            return None
-
-        return self.model(value)
+    @property
+    def element_type(self) -> "StandardCTypesEnum":
+        return self
 
 
 class CFormatEnum(StrEnum):
@@ -131,27 +161,27 @@ class CFormatEnum(StrEnum):
         return "ODIN_ENCODING_"
 
     @property
-    def odin_type(self) -> str:
+    def odin_type_macro(self) -> str:
         return f"{self.prefix}{self.name}"
 
-    def odin_type_conv(self, primitive: StandardCTypesEnum, length: int | None) -> str:
-        if self != CFormatEnum.AUTO:
-            return self.odin_type
+    # def odin_type_conv(self, primitive: StandardCTypesEnum, length: int | None) -> str:
+    #     if self != CFormatEnum.AUTO:
+    #         return self.odin_type
 
-        if primitive in [
-            StandardCTypesEnum.UINT8,
-            StandardCTypesEnum.INT8,
-            StandardCTypesEnum.UINT16,
-            StandardCTypesEnum.INT16,
-            StandardCTypesEnum.UINT32,
-            StandardCTypesEnum.INT32,
-        ]:
-            return CFormatEnum.NUMBER.odin_type
-        elif primitive in [StandardCTypesEnum.FLOAT, StandardCTypesEnum.DOUBLE]:
-            return CFormatEnum.DECIMAL.odin_type
-        elif primitive == StandardCTypesEnum.CHAR:
-            return CFormatEnum.STRING.odin_type
-        elif primitive == StandardCTypesEnum.BOOL:
-            return CFormatEnum.NUMBER.odin_type
-        else:
-            raise ValueError(f"Unsupported primitive type {primitive}")
+    #     if primitive in [
+    #         StandardCTypesEnum.UINT8,
+    #         StandardCTypesEnum.INT8,
+    #         StandardCTypesEnum.UINT16,
+    #         StandardCTypesEnum.INT16,
+    #         StandardCTypesEnum.UINT32,
+    #         StandardCTypesEnum.INT32,
+    #     ]:
+    #         return CFormatEnum.NUMBER.odin_type
+    #     elif primitive in [StandardCTypesEnum.FLOAT, StandardCTypesEnum.DOUBLE]:
+    #         return CFormatEnum.DECIMAL.odin_type
+    #     elif primitive == StandardCTypesEnum.CHAR:
+    #         return CFormatEnum.STRING.odin_type
+    #     elif primitive == StandardCTypesEnum.BOOL:
+    #         return CFormatEnum.NUMBER.odin_type
+    #     else:
+    #         raise ValueError(f"Unsupported primitive type {primitive}")
