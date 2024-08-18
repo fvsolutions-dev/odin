@@ -3,6 +3,7 @@ from typing import Dict
 import csnake as cc
 from pydantic import BaseModel
 
+from odin_python.parameter.parameter import LocalParameterModel
 from odin_python.utils.csnake_custom import StructVariable
 
 from ..data_types.custom_enum import EnumeratorDataType
@@ -34,7 +35,8 @@ class ParameterStoreModel(BaseModel):
             group_struct = StructVariable(var_name=group_name)
 
             for parameter in device_group.data.values():
-                group_struct.add_variable(parameter.to_c_initialiser(types))
+                if isinstance(parameter, LocalParameterModel):
+                    group_struct.add_variable(parameter.to_c_initialiser(types))
 
             struct.add_struct(group_struct)
 

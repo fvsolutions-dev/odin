@@ -8,7 +8,7 @@ from odin_python.parameter.access import (
     AccessOptionsType,
     AccessOptionsTypeFactory,
 )
-from .parameter import ParameterModel, ParameterArrayModel
+from .parameter import LocalParameterModel, ParameterArrayModel, ReferenceParameterModel
 
 from ..data_types.custom_structure import StructureDataType
 from ..data_types.custom_enum import EnumeratorDataType
@@ -28,7 +28,7 @@ class ParameterGroupModel(BaseModel):
     _access_configuration: AccessConfigurations = PrivateAttr()
 
     description: str | None = None
-    data: Dict[str, ParameterModel | ParameterArrayModel]
+    data: Dict[str, LocalParameterModel | ParameterArrayModel | ReferenceParameterModel]
 
     access_permissions: AccessOptionsType = Field(
         default_factory=AccessOptionsTypeFactory
@@ -37,7 +37,8 @@ class ParameterGroupModel(BaseModel):
     def apply_naming(self):
         for k, v in self.data.items():
             v._name = k
-            v._parameter_location = f"{self._parameter_location}.{self._name}"
+            if isinstance(v, LocalParameterModel):
+                v._parameter_location = f"{self._parameter_location}.{self._name}"
             v._group_name = self._name
             v._group_id = self.id
             v._access_configuration = AccessConfigurations.inherit(
@@ -55,7 +56,8 @@ class ParameterGroupModel(BaseModel):
     ) -> cc.Struct:
         struct = cc.Struct(self.c_type, typedef=True)
         for parameter_name, parameter in self.data.items():
-            struct.add_variable(parameter.to_c_initialiser(types))
+            if isinstance(parameter, LocalParameterModel):
+                struct.add_variable(parameter.to_c_initialiser(types))
         return struct
 
     def to_c_initialiser(
@@ -67,6 +69,7 @@ class ParameterGroupModel(BaseModel):
             value={
                 parameter_name: parameter.to_c_initialiser(types).value
                 for parameter_name, parameter in self.data.items()  # type: ignore
+                if isinstance(parameter, LocalParameterModel)
             },
         )
 

@@ -10,7 +10,11 @@ from odin_python.parameter.access import (
     AccessConfigurations,
 )
 from odin_python.parameter.group import ParameterGroupModel
-from odin_python.parameter.parameter import ParameterArrayModel, ParameterModel
+from odin_python.parameter.parameter import (
+    ParameterArrayModel,
+    LocalParameterModel,
+    ReferenceParameterModel,
+)
 from odin_python.parameter.store import ParameterStoreModel
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pydantic_yaml import parse_yaml_file_as
@@ -31,9 +35,9 @@ class TestReader(BaseModel):
     types: Dict[str, StructureDataType | EnumeratorDataType] = Field(
         default_factory=dict
     )
-    variables: Dict[str, ParameterModel | ParameterArrayModel] = Field(
-        default_factory=dict
-    )
+    variables: Dict[
+        str, LocalParameterModel | ParameterArrayModel | ReferenceParameterModel
+    ] = Field(default_factory=dict)
     datastore: Dict[str, ParameterGroupModel] = Field(default_factory=dict)
 
     @model_validator(mode="after")
@@ -53,7 +57,8 @@ class TestReader(BaseModel):
 
         for k, v in self.variables.items():
             v._name = k
-            v._parameter_location = None
+            if isinstance(v, LocalParameterModel):
+                v._parameter_location = None
             v._group_name = None
             v._group_id = None
             v._access_configuration = AccessConfigurations.inherit(
@@ -108,7 +113,8 @@ class TestReader(BaseModel):
         cw.add_line("")
 
         for k, v in self.variables.items():
-            cw.add_variable_initialization(v.to_c_initialiser(self.types))
+            if isinstance(v, LocalParameterModel):
+                cw.add_variable_initialization(v.to_c_initialiser(self.types))
             cw.add_line("")
             cw.add_variable_initialization(
                 v.to_c_odin_parameter(self.types, name_prefix="ODIN_")

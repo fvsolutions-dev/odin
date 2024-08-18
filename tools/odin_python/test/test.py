@@ -6,8 +6,10 @@ FILES = [
     "test/configs/single_variables.yaml",
     "test/configs/array_variables.yaml",
     "test/configs/group_variables.yaml",
-    "test/configs/muov/datastore_config.yaml",
+    "test/configs/muov/datastore_config_minimal.yaml",
     "test/configs/permissions.yaml",
+    "/root/dev/tilt-bike/boards/comms-esp/main/app_datastore/datastore_config.yaml",
+    "test/configs/referenced.yaml"
 ]
 for file in FILES:
     model = parse_yaml_file_as(TestReader, file)
