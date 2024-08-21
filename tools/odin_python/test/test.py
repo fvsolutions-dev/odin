@@ -1,24 +1,33 @@
-from parser import TestReader
+from odin_python.main_model import TestReader
 from pydantic_yaml import parse_yaml_file_as
 import os
+from odin_python.c_generator import CGenerator
 
 FILES = [
-    "test/configs/single_variables.yaml",
-    "test/configs/array_variables.yaml",
-    "test/configs/group_variables.yaml",
+    # "test/configs/single_variables.yaml",
+    # "test/configs/array_variables.yaml",
+    # "test/configs/group_variables.yaml",
     "test/configs/muov/datastore_config_minimal.yaml",
-    "test/configs/permissions.yaml",
-    "/root/dev/tilt-bike/boards/comms-esp/main/app_datastore/datastore_config.yaml",
-    "test/configs/referenced.yaml"
+    # "test/configs/permissions.yaml",
+    # "/root/dev/tilt-bike/boards/comms-esp/main/app_datastore/datastore_config.yaml",
+    # "test/configs/referenced.yaml"
 ]
 for file in FILES:
-    model = parse_yaml_file_as(TestReader, file)
+    model = TestReader.from_yaml(file)
     file_name = file.split("/")[-1].split(".")[0]
 
-    output_file = f"test/output/{file_name}.c"
-    os.makedirs("test/output", exist_ok=True)
-    model.generate_simple_file(output_file)
+    OUTPUT_DIR = "test/output"
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    generator = CGenerator(OUTPUT_DIR, file_name, model)
+    generator.generate_header()
+    generator.generate_source()
 
     INCLUDE_DIR = "../.."
-    # Test compulation as lib
-    os.system(f"gcc -c {output_file} -I {INCLUDE_DIR} -o test/output/{file_name}.o")
+    # # Test compulation as lib
+    os.system(
+        f"gcc -c {generator.source_filepath} -I {INCLUDE_DIR}  -I {OUTPUT_DIR}  -o {OUTPUT_DIR}/{file_name}.o"
+    )
+
+    # Get size of the the ram
+    

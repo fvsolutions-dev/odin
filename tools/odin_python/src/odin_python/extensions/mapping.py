@@ -4,7 +4,7 @@ from csnake import FormattedLiteral
 from pydantic import BaseModel
 
 
-class ReferenceParameterExtensionModel(BaseModel):
+class MappingParameterExtensionModel(BaseModel):
     type: Literal["reference"]
     reference: str
     offset: float = 0.0

@@ -1,3 +1,3 @@
-from .cli import cli
+# from ...old.cli import cli
 
-cli()
+# cli()

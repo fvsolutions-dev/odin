@@ -67,7 +67,7 @@ class TestReader(BaseModel):
 
         for k, v in self.datastore.items():
             v._name = k
-            v._parameter_location = self.ram_location
+            v._ram_location = self.ram_location
             v._access_configuration = AccessConfigurations.inherit(
                 self._access_configuration, v.access_permissions
             )
@@ -103,9 +103,9 @@ class TestReader(BaseModel):
         datastore = ParameterStoreModel(
             ram_name=self.ram_location,
             parameter_name="odin_params",
-            groups=self.datastore,
+            children=self.datastore,
         )
-        cw.add_struct(datastore.to_recursive_typedef(self.types))
+        cw.add_struct(datastore.ram_typedef(self.types))
         # cw.add_struct(datastore.to_c_typedef(self.types))
         cw.add_struct(datastore.to_recursive_odin_typedef(self.types))
         cw.add_line("")
@@ -117,7 +117,7 @@ class TestReader(BaseModel):
                 cw.add_variable_initialization(v.to_c_initialiser(self.types))
             cw.add_line("")
             cw.add_variable_initialization(
-                v.to_c_odin_parameter(self.types, name_prefix="ODIN_")
+                v.to_c_odin_parameter_initialiser(self.types, name_prefix="ODIN_")
             )
 
         # for k, v in self.groups.items():

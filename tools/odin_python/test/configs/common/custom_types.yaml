@@ -1,44 +1,44 @@
-c_dependencies:
+includes:
   - "stdint.h"
   - "stdbool.h"
   - "odin_datastore.h"
   
-types:
-  direction_t:
-    type: enumerator
-    values:
-      DOWN: 0
-      UP: 1
-      LEFT: 2
-      RIGHT: 3
+# types:
+#   direction_t:
+#     type: enumerator
+#     values:
+#       DOWN: 0
+#       UP: 1
+#       LEFT: 2
+#       RIGHT: 3
 
-    default: RIGHT
+#     default: RIGHT
 
-  direction_no_default_t:
-    type: enumerator
-    values:
-      DOWN: 0
-      UP: 1
-      LEFT: 2
-      RIGHT: 3
+#   direction_no_default_t:
+#     type: enumerator
+#     values:
+#       DOWN: 0
+#       UP: 1
+#       LEFT: 2
+#       RIGHT: 3
 
-  state_t:
-    type: structured
-    structure:
-      A_state:
-        primitive: direction_t
-        length_bits: 2
-        description: "Direction of the button"
-        default: UP
+  # state_t:
+  #   type: structured
+  #   structure:
+  #     A_state:
+  #       primitive: direction_t
+  #       length_bits: 2
+  #       description: "Direction of the button"
+  #       default: UP
 
-      b_state:
-        primitive: direction_t
-        length_bits: 2
-        description: "Direction of the button"
-        default: DOWN
+  #     b_state:
+  #       primitive: direction_t
+  #       length_bits: 2
+  #       description: "Direction of the button"
+  #       default: DOWN
 
-      value_test:
-        primitive: uint8_t
-        length_bits: 4
-        description: "Random number"
-        default: 0xF
+  #     value_test:
+  #       primitive: uint8_t
+  #       length_bits: 4
+  #       description: "Random number"
+  #       default: 0xF

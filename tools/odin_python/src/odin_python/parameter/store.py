@@ -1,21 +1,49 @@
+from math import e
+import re
 from typing import Dict
 
 import csnake as cc
 from pydantic import BaseModel
 
+from odin_python.parameter.access import (
+    AccessConfigurationType,
+    AccessOptionsType,
+    AccessOptionsTypeFactory,
+)
 from odin_python.parameter.parameter import LocalParameterModel
 from odin_python.utils.csnake_custom import StructVariable
 
 from ..data_types.custom_enum import EnumeratorDataType
 from ..data_types.custom_structure import StructureDataType
 from .group import ParameterGroupModel
+from pydantic import PrivateAttr, Field, model_validator
 
 
 class ParameterStoreModel(BaseModel):
     ram_name: str
     parameter_name: str
 
-    groups: Dict[str, ParameterGroupModel]
+    children: Dict[str, ParameterGroupModel | LocalParameterModel]
+    access_permissions: AccessConfigurationType
+    id_size: int = 32
+    id_shift: int = 8
+
+    @model_validator(mode="after")
+    def init_children(self):
+        for name, item in self.children.items():
+            item.init_children(self, name, self.access_permissions)
+        return self
+
+    @property
+    def id_shift_bits(self) -> int:
+        return self.id_size - self.id_shift
+
+    def calculate_id(self, id: int) -> int:
+        return id << self.id_shift_bits
+
+    @property
+    def ram_location(self):
+        return self.ram_name
 
     @property
     def c_type(self) -> str:
@@ -25,44 +53,56 @@ class ParameterStoreModel(BaseModel):
     def odin_c_type(self) -> str:
         return f"{self.parameter_name}_t"
 
-    def to_recursive_typedef(
+    def ram_typedef(
         self, types: Dict[str, EnumeratorDataType | StructureDataType]
     ) -> cc.Struct:
         struct = StructVariable(self.c_type, typedef=True)
 
         # Create the data structures for groups
-        for group_name, device_group in self.groups.items():
-            group_struct = StructVariable(var_name=group_name)
-
-            for parameter in device_group.data.values():
-                if isinstance(parameter, LocalParameterModel):
-                    group_struct.add_variable(parameter.to_c_initialiser(types))
-
-            struct.add_struct(group_struct)
+        for child in self.children.values():
+            if isinstance(child, LocalParameterModel):
+                struct.add_variable(child.to_c_initialiser(types))
+            elif isinstance(child, ParameterGroupModel):
+                struct.add_struct(child.ram_struct(types))
 
         return struct
 
-    def to_c_typedef(
+    def to_recursive_odin_typedef(
         self, types: Dict[str, EnumeratorDataType | StructureDataType]
     ) -> cc.Struct:
-        struct = cc.Struct(self.c_type, typedef=True)
+        struct = StructVariable(self.odin_c_type, typedef=True)
 
-        for group in self.groups.values():
-            struct.add_variable(group.to_c_initialiser(types))
+        # Create the data structures for groups
+        for child in self.children.values():
+            if isinstance(child, LocalParameterModel):
+                struct.add_variable(child.to_c_odin_parameter_initialiser(types))
+            elif isinstance(child, ParameterGroupModel):
+                struct.add_struct(child.to_c_odin_struct(types))
 
         return struct
 
     def to_c_initialiser(
         self, types: Dict[str, EnumeratorDataType | StructureDataType]
     ) -> cc.Variable:
+        values = {}
+        for child_name, child in self.children.items():
+            values[child_name] = child.to_c_initialiser(types).value
+
         return cc.Variable(
             name=self.ram_name,
             primitive=self.c_type,
-            value={
-                group_name: group.to_c_initialiser(types).value
-                for group_name, group in self.groups.items()  # type: ignore
-            },
+            value=values,  # type: ignore
         )
+
+    def to_c_typedef(
+        self, types: Dict[str, EnumeratorDataType | StructureDataType]
+    ) -> cc.Struct:
+        struct = cc.Struct(self.c_type, typedef=True)
+
+        for group in self.children.values():
+            struct.add_variable(group.to_c_initialiser(types))
+
+        return struct
 
     def to_c_odin_parameter_initialiser(
         self, types: Dict[str, EnumeratorDataType | StructureDataType]
@@ -72,25 +112,30 @@ class ParameterStoreModel(BaseModel):
             primitive=self.odin_c_type,
             value={
                 group_name: group.to_c_odin_parameter_initialiser(types).value
-                for group_name, group in self.groups.items()  # type: ignore
+                for group_name, group in self.children.items()  # type: ignore
             },
         )
 
-    def to_recursive_odin_typedef(
+    def to_tree_definition(
         self, types: Dict[str, EnumeratorDataType | StructureDataType]
-    ) -> cc.Struct:
-        struct = StructVariable(self.odin_c_type, typedef=True)
+    ) -> cc.Variable:
+        children = []
+        for child_name, child in self.children.items():
+            if isinstance(child, LocalParameterModel):
+                children.append(child._name)
 
-        # Create the data structures for groups
-        for group_name, device_group in self.groups.items():
-            group_struct = StructVariable(var_name=group_name)
+            elif isinstance(child, ParameterGroupModel):
+                children.append(child.to_c_tree(types))
 
-            for parameter in device_group.data.values():
-                group_struct.add_variable(parameter.to_c_odin_parameter(types))
-
-            struct.add_struct(group_struct)
-
-        return struct
+        return cc.Variable(
+            name=f"{self.parameter_name}_tree",
+            primitive="odin_tree_t",
+            value={
+                "name": self.parameter_name,
+                "id": 0,
+                "children": children,
+            },  # type: ignore
+        )
 
     # def as_variable_initialization(self) -> cc.Variable:
     #     assert self._name

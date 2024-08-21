@@ -1,16 +1,16 @@
 from .validation import ValidationParameterExtensionModel
-from .reference import ReferenceParameterExtensionModel
+from .mapping import MappingParameterExtensionModel
 from .custom import CustomParameterExtensionModel
 
 EXENSIONS = (
     ValidationParameterExtensionModel
-    | ReferenceParameterExtensionModel
+    | MappingParameterExtensionModel
     | CustomParameterExtensionModel
 )
 
 __all__ = [
     "ValidationParameterExtensionModel",
-    "ReferenceParameterExtensionModel",
+    "MappingParameterExtensionModel",
     "EXENSIONS",
     "CustomParameterExtensionModel",
 ]

@@ -9,7 +9,7 @@ from strenum import StrEnum
 
 from .extensions import (
     EXENSIONS,
-    ReferenceParameterExtensionModel,
+    MappingParameterExtensionModel,
 )
 from .types import CFormatEnum, CTypeEnum
 from .utils.csnake_custom import StructVariable
@@ -59,7 +59,7 @@ class ParameterModel(BaseModel):
     @model_validator(mode="after")
     def check_reference(self) -> "ParameterModel":
         if self.extension and isinstance(
-            self.extension, ReferenceParameterExtensionModel
+            self.extension, MappingParameterExtensionModel
         ):
             self._is_reference = True
         return self
