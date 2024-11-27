@@ -59,11 +59,19 @@ class TestReader(BaseModel):
 
     @classmethod
     def from_yaml(cls, path: str):
-        # try:
         return parse_yaml_file_as(cls, path)
-        # except ValidationError as e:
-            # print(json.dumps(e.errors(), indent=2))
-            # raise e
+
+    def dump_json(self) -> str:
+        """Dump the model as formatted json"""
+        return self.model_dump_json(indent=2)
+
+    def dump_summary(self, level=0) -> str:
+        """Dump a summary of the model"""
+        buffer = ""
+        for k, v in self.parameters.items():
+            if isinstance(v, LocalParameterModel):
+                buffer += f"{'  ' * level}{v.one_line_summary()}\n"
+        return buffer
 
     @model_validator(mode="after")
     def post_load(self):
@@ -77,19 +85,18 @@ class TestReader(BaseModel):
             self.access_groups, None
         )
 
-        #initialize types
+        # initialize types
         for k, v in self.types.items():
             v._typename = k
 
-        #initialize datastore
+        # initialize datastore
         self._datastore = ParameterStoreModel(
             ram_name=self.config.storage_name,
             parameter_name=self.config.parameter_name,
             children=self.parameters,
             access_permissions=self.access_groups,
         )
-        
-        
+
         # for k, v in self.parameters.items():
         #     if isinstance(v, ParameterGroupModel):
         #         v._name = k

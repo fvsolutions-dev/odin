@@ -1,62 +1,74 @@
-from typing import Any, Dict, Literal
+from typing import TYPE_CHECKING, Any, Dict, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
-
+import csnake as cc
 from odin_python.parameter.access import (
-    AccessConfigurationType,
     AccessConfigurations,
+    AccessConfigurationType,
     AccessOptionsType,
     AccessOptionsTypeFactory,
 )
 from odin_python.utils.string import escape_string
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 # from .models import AccessOptionsGenerator, MainModel, DeviceGroupModel
-
 from ..data_types.custom_enum import EnumeratorDataType
 from ..data_types.custom_structure import GenericDataType, StructureDataType
 from ..data_types.standard_types import CFormatEnum, StandardCTypesEnum
-import csnake as cc
 from ..extensions import (
     EXENSIONS,
     MappingParameterExtensionModel,
 )
+from abc import ABC, abstractmethod
+
+if TYPE_CHECKING:
+    from .group import ParameterGroupModel
+    from .store import ParameterStoreModel
+
 
 ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
 
-from typing import TYPE_CHECKING
 
-
-if TYPE_CHECKING:
-    from .store import ParameterStoreModel
-    from .group import ParameterGroupModel
-
-
-class BaseParameterModel(BaseModel):
+class BaseParameterModel(BaseModel, ABC):
     model_config = ConfigDict(extra="forbid")
     _name: str = PrivateAttr()
-    _parent: "ParameterGroupModel|ParameterStoreModel" = PrivateAttr()
+
+    # Reference to the parent model if any
+    _parent: "ParameterGroupModel|ParameterStoreModel" = PrivateAttr(default=None)
+
+    # The access configuration for this parameter belongs to
     _access_configuration: AccessConfigurations = PrivateAttr()
 
-    id: int
-    primitive: StandardCTypesEnum | str = Field(union_mode="left_to_right")
-    description: str | None = None
+    # Local id of the parameters
+    local_id: int
+
+    # Primitive, must be mapped to a known type
+    type: str = Field(description="Primitive type of the parameter")
+
+    # Description of the parameter
+    description: str | None = Field(description="Description of the parameter")
+
+    # Access permisions
     access_permissions: AccessOptionsType = Field(
         default_factory=AccessOptionsTypeFactory
     )
 
     format: CFormatEnum = Field(
         default=CFormatEnum.AUTO,
-        description="The format of the data. If set to 'auto', the format will be determined based on the primitive type.",
+        description="The format of the data, represents the way the data has to be displayed. If set to 'auto', the format will be determined based on the primitive type.",
     )
 
-    def primitive_type(self, types) -> StandardCTypesEnum | GenericDataType:
-        if isinstance(self.primitive, StandardCTypesEnum):
-            return self.primitive
-        return types[self.primitive]
-
     @property
-    def qualified_id(self) -> int:
-        return self._parent.calculate_id(self.id)
+    def global_id(self) -> int:
+        """Returns the global id of the parameter"""
+        return self._parent.calculate_id(self.local_id)
+
+    def one_line_summary(self):
+        return f"{self._name} (0x{self.global_id:08X}): {self.type}"
+
+    def primitive_type(self, types) -> StandardCTypesEnum | GenericDataType:
+        if isinstance(self.type, StandardCTypesEnum):
+            return self.type
+        return types[self.type]
 
     def init_children(
         self,
@@ -72,7 +84,7 @@ class BaseParameterModel(BaseModel):
 
 
 class LocalParameterModel(BaseParameterModel):
-    """Stores all the information for a parameter."""
+    """A local parameter model"""
 
     default: Any | None = None
     extension: EXENSIONS | None = None
@@ -99,7 +111,7 @@ class LocalParameterModel(BaseParameterModel):
             name=f"{name_prefix}{self._name}" if name_prefix else self._name,
             primitive=ODIN_PARAMETER_TYPE,
             value={
-                "index": cc.TextModifier(f"0x{self.qualified_id:08X}"),
+                "index": cc.TextModifier(f"0x{self.global_id:08X}"),
                 "access": cc.TextModifier(
                     "|".join(permission_flags) if permission_flags else "0"
                 ),
@@ -159,7 +171,7 @@ class ReferenceParameterModel(BaseParameterModel):
             name=f"{name_prefix}{self._name}" if name_prefix else self._name,
             primitive=ODIN_PARAMETER_TYPE,
             value={
-                "index": cc.TextModifier(f"0x{self.qualified_id:08X}"),
+                "index": cc.TextModifier(f"0x{self.global_id:08X}"),
                 "access": cc.TextModifier(
                     "|".join(permission_flags) if permission_flags else "0"
                 ),

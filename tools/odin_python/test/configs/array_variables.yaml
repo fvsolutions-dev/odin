@@ -2,6 +2,7 @@ extensions:
   - "test/configs/common/custom_types.yaml"
 
 variables:
+
   no_default_state:
     id: 0x1
     primitive: state_t

@@ -4,7 +4,7 @@ import csnake as cc
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
 
-from .generic import GenericDataType
+from .__generic__ import GenericDataType
 from .standard_types import CustomCTypesEnum, StandardCTypesEnum, CFormatEnum
 from .custom_enum import EnumeratorDataType
 

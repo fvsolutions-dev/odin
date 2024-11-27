@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Literal
 
 import csnake as cc
 
-from .generic import GenericDataType
+from .__generic__ import GenericDataType
 
 from .standard_types import CFormatEnum, CustomCTypesEnum
 
