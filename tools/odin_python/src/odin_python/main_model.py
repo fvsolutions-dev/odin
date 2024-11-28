@@ -3,6 +3,7 @@ from typing import Dict, List
 import csnake as cc
 from odin_python.data_types.custom_enum import EnumeratorDataType
 from odin_python.data_types.custom_structure import StructureDataType
+from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.parameter.access import (
     AccessConfigurationModel,
     AccessConfigurationType,
@@ -57,6 +58,8 @@ class TestReader(BaseModel):
 
     _datastore: ParameterStoreModel = PrivateAttr()
 
+    _associated_types: TypeRegistry = PrivateAttr()
+
     @classmethod
     def from_yaml(cls, path: str):
         return parse_yaml_file_as(cls, path)
@@ -75,6 +78,10 @@ class TestReader(BaseModel):
 
     @model_validator(mode="after")
     def post_load(self):
+        
+        self._associated_types = TypeRegistry()
+        self._associated_types.register(BASE_DATA_TYPES)
+        
         # Initialize access configurations
         for k, v in self.access_groups.items():
             if v is None:
@@ -86,8 +93,8 @@ class TestReader(BaseModel):
         )
 
         # initialize types
-        for k, v in self.types.items():
-            v._typename = k
+        # for k, v in self.types.items():
+        #     v._typename = k
 
         # initialize datastore
         self._datastore = ParameterStoreModel(

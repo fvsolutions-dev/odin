@@ -44,6 +44,9 @@ class BaseParameterModel(BaseModel, ABC):
     # Primitive, must be mapped to a known type
     type: str = Field(description="Primitive type of the parameter")
 
+    # Resolved type
+    _resolved_type: GenericDataType = PrivateAttr()
+
     # Description of the parameter
     description: str | None = Field(description="Description of the parameter")
 
