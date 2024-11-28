@@ -1,5 +1,0 @@
-parameters:
-  test_variable:
-    local_id: 0x1
-    type: float
-    description: A test variable

@@ -1,6 +1,6 @@
 from csnake import CodeWriterLite
 import csnake as cc
-from typing import Union
+from typing import Union, Collection, Mapping
 
 
 class StructVariable(cc.Struct):
@@ -37,3 +37,6 @@ class StructVariable(cc.Struct):
             writer.add(f"{self.var_name};")
 
         return writer
+
+    def add_variable(self, variable: cc.Variable):
+        super().add_variable(variable) # type: ignore
