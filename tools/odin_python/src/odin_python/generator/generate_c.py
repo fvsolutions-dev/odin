@@ -1,3 +1,4 @@
+from operator import ge
 import os
 from re import S
 
@@ -16,17 +17,24 @@ class CGenerator:
     STORE_TYPE = "root_type_t"
     STORE_NAME = "root"
 
+    RAM_TYPE = "root_ram_t"
+    RAM_NAME = "root_ram"
+
     @staticmethod
     def generate_source(model: RootParameterModel):
         cw = cc.CodeWriter()
-        cw.add_line("#include <stdint.h>")
-        cw.add_line("#include <stdbool.h>")
+        # Generate the ram storage type
+        cw.add_variable_initialization(
+            model.to_c_initialiser(CGenerator.RAM_NAME, CGenerator.RAM_TYPE)
+        )
+        cw.add_line("")
 
         cw.add_variable_initialization(
             model.to_c_odin_parameter_initialiser(
                 param_name=CGenerator.STORE_NAME, type_name=CGenerator.STORE_TYPE
             )
         )
+        cw.add_line("")
 
         return str(cw)
 
@@ -35,9 +43,22 @@ class CGenerator:
         cw = cc.CodeWriter()
         cw.add_line("#include <stdint.h>")
         cw.add_line("#include <stdbool.h>")
+        cw.add_line("#include <odin.h>")
+        cw.add_line("")
 
+        cw.add_struct(model.to_ram_struct(CGenerator.RAM_TYPE))
+        cw.add_line("")
+        
         cw.add_struct(model.to_recursive_odin_typedef(type_name=CGenerator.STORE_TYPE))
+        cw.add_line("")
+        
         return str(cw)
+
+    @staticmethod
+    def generate_single_source(model: RootParameterModel):
+        return (
+            CGenerator.generate_header(model) + "\n" + CGenerator.generate_source(model)
+        )
 
 
 # class CGenerator:

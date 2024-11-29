@@ -1,7 +1,7 @@
-from ..data_types.type_registry import DataType, TypeRegistry
+from ..data_types.type_registry import DataType, RegularCDataType, TypeRegistry
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 from odin_python.utils.string import escape_string
-from typing import Dict
+from typing import Any, Dict, List
 
 # from .models import AccessOptionsGenerator, MainModel, DeviceGroupModel
 # from ..data_types.custom_enum import EnumeratorDataType
@@ -69,6 +69,8 @@ class ParameterModel(BaseParameterModel):
     type: str = Field(description="Primitive type of the parameter")
 
     _resolved_type: DataType = PrivateAttr()
+    default: Any = Field(description="Default value of the parameter")
+    _data_storage_reference: str | None = PrivateAttr(default=None)
 
     # format: CFormatEnum = Field(
     #     default=CFormatEnum.AUTO,
@@ -86,7 +88,7 @@ class ParameterModel(BaseParameterModel):
 
     def to_c_odin_parameter_initialiser(self, **kwargs) -> cc.Variable:
         # permission_flags = self._access_configuration.get_permission_flags()
-
+        assert isinstance(self._resolved_type, RegularCDataType)
         return cc.Variable(
             name=self._name,
             primitive=ODIN_PARAMETER_TYPE,
@@ -101,12 +103,28 @@ class ParameterModel(BaseParameterModel):
                 #     else self.format.odin_type_macro
                 # ),
                 # "type": cc.TextModifier(primitive_type.element_type.odin_type_macro),
-                # "data": cc.TextModifier(f"&{self.ram_location}"),
+                "data": cc.TextModifier(f"&{self._data_storage_reference}"),
                 "size": cc.TextModifier(f"sizeof({self._resolved_type.c_typename})"),
                 "name": self._name,
                 "description": escape_string(self.resolved_description),
             },  # type: ignore
         )
+
+    def to_c_initialiser(
+        self, name: str, type_name: str, absolute_reference: str
+    ) -> cc.Variable:
+        """Returns the C initialiser for the parameter
+
+        Example:
+        ```
+        uint32_t my_parameter = 0;
+        ```
+        """
+
+        self._data_storage_reference = f"{absolute_reference}.{self._name}"
+
+        assert isinstance(self._resolved_type, RegularCDataType)
+        return self._resolved_type.to_c_initialiser(self._name, self.default)
 
     # def primitive_type(self, types) -> StandardCTypesEnum | GenericDataType:
     #     if isinstance(self.type, StandardCTypesEnum):
@@ -176,6 +194,40 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         return struct
 
+    def to_ram_struct(
+        self,
+        type_name: str | None = None,
+    ) -> cc.Struct:
+        if type_name:
+            struct = StructVariable(name=type_name, typedef=True)
+        else:
+            struct = StructVariable(var_name=self._name, typedef=False)
+
+        for child in self.children.values():
+            if isinstance(child, ParameterGroupModel):
+                struct.add_struct(child.to_ram_struct())
+            elif isinstance(child, ParameterModel):
+                struct.add_variable(child.to_c_initialiser(child._name, child.type, ""))
+            else:
+                raise ValueError("Unknown type")
+        return struct
+
+    def to_c_initialiser(
+        self, name: str, type_name: str, absolute_reference: str
+    ) -> cc.Variable:
+        absolute_reference = f"{absolute_reference}.{self._name}"
+
+        return cc.Variable(
+            name=self._name,
+            primitive="UNKNOWN PRIMITIVE",
+            value={
+                parameter_name: parameter.to_c_initialiser(
+                    name, type_name, absolute_reference
+                ).value
+                for parameter_name, parameter in self.children.items()  # type: ignore
+            },
+        )
+
 
 class ParameterGroupModel(BaseParameterGroupModel):
     id_shift: int = Field(description="Number of bits to shift the local id", default=0)
@@ -186,3 +238,16 @@ class RootParameterModel(BaseParameterGroupModel):
 
     def dump_json(self):
         return self.model_dump_json(indent=2)
+
+    def to_c_initialiser(
+        self, name: str, type_name: str, absolute_reference: str = ""
+    ) -> cc.Variable:
+        values = {}
+        for child_name, child in self.children.items():
+            values[child_name] = child.to_c_initialiser(name, type_name, name).value
+
+        return cc.Variable(
+            name=name,
+            primitive=type_name,
+            value=values,  # type: ignore
+        )

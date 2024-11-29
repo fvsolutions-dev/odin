@@ -1,4 +1,8 @@
 {
     "python.analysis.autoImportCompletions": true,
-    "python.analysis.typeCheckingMode": "strict"
+    "python.analysis.typeCheckingMode": "strict",
+    "C_Cpp.default.compilerPath": "d:\\Tools\\gcc-arm-none-eabi-10.3-2021.10\\bin\\arm-none-eabi-gcc.exe",
+    "files.associations": {
+        "odin.h": "c"
+    }
 }

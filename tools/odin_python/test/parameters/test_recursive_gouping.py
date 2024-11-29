@@ -40,9 +40,7 @@ def test_basic_generated():
     root_parameters.post_load_resolve(None, "root", registry)
 
     with open("test_generated.c", "w") as f:
-        f.write(CGenerator.generate_source(root_parameters))
-    with open("test_generated.h", "w") as f:
-        f.write(CGenerator.generate_header(root_parameters))
+        f.write(CGenerator.generate_single_source(root_parameters))
 
 
 if __name__ == "__main__":

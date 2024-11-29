@@ -1,30 +1,41 @@
 from typing import Dict
 from pydantic import BaseModel
-from typing import List
+from typing import List, Any
 from pydantic import Field
+import csnake as cc
 
 
 class DataType(BaseModel):
     typename: str
     size: int = Field(description="Size of the data type in bytes")
+
+
+class RegularCDataType(DataType):
     c_typename: str = Field(
         description="The C typename that corresponds to the data type"
     )
 
+    def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+        return cc.Variable(
+            name=name,
+            primitive=self.c_typename,
+            value=cc.TextModifier(str(default)),  # type: ignore
+        )
 
-BASE_DATA_TYPES = [
-    DataType(typename="u64", size=8, c_typename="uint64_t"),
-    DataType(typename="u32", size=4, c_typename="uint32_t"),
-    DataType(typename="u16", size=2, c_typename="uint16_t"),
-    DataType(typename="u8", size=1, c_typename="uint8_t"),
-    DataType(typename="i64", size=8, c_typename="int64_t"),
-    DataType(typename="i32", size=4, c_typename="int32_t"),
-    DataType(typename="i16", size=2, c_typename="int16_t"),
-    DataType(typename="i8", size=1, c_typename="int8_t"),
-    DataType(typename="f32", size=4, c_typename="float"),
-    DataType(typename="f64", size=8, c_typename="double"),
-    DataType(typename="bool", size=1, c_typename="bool"),
-    DataType(typename="char", size=1, c_typename="char"),
+
+BASE_DATA_TYPES: List[DataType] = [
+    RegularCDataType(typename="u64", size=8, c_typename="uint64_t"),
+    RegularCDataType(typename="u32", size=4, c_typename="uint32_t"),
+    RegularCDataType(typename="u16", size=2, c_typename="uint16_t"),
+    RegularCDataType(typename="u8", size=1, c_typename="uint8_t"),
+    RegularCDataType(typename="i64", size=8, c_typename="int64_t"),
+    RegularCDataType(typename="i32", size=4, c_typename="int32_t"),
+    RegularCDataType(typename="i16", size=2, c_typename="int16_t"),
+    RegularCDataType(typename="i8", size=1, c_typename="int8_t"),
+    RegularCDataType(typename="f32", size=4, c_typename="float"),
+    RegularCDataType(typename="f64", size=8, c_typename="double"),
+    RegularCDataType(typename="bool", size=1, c_typename="bool"),
+    RegularCDataType(typename="char", size=1, c_typename="char"),
 ]
 
 
