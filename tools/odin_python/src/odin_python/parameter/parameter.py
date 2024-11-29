@@ -1,7 +1,7 @@
 from ..data_types.type_registry import DataType, RegularCDataType, TypeRegistry
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 from odin_python.utils.string import escape_string
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 # from .models import AccessOptionsGenerator, MainModel, DeviceGroupModel
 # from ..data_types.custom_enum import EnumeratorDataType

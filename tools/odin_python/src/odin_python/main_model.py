@@ -24,7 +24,6 @@ from pydantic import (
 from pydantic_yaml import parse_yaml_file_as
 
 
-
 class ConfigModel(BaseModel):
     storage_name: str = "ODIN_ram"
     parameter_name: str = "ODIN_params"
@@ -73,10 +72,9 @@ class TestReader(BaseModel):
 
     @model_validator(mode="after")
     def post_load(self):
-        
         self._associated_types = TypeRegistry()
         self._associated_types.register(BASE_DATA_TYPES)
-        
+
         # Initialize access configurations
         for k, v in self.access_groups.items():
             if v is None:

@@ -1,16 +1,8 @@
-from operator import ge
-import os
-from re import S
-
 import csnake as cc
 
 from odin_python.parameter.parameter import (
-    ParameterGroupModel,
-    ParameterModel,
     RootParameterModel,
 )
-from typing import Dict
-from odin_python.utils.csnake_custom import StructVariable
 
 
 class CGenerator:
@@ -48,10 +40,10 @@ class CGenerator:
 
         cw.add_struct(model.to_ram_struct(CGenerator.RAM_TYPE))
         cw.add_line("")
-        
+
         cw.add_struct(model.to_recursive_odin_typedef(type_name=CGenerator.STORE_TYPE))
         cw.add_line("")
-        
+
         return str(cw)
 
     @staticmethod
