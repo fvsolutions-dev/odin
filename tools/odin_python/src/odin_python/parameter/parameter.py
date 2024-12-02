@@ -61,6 +61,45 @@ class BaseParameterModel(BaseModel, ABC):
     @abstractmethod
     def to_c_odin_parameter_initialiser(self, **kwargs) -> cc.Variable: ...
 
+    @abstractmethod
+    def to_c_initialiser(
+        self, name: str, type_name: str, absolute_reference: str
+    ) -> cc.Variable | None: ...
+
+
+class ReferenceParameterModel(BaseParameterModel):
+    type: str = Field(description="Primitive type of the parameter")
+    _resolved_type: DataType = PrivateAttr()
+    reference: str = Field(description="Reference to the point in memory")
+
+    def post_load_resolve(
+        self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry
+    ):
+        super().post_load_resolve(parent, name, type_registry)
+        self._resolved_type = type_registry.get_type(self.type)
+
+    def one_line_summary(self, level=0):
+        return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
+
+    def to_c_odin_parameter_initialiser(self, **kwargs) -> cc.Variable:
+        assert isinstance(self._resolved_type, RegularCDataType)
+        return cc.Variable(
+            name=self._name,
+            primitive=ODIN_PARAMETER_TYPE,
+            value={
+                "index": cc.TextModifier(f"0x{self.global_id:08X}"),
+                "data": cc.TextModifier(f"&{self.reference}"),
+                "size": cc.TextModifier(f"sizeof({self._resolved_type.c_typename})"),
+                "name": self._name,
+                "description": escape_string(self.resolved_description),
+            },  # type: ignore
+        )
+
+    def to_c_initialiser(
+        self, name: str, type_name: str, absolute_reference: str
+    ) -> cc.Variable | None:
+        return None
+
 
 class ParameterModel(BaseParameterModel):
     # Reference to the parent model if any
@@ -145,7 +184,7 @@ class ParameterModel(BaseParameterModel):
 
 
 class BaseParameterGroupModel(BaseParameterModel):
-    children: "Dict[str, ParameterGroupModel|ParameterModel ]"
+    children: "Dict[str, ParameterGroupModel|ParameterModel|ReferenceParameterModel]"
 
     def post_load_resolve(
         self,
@@ -187,7 +226,9 @@ class BaseParameterGroupModel(BaseParameterModel):
         for child in self.children.values():
             if isinstance(child, ParameterGroupModel):
                 struct.add_struct(child.to_recursive_odin_typedef())
-            elif isinstance(child, ParameterModel):
+            elif isinstance(child, ParameterModel) or isinstance(
+                child, ReferenceParameterModel
+            ):
                 struct.add_variable(child.to_c_odin_parameter_initialiser())
             else:
                 raise ValueError("Unknown type")
@@ -208,6 +249,8 @@ class BaseParameterGroupModel(BaseParameterModel):
                 struct.add_struct(child.to_ram_struct())
             elif isinstance(child, ParameterModel):
                 struct.add_variable(child.to_c_initialiser(child._name, child.type, ""))
+            elif isinstance(child, ReferenceParameterModel):
+                pass
             else:
                 raise ValueError("Unknown type")
         return struct
@@ -217,15 +260,17 @@ class BaseParameterGroupModel(BaseParameterModel):
     ) -> cc.Variable:
         absolute_reference = f"{absolute_reference}.{self._name}"
 
+        values = {}
+        for child_name, child in self.children.items():
+            initialiser = child.to_c_initialiser(name, type_name, name)
+
+            if initialiser is not None:
+                values[child_name] = initialiser.value
+
         return cc.Variable(
             name=self._name,
             primitive="UNKNOWN PRIMITIVE",
-            value={
-                parameter_name: parameter.to_c_initialiser(
-                    name, type_name, absolute_reference
-                ).value
-                for parameter_name, parameter in self.children.items()  # type: ignore
-            },
+            value=values,  # type: ignore
         )
 
 
@@ -244,7 +289,10 @@ class RootParameterModel(BaseParameterGroupModel):
     ) -> cc.Variable:
         values = {}
         for child_name, child in self.children.items():
-            values[child_name] = child.to_c_initialiser(name, type_name, name).value
+            initialiser = child.to_c_initialiser(name, type_name, name)
+
+            if initialiser is not None:
+                values[child_name] = initialiser.value
 
         return cc.Variable(
             name=name,

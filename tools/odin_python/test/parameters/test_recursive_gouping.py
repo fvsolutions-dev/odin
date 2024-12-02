@@ -35,8 +35,7 @@ def test_basic_generated():
     registry.register(BASE_DATA_TYPES)
 
     model = LoaderModel.from_yaml(CONFIG)
-
-    root_parameters = RootParameterModel(children=model.root)
+    root_parameters = RootParameterModel(children=model.root)  # type: ignore
     root_parameters.post_load_resolve(None, "root", registry)
 
     with open("test_generated.c", "w") as f:
