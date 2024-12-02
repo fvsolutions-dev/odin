@@ -17,7 +17,7 @@ class CGenerator:
         cw = cc.CodeWriter()
         # Generate the ram storage type
         cw.add_variable_initialization(
-            model.to_c_initialiser(CGenerator.RAM_NAME, CGenerator.RAM_TYPE)
+            model.to_c_value(CGenerator.RAM_NAME, CGenerator.RAM_TYPE)
         )
         cw.add_line("")
 

@@ -5,10 +5,12 @@ from odin_python.generator.generate_c import (
     CGenerator,
 )
 from odin_python.parameter.parameter import (
+    ArrayParameterModel,
     ParameterModel,
     ParameterGroupModel,
     ReferenceParameterModel,
     RootParameterModel,
+    VectorParameterModel,
 )
 from pydantic import RootModel, ValidationError
 from pydantic_yaml import parse_yaml_file_as
@@ -18,7 +20,16 @@ CONFIG = r"test\parameters\4_reference_parameter.yaml"
 
 
 class LoaderModel(
-    RootModel[Dict[str, ParameterModel | ParameterGroupModel | ReferenceParameterModel]]
+    RootModel[
+        Dict[
+            str,
+            ParameterModel
+            | ParameterGroupModel
+            | ReferenceParameterModel
+            | ArrayParameterModel
+            | VectorParameterModel,
+        ]
+    ]
 ):
     @classmethod
     def from_yaml(cls, file_path: str):

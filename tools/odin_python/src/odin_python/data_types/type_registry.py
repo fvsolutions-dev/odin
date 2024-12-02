@@ -3,11 +3,22 @@ from pydantic import BaseModel
 from typing import List, Any
 from pydantic import Field
 import csnake as cc
+from abc import ABC, abstractmethod
 
 
-class DataType(BaseModel):
+class DataType(BaseModel, ABC):
     typename: str
     size: int = Field(description="Size of the data type in bytes")
+
+    @abstractmethod
+    def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+        pass
+
+    @abstractmethod
+    def to_c_array_initialiser(
+        self, name: str, default: Any, dimensions: List[int]
+    ) -> cc.Variable:
+        pass
 
 
 class RegularCDataType(DataType):
@@ -20,6 +31,16 @@ class RegularCDataType(DataType):
             name=name,
             primitive=self.c_typename,
             value=cc.TextModifier(str(default)),  # type: ignore
+        )
+
+    def to_c_array_initialiser(
+        self, name: str, default: List[Any] | None, dimensions: List[int]
+    ) -> cc.Variable:
+        return cc.Variable(
+            name=name,
+            primitive=self.c_typename,
+            array=dimensions,
+            value=default if default else [0],  # type: ignore
         )
 
 
