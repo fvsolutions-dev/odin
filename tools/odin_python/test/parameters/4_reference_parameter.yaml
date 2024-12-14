@@ -1,6 +1,0 @@
-
-test_variable_A:
-  local_id: 0x1
-  type: f32
-  description: A test variable
-  reference: my.reference

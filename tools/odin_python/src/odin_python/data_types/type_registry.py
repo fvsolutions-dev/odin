@@ -4,12 +4,13 @@ from typing import List, Any
 from pydantic import Field
 import csnake as cc
 from abc import ABC, abstractmethod
+from enum import Enum
 
 
 class DataType(BaseModel, ABC):
     typename: str
     size: int = Field(description="Size of the data type in bytes")
-
+    
     @abstractmethod
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
         pass
@@ -42,6 +43,8 @@ class RegularCDataType(DataType):
             array=dimensions,
             value=default if default else [0],  # type: ignore
         )
+
+
 
 
 BASE_DATA_TYPES: List[DataType] = [

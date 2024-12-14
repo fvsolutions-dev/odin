@@ -21,11 +21,12 @@ class CGenerator:
         )
         cw.add_line("")
 
-        cw.add_variable_initialization(
-            model.to_c_odin_parameter_initialiser(
-                param_name=CGenerator.STORE_NAME, type_name=CGenerator.STORE_TYPE
-            )
+        value = model.to_c_odin_parameter_initialiser(
+            param_name=CGenerator.STORE_NAME, type_name=CGenerator.STORE_TYPE
         )
+        value.qualifiers = ["const"]
+
+        cw.add_variable_initialization(value)
         cw.add_line("")
 
         return str(cw)
