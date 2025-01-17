@@ -74,7 +74,7 @@ def process_config(config: str):
     return f"{config}.c"
 
 def compile_file(file: str):
-    command = f"clang -o {file}.o -c {file} -I D:/projects/odin/odin/tools/odin_python/test/configs -L /usr/local/lib"
+    command = f"clang -o {file}.o -c {file} -I D:/Projects/odin_datastore/odin/tools/odin_python/test/configs -L /usr/local/lib"
     print(command)
     e = subprocess.run(command, shell=True)
     if e.returncode != 0:
