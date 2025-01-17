@@ -24,6 +24,14 @@ from odin_python.parameter.parameter import (
 from pydantic import RootModel, ValidationError
 from pydantic_yaml import parse_yaml_file_as
 
+import subprocess
+
+import pytest
+import glob
+
+
+CONFIGS = glob.glob("test/configs/*.yaml")
+
 
 class LoaderModel(
     RootModel[
@@ -50,28 +58,37 @@ class LoaderModel(
             raise Exception("Failed to parse yaml file")
 
 
-CONFIGS = [
-    r"basic\config.yaml",
-    r"reference\config.yaml",
-    r"array\arrays.yaml",
-]
-
-
 def process_config(config: str):
     registry = TypeRegistry()
     registry.register(BASE_DATA_TYPES)
 
-    model = LoaderModel.from_yaml(os.path.join(os.path.dirname(__file__), config))
+    model = LoaderModel.from_yaml( config)
 
     root_parameters = RootParameterModel(children=model.root)  # type: ignore
     root_parameters.post_load_resolve(None, "root", registry)
 
-    escaped_name = config.replace("\\", "_")
-    
-    with open(f"test_generated_{escaped_name}.c", "w") as f:
+    # 
+    with open(f"{config}.c", "w") as f:
         f.write(CGenerator.generate_single_source(root_parameters))
 
+    return f"{config}.c"
 
+def compile_file(file: str):
+    command = f"clang -o {file}.o -c {file} -I D:/projects/odin/odin/tools/odin_python/test/configs -L /usr/local/lib"
+    print(command)
+    e = subprocess.run(command, shell=True)
+    if e.returncode != 0:
+        raise Exception(f"Failed to compile {file}")
+
+# Parameterize with all the configs
+@pytest.mark.parametrize("config", CONFIGS)
+def test_basic_parse(config: str):
+    file = process_config(config)
+    compile_file(file)
+    
 if __name__ == "__main__":
     for config in CONFIGS:
-        process_config(config)
+        print(f"processing {config}")
+        file = process_config(config)
+        compile_file(file)
+        

@@ -248,7 +248,7 @@ class ParameterModel(BaseParameterModel):
 
         assert (
             self._data_storage_reference is not None
-        ), "Data storage reference is not set"
+        ), "Data storage reference is not set, call to_c_initialiser first to set the reference"
 
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,

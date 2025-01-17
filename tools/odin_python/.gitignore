@@ -1,3 +1,2 @@
-test/output/**
-**.h
-**.c
+test/configs/*.c
+test/configs/*.out

@@ -6,9 +6,9 @@ from pydantic import RootModel
 from pydantic_yaml import parse_yaml_file_as
 import csnake as cc  # type: ignore
 from odin_python.utils.csnake_custom import StructVariable
+import os
 
-
-CONFIG = r"test\parameters\1_regular_parameter.yaml"
+CONFIG = "simple_config.yaml"
 
 
 class LoaderModel(RootModel[Dict[str, ParameterModel]]):
@@ -48,18 +48,26 @@ class LoaderModel(RootModel[Dict[str, ParameterModel]]):
 
 
 def test_basic_parse():
-    model = LoaderModel.from_yaml(CONFIG)
+    model = LoaderModel.from_yaml(os.path.join(os.path.dirname(__file__), CONFIG))
+    
+    # Create the type registry, wich manages the types of the parameters
     registry = TypeRegistry()
     registry.register(BASE_DATA_TYPES)
 
+    # Resolve the types of the parameters in the model
     model.resolve_types(registry)
-
+    
+    # Print the model
+    print("Model:")
     print(model.dump_json())
+    
+    print("Summary:")
     print(model.dump_summary())
 
+    # Generate the C code
     cw = cc.CodeWriter()
+    model.to_recursive_odin_typedef().add_to_code_writer(cw)
     cw.add_struct(model.to_recursive_odin_typedef())
-
     cw.add_variable_initialization(model.to_c_odin_parameter_initialiser())
 
     file = str(cw)
