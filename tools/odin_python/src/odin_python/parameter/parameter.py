@@ -1,21 +1,13 @@
-from enum import Enum
-from ..data_types.type_registry import DataType, RegularCDataType, TypeRegistry
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
-from odin_python.utils.string import escape_string
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
-# from .models import AccessOptionsGenerator, MainModel, DeviceGroupModel
-# from ..data_types.custom_enum import EnumeratorDataType
-# from ..data_types.custom_structure import GenericDataType, StructureDataType
-# from ..data_types.standard_types import CFormatEnum, StandardCTypesEnum
-import csnake as cc  # type: ignore
+import csnake as cc
 from odin_python.utils.csnake_custom import StructVariable
+from odin_python.utils.string import escape_string
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
-# from ..extensions import (
-#     EXENSIONS,
-#     MappingParameterExtensionModel,
-# )
-from abc import ABC, abstractmethod
+from ..data_types.type_registry import DataType, RegularCDataType, TypeRegistry
+from .odin_defs import ODIN_ElementTypeEnum, ODIN_TypeEnum
 
 ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
 ODIN_ARRAY_PARAMETER_TYPE = "ODIN_array_t"
@@ -23,20 +15,26 @@ ODIN_VECTOR_PARAMETER_TYPE = "ODIN_vector_t"
 
 
 class BaseParameterModel(BaseModel, ABC):
+    """The base parameter model, is an abstract class that all parameter models inherit from
+
+    It contains the basic properties and methods that all parameter models should have
+
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     # Name of the parameter, set by the post_load_resolve method
     _name: str = PrivateAttr()
 
-    # Parent of the parameter, set by the post_load_resolve method
+    # Reference to the parent of the parameter, set by the post_load_resolve method
     _parent: "BaseParameterModel|None" = PrivateAttr(default=None)
 
-    # Local id of the parameter
-    local_id: int = Field(description="Local id of the parameter")
+    local_id: int = Field(
+        description="Local id of the parameter, unique within the parent"
+    )
 
-    # Description of the parameter, optional
     description: str | None = Field(
-        description="Description of the parameter", default=None
+        description="Description of the parameter, optional", default=None
     )
 
     def post_load_resolve(
@@ -45,19 +43,20 @@ class BaseParameterModel(BaseModel, ABC):
         name: str,
         type_registry: TypeRegistry,
     ):
-        """Post load resolve method, needs to be called after the model is initialized"""
-        del type_registry
+        """Post load resolve method, must to be called after the model is created"""
+
+        del type_registry  # type_registry is not used here
         self._parent = parent
         self._name = name
 
     @property
     def resolved_description(self) -> str:
-        """Returns the description of the parameter, if not set returns 'No description'"""
+        """Returns the description of the parameter, if not set returns a default value"""
         return self.description if self.description else "No description"
 
     @property
     def global_id(self) -> int:
-        """Returns the global id of the parameter"""
+        """Calculates the global id of the parameter, by going up the tree"""
         if self._parent is None:
             return self.local_id
 
@@ -69,63 +68,14 @@ class BaseParameterModel(BaseModel, ABC):
             raise ValueError("Parent is not a ParameterGroupModel")
 
     @abstractmethod
-    def to_c_odin_parameter_initialiser(self, **kwargs) -> cc.Variable: ...
-        
+    def to_c_odin_parameter_initialiser(self, **kwargs) -> cc.Variable:
+        """Returns the C initialiser for the parameter"""
+
     @abstractmethod
     def to_ram_initialiser(
         self, name: str, type_name: str, absolute_reference: str
-    ) -> cc.Variable | None: ...
-
-
-class ODIN_TypeEnum(Enum):
-    ODIN_TYPE_PARAMETER = "ODIN_TYPE_PARAMETER"
-    ODIN_TYPE_ARRAY = "ODIN_TYPE_ARRAY"
-    ODIN_TYPE_VECTOR = "ODIN_TYPE_VECTOR"
-
-
-class ODIN_ElementTypeEnum(Enum):
-    ODIN_ELEMENT_TYPE_BOOL = "ODIN_ELEMENT_TYPE_BOOL"
-    ODIN_ELEMENT_TYPE_HEX = "ODIN_ELEMENT_TYPE_HEX"
-    ODIN_ELEMENT_TYPE_UINT8 = "ODIN_ELEMENT_TYPE_UINT8"
-    ODIN_ELEMENT_TYPE_UINT16 = "ODIN_ELEMENT_TYPE_UINT16"
-    ODIN_ELEMENT_TYPE_UINT32 = "ODIN_ELEMENT_TYPE_UINT32"
-    ODIN_ELEMENT_TYPE_UINT64 = "ODIN_ELEMENT_TYPE_UINT64"
-    ODIN_ELEMENT_TYPE_INT8 = "ODIN_ELEMENT_TYPE_INT8"
-    ODIN_ELEMENT_TYPE_INT16 = "ODIN_ELEMENT_TYPE_INT16"
-    ODIN_ELEMENT_TYPE_INT32 = "ODIN_ELEMENT_TYPE_INT32"
-    ODIN_ELEMENT_TYPE_INT64 = "ODIN_ELEMENT_TYPE_INT64"
-    ODIN_ELEMENT_TYPE_FLOAT32 = "ODIN_ELEMENT_TYPE_FLOAT32"
-    ODIN_ELEMENT_TYPE_FLOAT64 = "ODIN_ELEMENT_TYPE_FLOAT64"
-    ODIN_ELEMENT_TYPE_CHAR = "ODIN_ELEMENT_TYPE_CHAR"
-    ODIN_ELEMENT_TYPE_CUSTOM = "ODIN_ELEMENT_TYPE_CUSTOM"
-
-    @classmethod
-    def from_c_type(cls, c_type: str) -> "ODIN_ElementTypeEnum":
-        if c_type == "bool":
-            return cls.ODIN_ELEMENT_TYPE_BOOL
-        if c_type == "uint8_t":
-            return cls.ODIN_ELEMENT_TYPE_UINT8
-        if c_type == "uint16_t":
-            return cls.ODIN_ELEMENT_TYPE_UINT16
-        if c_type == "uint32_t":
-            return cls.ODIN_ELEMENT_TYPE_UINT32
-        if c_type == "uint64_t":
-            return cls.ODIN_ELEMENT_TYPE_UINT64
-        if c_type == "int8_t":
-            return cls.ODIN_ELEMENT_TYPE_INT8
-        if c_type == "int16_t":
-            return cls.ODIN_ELEMENT_TYPE_INT16
-        if c_type == "int32_t":
-            return cls.ODIN_ELEMENT_TYPE_INT32
-        if c_type == "int64_t":
-            return cls.ODIN_ELEMENT_TYPE_INT64
-        if c_type == "float":
-            return cls.ODIN_ELEMENT_TYPE_FLOAT32
-        if c_type == "double":
-            return cls.ODIN_ELEMENT_TYPE_FLOAT64
-        if c_type == "char":
-            return cls.ODIN_ELEMENT_TYPE_CHAR
-        return cls.ODIN_ELEMENT_TYPE_CUSTOM
+    ) -> cc.Variable | None:
+        """Returns the ram initialiser for the parameter"""
 
 
 class ODIN_ParameterModel(BaseModel):
@@ -239,7 +189,7 @@ class ParameterModel(BaseParameterModel):
     def one_line_summary(self, level=0):
         return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
 
-    def to_c_odin_parameter_initialiser(self,**kwargs) -> cc.Variable:
+    def to_c_odin_parameter_initialiser(self, **kwargs) -> cc.Variable:
         """Returns the C initialiser for the parameter"""
 
         # permission_flags = self._access_configuration.get_permission_flags()
@@ -270,8 +220,8 @@ class ParameterModel(BaseParameterModel):
         uint32_t my_parameter = 0;
         ```
         """
-        self._data_storage_reference = f"{absolute_reference}.{self._name}"        
-        
+        self._data_storage_reference = f"{absolute_reference}.{self._name}"
+
         assert isinstance(self._resolved_type, RegularCDataType)
         return self._resolved_type.to_c_initialiser(self._name, self.default)
 
@@ -360,7 +310,7 @@ class ArrayParameterModel(BaseParameterModel):
 
         assert isinstance(self._resolved_type, RegularCDataType)
         return self._resolved_type.to_c_array_initialiser(
-            self._name, self.default, [self.elements]
+            self._name, self.default if self.default else [], [self.elements]
         )
 
 
@@ -493,12 +443,11 @@ class BaseParameterGroupModel(BaseParameterModel):
         self,
         type_name: str | None = None,
     ) -> cc.Struct:
-        
         if type_name:
             struct = StructVariable(name=type_name, typedef=True)
         else:
             struct = StructVariable(var_name=self._name, typedef=False)
-            
+
         # Create the data structures for groups
         for child in self.children.values():
             if isinstance(child, ParameterGroupModel):
@@ -510,11 +459,10 @@ class BaseParameterGroupModel(BaseParameterModel):
                 or isinstance(child, VectorParameterModel)
                 or isinstance(child, ArrayParameterModel)
             ):
-                
                 # Set the storqage reference to UNSET to not trigger an error when creating the initialiser
                 if not isinstance(child, ReferenceParameterModel):
                     child._data_storage_reference = "UNSET"
-                    
+
                 struct.add_variable(child.to_c_odin_parameter_initialiser())
 
             else:

@@ -9,14 +9,15 @@ from abc import ABC, abstractmethod
 class DataType(BaseModel, ABC):
     typename: str
     size: int = Field(description="Size of the data type in bytes")
-    
+
     @abstractmethod
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable: ...
 
     @abstractmethod
     def to_c_array_initialiser(
-        self, name: str, default: Any, dimensions: List[int]
+        self, name: str, defaults: Any, dimensions: List[int]
     ) -> cc.Variable: ...
+
 
 class RegularCDataType(DataType):
     c_typename: str = Field(
@@ -31,16 +32,51 @@ class RegularCDataType(DataType):
         )
 
     def to_c_array_initialiser(
-        self, name: str, default: List[Any] | None, dimensions: List[int]
+        self, name: str, defaults: List[Any], dimensions: List[int]
     ) -> cc.Variable:
         return cc.Variable(
             name=name,
             primitive=self.c_typename,
             array=dimensions,
-            value=default if default else [0],  # type: ignore
+            value=[cc.TextModifier(str(x)) for x in defaults],  # type: ignore
         )
 
 
+class BooleanCDataType(RegularCDataType):
+    def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+        if default:
+            value = "true"
+        else:
+            value = "false"
+
+        return super().to_c_initialiser(name, value)
+
+    def to_c_array_initialiser(
+        self, name: str, defaults: List[Any], dimensions: List[int]
+    ) -> cc.Variable:
+        value = ["true" if x else "false" for x in defaults]
+
+        return super().to_c_array_initialiser(name, value, dimensions)
+
+
+class CharCDataType(RegularCDataType):
+    def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+        return cc.Variable(
+            name=name,
+            primitive=self.c_typename,
+            value=cc.TextModifier(f"'{default}'"),  # type: ignore
+        )
+
+    def to_c_array_initialiser(
+        self, name: str, defaults: List[Any], dimensions: List[int]
+    ) -> cc.Variable:
+        
+        return cc.Variable(
+            name=name,
+            primitive=self.c_typename,
+            array=dimensions,
+            value= [cc.TextModifier(f"'{x}'") for x in defaults],  # type: ignore
+        )
 
 
 BASE_DATA_TYPES: List[DataType] = [
@@ -54,12 +90,14 @@ BASE_DATA_TYPES: List[DataType] = [
     RegularCDataType(typename="i8", size=1, c_typename="int8_t"),
     RegularCDataType(typename="f32", size=4, c_typename="float"),
     RegularCDataType(typename="f64", size=8, c_typename="double"),
-    RegularCDataType(typename="bool", size=1, c_typename="bool"),
-    RegularCDataType(typename="char", size=1, c_typename="char"),
+    BooleanCDataType(typename="bool", size=1, c_typename="bool"),
+    CharCDataType(typename="char", size=1, c_typename="char"),
 ]
 
 
 class TypeRegistry:
+    """The type registry, us used to store datatypes, it allows adding custom types"""
+
     def __init__(self):
         self.types: Dict[str, DataType] = {}
 
@@ -72,7 +110,7 @@ class TypeRegistry:
             return
 
         if type.typename in self.types:
-            raise ValueError(f"Type {type.__name__} already registered")
+            raise ValueError(f"Type {type.typename} already registered")
 
         self.types[type.typename] = type
 

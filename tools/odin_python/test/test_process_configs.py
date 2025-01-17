@@ -28,6 +28,7 @@ CONFIGS = glob.glob("test/configs/*.yaml")
 
 # CONFIGS = [r"test\configs\2_group_parameter.yaml"]
 
+
 class LoaderModel(
     RootModel[
         Dict[
@@ -57,16 +58,17 @@ def process_config(config: str):
     registry = TypeRegistry()
     registry.register(BASE_DATA_TYPES)
 
-    model = LoaderModel.from_yaml( config)
+    model = LoaderModel.from_yaml(config)
 
     root_parameters = RootParameterModel(children=model.root)  # type: ignore
     root_parameters.post_load_resolve(None, "root", registry)
 
-    # 
+    #
     with open(f"{config}.c", "w") as f:
         f.write(CGenerator.generate_single_source(root_parameters))
 
     return f"{config}.c"
+
 
 def compile_file(file: str):
     command = f"clang -o {file}.o -c {file} -I D:/Projects/odin_datastore/odin/tools/odin_python/test/configs"
@@ -75,15 +77,16 @@ def compile_file(file: str):
     if e.returncode != 0:
         raise Exception(f"Failed to compile {file}")
 
+
 # Parameterize with all the configs
 @pytest.mark.parametrize("config", CONFIGS)
 def test_basic_parse(config: str):
     file = process_config(config)
     compile_file(file)
-    
+
+
 if __name__ == "__main__":
     for config in CONFIGS:
         print(f"processing {config}")
         file = process_config(config)
         compile_file(file)
-        
