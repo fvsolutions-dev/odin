@@ -4,5 +4,11 @@
     "C_Cpp.default.compilerPath": "d:\\Tools\\gcc-arm-none-eabi-10.3-2021.10\\bin\\arm-none-eabi-gcc.exe",
     "files.associations": {
         "odin.h": "c"
-    }
+    },
+    "python.testing.pytestArgs": [
+        "test"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.experiments.optInto": ["pythonTestAdapter"]
 }

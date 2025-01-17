@@ -10,6 +10,14 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
+        },
+        
+        {
+            "name": "Python Debugger: TEST",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "test/test_process_configs.py",
+            "console": "integratedTerminal"
         }
     ]
 }   

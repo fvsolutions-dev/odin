@@ -1,4 +1,3 @@
-import os
 from typing import Dict
 
 from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
@@ -12,17 +11,12 @@ from odin_python.parameter.parameter import (
 )
 from pydantic import RootModel, ValidationError
 from pydantic_yaml import parse_yaml_file_as
-from typing import Dict
 
 from odin_python.parameter.parameter import (
     ArrayParameterModel,
-    ParameterModel,
-    ParameterGroupModel,
     ReferenceParameterModel,
     VectorParameterModel,
 )
-from pydantic import RootModel, ValidationError
-from pydantic_yaml import parse_yaml_file_as
 
 import subprocess
 
@@ -32,6 +26,7 @@ import glob
 
 CONFIGS = glob.glob("test/configs/*.yaml")
 
+# CONFIGS = [r"test\configs\2_group_parameter.yaml"]
 
 class LoaderModel(
     RootModel[
@@ -74,7 +69,7 @@ def process_config(config: str):
     return f"{config}.c"
 
 def compile_file(file: str):
-    command = f"clang -o {file}.o -c {file} -I D:/Projects/odin_datastore/odin/tools/odin_python/test/configs -L /usr/local/lib"
+    command = f"clang -o {file}.o -c {file} -I D:/Projects/odin_datastore/odin/tools/odin_python/test/configs"
     print(command)
     e = subprocess.run(command, shell=True)
     if e.returncode != 0:

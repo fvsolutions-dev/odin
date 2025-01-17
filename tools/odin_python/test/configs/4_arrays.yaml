@@ -35,7 +35,7 @@ group_A:
       elements: 10
       description: A test variable
 
-    variable_length_array:
+    variable_length_array_123:
       local_id: 0x1
       type: i16
       max_elements: 50

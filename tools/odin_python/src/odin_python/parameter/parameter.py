@@ -70,9 +70,9 @@ class BaseParameterModel(BaseModel, ABC):
 
     @abstractmethod
     def to_c_odin_parameter_initialiser(self, **kwargs) -> cc.Variable: ...
-
+        
     @abstractmethod
-    def to_c_initialiser(
+    def to_ram_initialiser(
         self, name: str, type_name: str, absolute_reference: str
     ) -> cc.Variable | None: ...
 
@@ -239,7 +239,7 @@ class ParameterModel(BaseParameterModel):
     def one_line_summary(self, level=0):
         return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
 
-    def to_c_odin_parameter_initialiser(self, **kwargs) -> cc.Variable:
+    def to_c_odin_parameter_initialiser(self,**kwargs) -> cc.Variable:
         """Returns the C initialiser for the parameter"""
 
         # permission_flags = self._access_configuration.get_permission_flags()
@@ -260,7 +260,7 @@ class ParameterModel(BaseParameterModel):
         )
         return parameter.variable
 
-    def to_c_initialiser(
+    def to_ram_initialiser(
         self, name: str, type_name: str, absolute_reference: str
     ) -> cc.Variable:
         """Returns the C initialiser for the parameter
@@ -270,9 +270,8 @@ class ParameterModel(BaseParameterModel):
         uint32_t my_parameter = 0;
         ```
         """
-
-        self._data_storage_reference = f"{absolute_reference}.{self._name}"
-
+        self._data_storage_reference = f"{absolute_reference}.{self._name}"        
+        
         assert isinstance(self._resolved_type, RegularCDataType)
         return self._resolved_type.to_c_initialiser(self._name, self.default)
 
@@ -304,7 +303,7 @@ class ReferenceParameterModel(BaseParameterModel):
 
         return parameter.variable
 
-    def to_c_initialiser(
+    def to_ram_initialiser(
         self, name: str, type_name: str, absolute_reference: str
     ) -> None:
         return None
@@ -346,7 +345,7 @@ class ArrayParameterModel(BaseParameterModel):
         )
         return parameter.variable
 
-    def to_c_initialiser(
+    def to_ram_initialiser(
         self, name: str, type_name: str, absolute_reference: str
     ) -> cc.Variable:
         """Returns the C initialiser for the parameter
@@ -444,7 +443,7 @@ class VectorParameterModel(BaseParameterModel):
 
         return struct
 
-    def to_c_initialiser(
+    def to_ram_initialiser(
         self, name: str, type_name: str, absolute_reference: str
     ) -> cc.Variable:
         self._data_storage_reference = f"{absolute_reference}.{self._name}"
@@ -490,18 +489,20 @@ class BaseParameterGroupModel(BaseParameterModel):
             val += f"\n{child.one_line_summary(level+1)}"
         return val
 
-    def to_recursive_odin_typedef(
+    def to_odin_parameter_typedef(
         self,
         type_name: str | None = None,
     ) -> cc.Struct:
+        
         if type_name:
             struct = StructVariable(name=type_name, typedef=True)
         else:
             struct = StructVariable(var_name=self._name, typedef=False)
+            
         # Create the data structures for groups
         for child in self.children.values():
             if isinstance(child, ParameterGroupModel):
-                struct.add_struct(child.to_recursive_odin_typedef())
+                struct.add_struct(child.to_odin_parameter_typedef())
 
             elif (
                 isinstance(child, ParameterModel)
@@ -509,6 +510,11 @@ class BaseParameterGroupModel(BaseParameterModel):
                 or isinstance(child, VectorParameterModel)
                 or isinstance(child, ArrayParameterModel)
             ):
+                
+                # Set the storqage reference to UNSET to not trigger an error when creating the initialiser
+                if not isinstance(child, ReferenceParameterModel):
+                    child._data_storage_reference = "UNSET"
+                    
                 struct.add_variable(child.to_c_odin_parameter_initialiser())
 
             else:
@@ -516,7 +522,7 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         return struct
 
-    def to_ram_struct(
+    def to_ram_typedef(
         self,
         type_name: str | None = None,
     ) -> cc.Struct:
@@ -527,16 +533,16 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         for child in self.children.values():
             if isinstance(child, ParameterGroupModel):
-                struct.add_struct(child.to_ram_struct())
+                struct.add_struct(child.to_ram_typedef())
 
             elif isinstance(child, VectorParameterModel):
-                child.to_c_initialiser(child._name, child.type, "")
+                child.to_ram_initialiser(child._name, child.type, "")
                 struct.add_struct(child.to_ram_struct())
 
             elif isinstance(child, ParameterModel) or isinstance(
                 child, ArrayParameterModel
             ):
-                variable = child.to_c_initialiser(child._name, child.type, "")
+                variable = child.to_ram_initialiser(child._name, child.type, "")
                 if variable:
                     struct.add_variable(variable)
 
@@ -548,14 +554,14 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         return struct
 
-    def to_c_initialiser(
+    def to_ram_initialiser(
         self, name: str, type_name: str, absolute_reference: str
     ) -> cc.Variable:
         absolute_reference = f"{absolute_reference}.{self._name}"
 
         values = {}
         for child in self.children.values():
-            initialiser = child.to_c_initialiser(name, type_name, name)
+            initialiser = child.to_ram_initialiser(name, type_name, absolute_reference)
 
             if initialiser:
                 values[initialiser.name] = initialiser.value
@@ -577,12 +583,12 @@ class RootParameterModel(BaseParameterGroupModel):
     def dump_json(self):
         return self.model_dump_json(indent=2)
 
-    def to_c_value(
+    def to_ram_initialiser(
         self, name: str, type_name: str, absolute_reference: str = ""
     ) -> cc.Variable:
         values = {}
         for child in self.children.values():
-            initialiser = child.to_c_initialiser(name, type_name, name)
+            initialiser = child.to_ram_initialiser(name, type_name, name)
 
             if initialiser:
                 values[initialiser.name] = initialiser.value

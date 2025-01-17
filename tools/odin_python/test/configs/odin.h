@@ -2,6 +2,14 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+extern uint64_t current_time_in_microseconds;
+struct my_struct
+{
+    float reference;
+};
+
+extern struct my_struct my;
+
 typedef enum
 {
     ODIN_TYPE_PARAMETER, // Single value

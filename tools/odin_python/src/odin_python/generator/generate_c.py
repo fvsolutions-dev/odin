@@ -17,7 +17,7 @@ class CGenerator:
         cw = cc.CodeWriter()
         # Generate the ram storage type
         cw.add_variable_initialization(
-            model.to_c_value(CGenerator.RAM_NAME, CGenerator.RAM_TYPE)
+            model.to_ram_initialiser(CGenerator.RAM_NAME, CGenerator.RAM_TYPE)
         )
         cw.add_line("")
 
@@ -39,10 +39,10 @@ class CGenerator:
         cw.add_line("#include <odin.h>")
         cw.add_line("")
 
-        cw.add_struct(model.to_ram_struct(CGenerator.RAM_TYPE))
+        cw.add_struct(model.to_ram_typedef(CGenerator.RAM_TYPE))
         cw.add_line("")
 
-        cw.add_struct(model.to_recursive_odin_typedef(type_name=CGenerator.STORE_TYPE))
+        cw.add_struct(model.to_odin_parameter_typedef(type_name=CGenerator.STORE_TYPE))
         cw.add_line("")
 
         return str(cw)
