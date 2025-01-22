@@ -1,3 +1,30 @@
 {
-    "python.analysis.autoImportCompletions": true
+    "python.analysis.autoImportCompletions": true,
+    "cmake.generator": "Ninja", // Use Ninja or your preferred generator
+    "cmake.cmakePath": "cmake", // Path to the CMake executable (if not in PATH)
+    "cmake.configureOnOpen": true, // Automatically configure on opening the project
+    "cmake.preferredGenerators": [
+        "Ninja",
+        "Unix Makefiles"
+    ], // Preferred generators
+    "cmake.toolchain": "",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.environment": {
+        "CC": "clang",
+        "CXX": "clang++"
+    },
+    "files.associations": {
+        "string.h": "c",
+        "odin.h": "c",
+        "stddef.h": "c",
+        "1a_simple_config_all_types.yaml.h": "c",
+        "odin_datastore.h": "c",
+        "encode_string.h": "c",
+        "ansi_colors.h": "c",
+        "stdio_dump.h": "c",
+        "stdint.h": "c",
+        "stdbool.h": "c",
+        "inttypes.h": "c"
+    },
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }

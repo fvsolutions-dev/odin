@@ -1,0 +1,1 @@
+odin gen-c examples\basic\config.yaml examples\basic

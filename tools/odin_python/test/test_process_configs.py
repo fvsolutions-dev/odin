@@ -26,8 +26,6 @@ import glob
 
 CONFIGS = glob.glob("test/configs/*.yaml")
 
-# CONFIGS = [r"test\configs\2_group_parameter.yaml"]
-
 
 class LoaderModel(
     RootModel[
@@ -71,7 +69,7 @@ def process_config(config: str):
 
 
 def compile_file(file: str):
-    command = f"clang -o {file}.o -c {file} -I D:/Projects/odin_datastore/odin/tools/odin_python/test/configs"
+    command = f"clang -o {file}.o -c {file} -I ../../src"
     print(command)
     e = subprocess.run(command, shell=True)
     if e.returncode != 0:
@@ -86,6 +84,8 @@ def test_basic_parse(config: str):
 
 
 if __name__ == "__main__":
+    CONFIGS = [r"test\configs\3_recursive_group_parameter.yaml"]
+
     for config in CONFIGS:
         print(f"processing {config}")
         file = process_config(config)

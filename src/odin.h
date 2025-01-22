@@ -2,6 +2,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#pragma once
+
+// Temp references
 extern uint64_t current_time_in_microseconds;
 struct my_struct
 {
@@ -9,12 +12,33 @@ struct my_struct
 };
 
 extern struct my_struct my;
+#define LOG_ERR(tag, format, ...) printf(format, ##__VA_ARGS__)
+
+typedef enum
+{
+    ODIN_SUCCESS = 0,
+    ODIN_ERROR = -20,
+    ODIN_ERROR_NO_PARAMETER = -1,
+    ODIN_ERROR_PARAMETER_NOT_FOUND = -6,
+    ODIN_ERROR_SIZE_MISMATCH = -2,
+    ODIN_ERROR_PERMISSION_DENIED = -3,
+    ODIN_ERROR_UNSUPPORTED_FORMAT = -4,
+    ODIN_ERROR_NOT_SUPPORTED = -5,
+    ODIN_ERR_FILE_NOT_FOUND = -7
+} odin_error_t;
+
+typedef enum
+{
+    ODIN_READ_ACCESS = 0,
+    ODIN_WRITE_ACCESS = 1
+} odin_access_t;
 
 typedef enum
 {
     ODIN_TYPE_PARAMETER, // Single value
     ODIN_TYPE_ARRAY,     // Fixed length array
-    ODIN_TYPE_VECTOR     // Variable length array, with a maximum length, keeps track of the current length
+    ODIN_TYPE_VECTOR,    // Preallocated variable length array (keeps track of the current length, with a separate pointer)
+    ODIN_TYPE_GROUP      // Group of parameters
 } ODIN_type_t;
 
 typedef enum
@@ -47,16 +71,15 @@ typedef enum
     ODIN_EXTENSION_TYPE_VALIDATE,
 } ODIN_extension_type_t;
 
-
 // Extension definition
 struct ODIN_extension;
 
 typedef struct ODIN_extension
 {
-    ODIN_extension_type_t type; // Type of the extension
-    void *ops;                  // Operations for the extension, check the type to cast to the correct type
-    void *data;                 // Metadata for the extension, can be NULL
-    struct ODIN_extension *next;     // Next extension in the list, can be NULL
+    ODIN_extension_type_t type;  // Type of the extension
+    void *ops;                   // Operations for the extension, check the type to cast to the correct type
+    void *data;                  // Metadata for the extension, can be NULL
+    struct ODIN_extension *next; // Next extension in the list, can be NULL
 } ODIN_extension_t;
 
 #define ODIN_INCLUDE_NAME
@@ -70,6 +93,7 @@ typedef struct
     // Type of the element
     ODIN_element_type_t element_type : 8;
 
+    // Extra flags
     uint16_t flags;
 
     // Index (ID) of the parameter
@@ -78,35 +102,21 @@ typedef struct
     // Size of the data
     uint16_t size;
 
+    // Max elements for arrays and vectors
+    uint16_t max_elements;
+
     // Pointer to the data
     void *data;
 
-    // Name of the parameter
+    // Name of the parameter, double null terminated, the first null is the end of the string, the second null is the end of description
 #ifdef ODIN_INCLUDE_NAME
-    const char *name;
-#endif
-
-#ifdef ODIN_INCLUDE_DESCRIPTION
-    const char *description;
+    const char *name_and_description;
 #endif
 
     // Extension info
     const ODIN_extension_t *extension; // Linked list of extensions, can be NULL
 
 } ODIN_parameter_t;
-
-typedef struct
-{
-    ODIN_parameter_t parameter;
-    uint16_t max_elements;
-} ODIN_array_t;
-
-typedef struct
-{
-    ODIN_parameter_t parameter;
-    uint16_t max_elements;
-} ODIN_vector_t;
-
 
 // String serialisation extension type
 typedef struct
@@ -134,3 +144,23 @@ typedef struct
     int (*validate)(const ODIN_parameter_t *parameter, const void *data, size_t size, uint16_t access_group);
 
 } ODIN_validate_extension_ops_t;
+
+typedef struct
+{
+    ODIN_type_t odin_type : 4;
+} ODIN_parameter_generic_t;
+
+typedef struct
+{
+    ODIN_type_t odin_type : 4;
+    uint16_t index; // Bits to shift to get the index
+    uint16_t shift; // Bits to shift to get the index
+    uint16_t type;  // Number of parameters in the group
+    uint16_t count; // Number of parameters in the group
+
+    const char *name_and_description;
+    const void *parameters[];
+} ODIN_parameter_group_t;
+
+int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group);
+int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group);
