@@ -2,7 +2,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-
 #pragma once
 
 // Temp references
@@ -78,6 +77,14 @@ typedef struct ODIN_extension {
 
 #define ODIN_INCLUDE_NAME
 #define ODIN_INCLUDE_DESCRIPTION
+
+
+typedef struct
+{
+  size_t num_elements;
+  uint8_t data[2]; //Not a pointer, but a array
+} ODIN_vector_structure_t;
+
 
 #pragma pack(push, 1)
 typedef struct {

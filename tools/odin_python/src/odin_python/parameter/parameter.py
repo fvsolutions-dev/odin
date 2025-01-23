@@ -37,7 +37,7 @@ class ODIN_ParameterModel(BaseModel):
                 ),
                 "flags": cc.TextModifier(str(self.access_group)),
                 "index": cc.TextModifier(f"0x{self.index:08X}"),
-                "size": cc.TextModifier(f"sizeof({self.type.c_typename})"),
+                "element_size": cc.TextModifier(f"sizeof({self.type.c_typename})"),
                 "data": cc.TextModifier(f"&{self.data}"),
                 "name_and_description": rf"{self.name}\0{escape_string(self.description)}",
                 "extension": cc.TextModifier(self.extension)
@@ -76,7 +76,7 @@ class ODIN_ArrayModel(BaseModel):
                 ),
                 "flags": cc.TextModifier(str(self.access_group)),
                 "index": cc.TextModifier(f"0x{self.index:08X}"),
-                "size": cc.TextModifier(f"sizeof({self.type.c_typename})*{self.num_elements}"),
+                "element_size": cc.TextModifier(f"sizeof({self.type.c_typename})"),
                 "data": cc.TextModifier(f"&{self.data}"),
                 "name_and_description": rf"{self.name}\0{escape_string(self.description)}",
                 "extension": cc.TextModifier(self.extension)
@@ -208,9 +208,9 @@ class ParameterModel(BaseParameterModel):
 
         assert isinstance(self._resolved_type, RegularCDataType)
 
-        assert (
-            self._data_storage_reference is not None
-        ), "Data storage reference is not set, call to_c_initialiser first to set the reference"
+        assert self._data_storage_reference is not None, (
+            "Data storage reference is not set, call to_c_initialiser first to set the reference"
+        )
 
         # Store a reference to the parameter name
         self._parameter_storage_reference = f"{absolute_reference}.{self._name}"
@@ -275,7 +275,7 @@ class ArrayParameterModel(BaseParameterModel):
     elements: int = Field(description="Number of elements in the array")
 
     _resolved_type: DataType = PrivateAttr()
-    
+
     # Reference to the variable which stores the data
     _data_storage_reference: str | None = PrivateAttr(default=None)
 
@@ -313,9 +313,9 @@ class ArrayParameterModel(BaseParameterModel):
         self, absolute_reference: str, **kwargs
     ) -> cc.Variable:
         assert isinstance(self._resolved_type, RegularCDataType)
-        assert (
-            self._data_storage_reference is not None
-        ), "Data storage reference is not set"
+        assert self._data_storage_reference is not None, (
+            "Data storage reference is not set"
+        )
 
         self._parameter_storage_reference = f"{absolute_reference}.{self._name}"
 
@@ -339,7 +339,7 @@ class VectorParameterModel(BaseParameterModel):
     max_elements: int = Field(description="Number of elements in the array")
 
     _resolved_type: DataType = PrivateAttr()
-    
+
     # Reference to the variable which stores the data
     _data_storage_reference: str | None = PrivateAttr(default=None)
 
@@ -367,7 +367,7 @@ class VectorParameterModel(BaseParameterModel):
         struct.add_variable(
             cc.Variable(
                 name="num_elements",
-                primitive="uint16_t",
+                primitive="size_t",
                 value=len(self.default) if self.default else 0,  # type: ignore
             ),
         )
@@ -398,9 +398,9 @@ class VectorParameterModel(BaseParameterModel):
     ) -> cc.Variable:
         assert isinstance(self._resolved_type, RegularCDataType)
 
-        assert (
-            self._data_storage_reference is not None
-        ), "Data storage reference is not set"
+        assert self._data_storage_reference is not None, (
+            "Data storage reference is not set"
+        )
 
         self._parameter_storage_reference = f"{absolute_reference}.{self._name}"
 
@@ -440,7 +440,7 @@ class BaseParameterGroupModel(BaseParameterModel):
     _parameter_storage_reference: str | None = PrivateAttr(default=None)
 
     # _group_storage_reference: str | None = PrivateAttr(default=None)
-    
+
     def post_load_resolve(
         self,
         parent: BaseParameterModel | None,
@@ -459,13 +459,11 @@ class BaseParameterGroupModel(BaseParameterModel):
         type_name: str | None = None,
         **kwargs,
     ) -> cc.Variable:
-    
         if absolute_reference == "":
             absolute_reference = self._name
         else:
             absolute_reference = f"{absolute_reference}.{self._name}"
-        
-        
+
         return cc.Variable(
             name=param_name if param_name else "UNKNOWN_NAME",
             primitive=type_name if type_name else "UKNOWN_TYPE",
@@ -484,7 +482,7 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         # self._group_storage_reference = self._name
         self._parameter_storage_reference = param_name
-        
+
         # const ODIN_parameter_group_t odin_group = {
         #     .name_and_description = "zwift_trainer_configuration_1\0Trainer Configuration",
         #     .index = 0x20,
@@ -527,7 +525,7 @@ class BaseParameterGroupModel(BaseParameterModel):
     def one_line_summary(self, level=0):
         val = f"{level * '  '}{self._name} (0x{self.global_id:08X})"
         for child in self.children.values():
-            val += f"\n{child.one_line_summary(level+1)}"
+            val += f"\n{child.one_line_summary(level + 1)}"
         return val
 
     def to_odin_parameter_typedef(
@@ -554,7 +552,9 @@ class BaseParameterGroupModel(BaseParameterModel):
                 if not isinstance(child, ReferenceParameterModel):
                     child._data_storage_reference = "UNSET"
 
-                struct.add_variable(child.to_c_odin_parameter_initialiser(absolute_reference="UNKNOWN"))
+                struct.add_variable(
+                    child.to_c_odin_parameter_initialiser(absolute_reference="UNKNOWN")
+                )
 
             else:
                 raise ValueError("Unknown type")

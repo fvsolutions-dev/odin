@@ -31,73 +31,73 @@ typedef struct
     uint8_t u8_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         uint8_t data[50];
     }u8_variable_length_array;
     int8_t i8_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         int8_t data[50];
     }i8_variable_length_array;
     uint16_t u16_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         uint16_t data[50];
     }u16_variable_length_array;
     int16_t i16_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         int16_t data[50];
     }i16_variable_length_array;
     uint32_t u32_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         uint32_t data[50];
     }u32_variable_length_array;
     int32_t i32_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         int32_t data[50];
     }i32_variable_length_array;
     uint64_t u64_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         uint64_t data[50];
     }u64_variable_length_array;
     int64_t i64_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         int64_t data[50];
     }i64_variable_length_array;
     float float32_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         float data[50];
     }float32_variable_length_array;
     double float64_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         double data[50];
     }float64_variable_length_array;
     bool bool_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         bool data[50];
     }bool_variable_length_array;
     char char_array[10];
     struct 
     {
-        uint16_t num_elements;
+        size_t num_elements;
         char data[50];
     }char_variable_length_array;
 } root_ram_t;

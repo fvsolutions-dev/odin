@@ -191,49 +191,48 @@ const root_type_t root = {
          .name_and_description =
              "test_variable_char\0A test variable of type character",
          .extension = NULL},
-    .group_A =
-        {.group_A = {.other_child = {.odin_type = ODIN_TYPE_PARAMETER,
-                                     .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
-                                     .flags = 0,
-                                     .index = 0x00000031,
-                                     .element_size = sizeof(float),
-                                     .data =
-                                         &root_ram.group_A.group_A.other_child,
-                                     .name_and_description =
-                                         "other_child\0A test variable",
-                                     .extension = NULL}
+    .group_A = {.group_A = {.other_child =
+                                {.odin_type = ODIN_TYPE_PARAMETER,
+                                 .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
+                                 .flags = 0,
+                                 .index = 0x00000031,
+                                 .element_size = sizeof(float),
+                                 .data = &root_ram.group_A.group_A.other_child,
+                                 .name_and_description =
+                                     "other_child\0A test variable",
+                                 .extension = NULL}
 
-         },
-         .test_variable_A = {.odin_type = ODIN_TYPE_PARAMETER,
-                             .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
-                             .flags = 0,
-                             .index = 0x00000011,
-                             .element_size = sizeof(float),
-                             .data = &root_ram.group_A.test_variable_A,
-                             .name_and_description =
-                                 "test_variable_A\0A test variable",
-                             .extension = NULL},
-         .test_variable_B = {.odin_type = ODIN_TYPE_PARAMETER,
-                             .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
-                             .flags = 0,
-                             .index = 0x00000011,
-                             .element_size = sizeof(float),
-                             .data = &root_ram.group_A.test_variable_B,
-                             .name_and_description =
-                                 "test_variable_B\0A test variable",
-                             .extension = NULL},
-         .test_variable_small =
-             {.odin_type = ODIN_TYPE_PARAMETER,
-              .element_type = ODIN_ELEMENT_TYPE_UINT8,
-              .flags = 0,
-              .index = 0x00000011,
-              .element_size = sizeof(uint8_t),
-              .data = &root_ram.group_A.test_variable_small,
-              .name_and_description =
-                  "test_variable_small\0A small test variable",
-              .extension = NULL}
+                },
+                .test_variable_A = {.odin_type = ODIN_TYPE_PARAMETER,
+                                    .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
+                                    .flags = 0,
+                                    .index = 0x00000011,
+                                    .element_size = sizeof(float),
+                                    .data = &root_ram.group_A.test_variable_A,
+                                    .name_and_description =
+                                        "test_variable_A\0A test variable",
+                                    .extension = NULL},
+                .test_variable_B = {.odin_type = ODIN_TYPE_PARAMETER,
+                                    .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
+                                    .flags = 0,
+                                    .index = 0x00000011,
+                                    .element_size = sizeof(float),
+                                    .data = &root_ram.group_A.test_variable_B,
+                                    .name_and_description =
+                                        "test_variable_B\0A test variable",
+                                    .extension = NULL},
+                .test_variable_small =
+                    {.odin_type = ODIN_TYPE_PARAMETER,
+                     .element_type = ODIN_ELEMENT_TYPE_UINT8,
+                     .flags = 0,
+                     .index = 0x00000011,
+                     .element_size = sizeof(uint8_t),
+                     .data = &root_ram.group_A.test_variable_small,
+                     .name_and_description =
+                         "test_variable_small\0A small test variable",
+                     .extension = NULL}
 
-        },
+    },
     .test_variable_small = {.odin_type = ODIN_TYPE_PARAMETER,
                             .element_type = ODIN_ELEMENT_TYPE_UINT64,
                             .flags = 0,
@@ -247,7 +246,7 @@ const root_type_t root = {
                  .element_type = ODIN_ELEMENT_TYPE_UINT8,
                  .flags = 0,
                  .index = 0x00000001,
-                 .element_size = sizeof(uint8_t) * 10,
+                 .element_size = sizeof(uint8_t),
                  .data = &root_ram.u8_array,
                  .name_and_description = "u8_array\0A test variable",
                  .extension = NULL,
@@ -257,7 +256,7 @@ const root_type_t root = {
          .element_type = ODIN_ELEMENT_TYPE_UINT8,
          .flags = 0,
          .index = 0x00000002,
-         .element_size = sizeof(uint8_t) * 50,
+         .element_size = sizeof(uint8_t),
          .data = &root_ram.u8_variable_length_array,
          .name_and_description =
              "u8_variable_length_array\0My variable length array, allowing "
@@ -269,7 +268,7 @@ const root_type_t root = {
                  .element_type = ODIN_ELEMENT_TYPE_INT8,
                  .flags = 0,
                  .index = 0x00000003,
-                 .element_size = sizeof(int8_t) * 10,
+                 .element_size = sizeof(int8_t),
                  .data = &root_ram.i8_array,
                  .name_and_description = "i8_array\0A test variable",
                  .extension = NULL,
@@ -279,7 +278,7 @@ const root_type_t root = {
          .element_type = ODIN_ELEMENT_TYPE_INT8,
          .flags = 0,
          .index = 0x00000004,
-         .element_size = sizeof(int8_t) * 50,
+         .element_size = sizeof(int8_t),
          .data = &root_ram.i8_variable_length_array,
          .name_and_description =
              "i8_variable_length_array\0My variable length array, allowing "
@@ -291,7 +290,7 @@ const root_type_t root = {
                   .element_type = ODIN_ELEMENT_TYPE_UINT16,
                   .flags = 0,
                   .index = 0x00000005,
-                  .element_size = sizeof(uint16_t) * 10,
+                  .element_size = sizeof(uint16_t),
                   .data = &root_ram.u16_array,
                   .name_and_description = "u16_array\0A test variable",
                   .extension = NULL,
@@ -301,7 +300,7 @@ const root_type_t root = {
          .element_type = ODIN_ELEMENT_TYPE_UINT16,
          .flags = 0,
          .index = 0x00000006,
-         .element_size = sizeof(uint16_t) * 50,
+         .element_size = sizeof(uint16_t),
          .data = &root_ram.u16_variable_length_array,
          .name_and_description =
              "u16_variable_length_array\0My variable length array, allowing "
@@ -313,7 +312,7 @@ const root_type_t root = {
                   .element_type = ODIN_ELEMENT_TYPE_INT16,
                   .flags = 0,
                   .index = 0x00000007,
-                  .element_size = sizeof(int16_t) * 10,
+                  .element_size = sizeof(int16_t),
                   .data = &root_ram.i16_array,
                   .name_and_description = "i16_array\0A test variable",
                   .extension = NULL,
@@ -323,7 +322,7 @@ const root_type_t root = {
          .element_type = ODIN_ELEMENT_TYPE_INT16,
          .flags = 0,
          .index = 0x00000008,
-         .element_size = sizeof(int16_t) * 50,
+         .element_size = sizeof(int16_t),
          .data = &root_ram.i16_variable_length_array,
          .name_and_description =
              "i16_variable_length_array\0My variable length array, allowing "
@@ -335,7 +334,7 @@ const root_type_t root = {
                   .element_type = ODIN_ELEMENT_TYPE_UINT32,
                   .flags = 0,
                   .index = 0x00000009,
-                  .element_size = sizeof(uint32_t) * 10,
+                  .element_size = sizeof(uint32_t),
                   .data = &root_ram.u32_array,
                   .name_and_description = "u32_array\0A test variable",
                   .extension = NULL,
@@ -345,7 +344,7 @@ const root_type_t root = {
          .element_type = ODIN_ELEMENT_TYPE_UINT32,
          .flags = 0,
          .index = 0x0000000A,
-         .element_size = sizeof(uint32_t) * 50,
+         .element_size = sizeof(uint32_t),
          .data = &root_ram.u32_variable_length_array,
          .name_and_description =
              "u32_variable_length_array\0My variable length array, allowing "
@@ -357,7 +356,7 @@ const root_type_t root = {
                   .element_type = ODIN_ELEMENT_TYPE_INT32,
                   .flags = 0,
                   .index = 0x0000000B,
-                  .element_size = sizeof(int32_t) * 10,
+                  .element_size = sizeof(int32_t),
                   .data = &root_ram.i32_array,
                   .name_and_description = "i32_array\0A test variable",
                   .extension = NULL,
@@ -367,7 +366,7 @@ const root_type_t root = {
          .element_type = ODIN_ELEMENT_TYPE_INT32,
          .flags = 0,
          .index = 0x0000000C,
-         .element_size = sizeof(int32_t) * 50,
+         .element_size = sizeof(int32_t),
          .data = &root_ram.i32_variable_length_array,
          .name_and_description =
              "i32_variable_length_array\0My variable length array, allowing "
@@ -379,7 +378,7 @@ const root_type_t root = {
                   .element_type = ODIN_ELEMENT_TYPE_UINT64,
                   .flags = 0,
                   .index = 0x0000000D,
-                  .element_size = sizeof(uint64_t) * 10,
+                  .element_size = sizeof(uint64_t),
                   .data = &root_ram.u64_array,
                   .name_and_description = "u64_array\0A test variable",
                   .extension = NULL,
@@ -389,7 +388,7 @@ const root_type_t root = {
          .element_type = ODIN_ELEMENT_TYPE_UINT64,
          .flags = 0,
          .index = 0x0000000E,
-         .element_size = sizeof(uint64_t) * 50,
+         .element_size = sizeof(uint64_t),
          .data = &root_ram.u64_variable_length_array,
          .name_and_description =
              "u64_variable_length_array\0My variable length array, allowing "
@@ -401,7 +400,7 @@ const root_type_t root = {
                   .element_type = ODIN_ELEMENT_TYPE_INT64,
                   .flags = 0,
                   .index = 0x0000000F,
-                  .element_size = sizeof(int64_t) * 10,
+                  .element_size = sizeof(int64_t),
                   .data = &root_ram.i64_array,
                   .name_and_description = "i64_array\0A test variable",
                   .extension = NULL,
@@ -411,7 +410,7 @@ const root_type_t root = {
          .element_type = ODIN_ELEMENT_TYPE_INT64,
          .flags = 0,
          .index = 0x00000010,
-         .element_size = sizeof(int64_t) * 50,
+         .element_size = sizeof(int64_t),
          .data = &root_ram.i64_variable_length_array,
          .name_and_description =
              "i64_variable_length_array\0My variable length array, allowing "
@@ -423,7 +422,7 @@ const root_type_t root = {
                       .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
                       .flags = 0,
                       .index = 0x00000011,
-                      .element_size = sizeof(float) * 10,
+                      .element_size = sizeof(float),
                       .data = &root_ram.float32_array,
                       .name_and_description = "float32_array\0A test variable",
                       .extension = NULL,
@@ -433,7 +432,7 @@ const root_type_t root = {
          .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
          .flags = 0,
          .index = 0x00000012,
-         .element_size = sizeof(float) * 50,
+         .element_size = sizeof(float),
          .data = &root_ram.float32_variable_length_array,
          .name_and_description =
              "float32_variable_length_array\0My variable length array, "
@@ -445,7 +444,7 @@ const root_type_t root = {
                       .element_type = ODIN_ELEMENT_TYPE_FLOAT64,
                       .flags = 0,
                       .index = 0x00000013,
-                      .element_size = sizeof(double) * 10,
+                      .element_size = sizeof(double),
                       .data = &root_ram.float64_array,
                       .name_and_description = "float64_array\0A test variable",
                       .extension = NULL,
@@ -455,7 +454,7 @@ const root_type_t root = {
          .element_type = ODIN_ELEMENT_TYPE_FLOAT64,
          .flags = 0,
          .index = 0x00000014,
-         .element_size = sizeof(double) * 50,
+         .element_size = sizeof(double),
          .data = &root_ram.float64_variable_length_array,
          .name_and_description =
              "float64_variable_length_array\0My variable length array, "
@@ -467,7 +466,7 @@ const root_type_t root = {
                    .element_type = ODIN_ELEMENT_TYPE_BOOL,
                    .flags = 0,
                    .index = 0x00000015,
-                   .element_size = sizeof(bool) * 10,
+                   .element_size = sizeof(bool),
                    .data = &root_ram.bool_array,
                    .name_and_description = "bool_array\0A test variable",
                    .extension = NULL,
@@ -477,7 +476,7 @@ const root_type_t root = {
          .element_type = ODIN_ELEMENT_TYPE_BOOL,
          .flags = 0,
          .index = 0x00000016,
-         .element_size = sizeof(bool) * 50,
+         .element_size = sizeof(bool),
          .data = &root_ram.bool_variable_length_array,
          .name_and_description =
              "bool_variable_length_array\0My variable length array, allowing "
@@ -489,7 +488,7 @@ const root_type_t root = {
                    .element_type = ODIN_ELEMENT_TYPE_CHAR,
                    .flags = 0,
                    .index = 0x00000017,
-                   .element_size = sizeof(char) * 10,
+                   .element_size = sizeof(char),
                    .data = &root_ram.char_array,
                    .name_and_description = "char_array\0A test variable",
                    .extension = NULL,
@@ -499,7 +498,7 @@ const root_type_t root = {
         .element_type = ODIN_ELEMENT_TYPE_CHAR,
         .flags = 0,
         .index = 0x00000018,
-        .element_size = sizeof(char) * 50,
+        .element_size = sizeof(char),
         .data = &root_ram.char_variable_length_array,
         .name_and_description =
             "char_variable_length_array\0My variable length array, allowing "

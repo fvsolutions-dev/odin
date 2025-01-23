@@ -1,31 +1,41 @@
 #include "odin.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 #define TAG "ODIN"
+
+int ODIN_get_data_size(const ODIN_parameter_t *parameter) {
+  if (parameter->odin_type == ODIN_TYPE_VECTOR) {
+
+    uint16_t *num_elements = (uint16_t *)parameter->data;
+    if (*num_elements > parameter->max_elements) {
+      return parameter->element_size * parameter->max_elements;
+    } else {
+      return parameter->element_size * *num_elements;
+    }
+  } else if (parameter->odin_type == ODIN_TYPE_ARRAY) {
+    return parameter->element_size * parameter->max_elements;
+  } else {
+    return parameter->element_size;
+  }
+}
 
 int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter,
                                     void *output_buffer,
                                     size_t output_buffer_size,
                                     uint16_t access_group) {
 
-  int total_size = 0;
-  if (parameter->odin_type == ODIN_TYPE_VECTOR) {
-    uint16_t *num_elements = (uint16_t *)parameter->data;
-    total_size = *num_elements * parameter->element_size + sizeof(uint16_t);
-  } else {
-    total_size = parameter->element_size;
-  }
+  int total_size = ODIN_get_data_size(parameter);
 
   // Check if the buffer is large enough
-  if (output_buffer_size < parameter->element_size) {
+  if (output_buffer_size < total_size) {
     LOG_ERR(TAG, "Buffer too small (%zu < %u) when reading %s",
-            output_buffer_size, parameter->element_size,
-            parameter->name_and_description);
+            output_buffer_size, total_size, parameter->name_and_description);
     return ODIN_ERROR_SIZE_MISMATCH;
   }
 
-  return ODIN_parameter_read(parameter, output_buffer, parameter->element_size,
+  return ODIN_parameter_read(parameter, output_buffer, total_size,
                              access_group);
 }
 
@@ -43,6 +53,7 @@ int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter,
  */
 int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data,
                         size_t size, uint16_t access_group) {
+
   // Check if the parameter exists
   if (parameter == NULL) {
     return ODIN_ERROR_NO_PARAMETER;
@@ -86,24 +97,24 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data,
     read_size = parameter->element_size;
     break;
 
-  case ODIN_TYPE_ARRAY:
+  case ODIN_TYPE_ARRAY: {
+
+    int read_size = ODIN_get_data_size(parameter);
 
     // Check if the size is exactly the same
-    if (size != parameter->element_size) {
+    if (size != read_size) {
       LOG_ERR(TAG, "Read size mismatch (%zu != %u) when reading %s", size,
               read_size, parameter->name_and_description);
       return ODIN_ERROR_SIZE_MISMATCH;
     }
 
     // Copy the data to the buffer
-    memcpy(data, parameter->data, parameter->element_size);
+    memcpy(data, parameter->data, read_size);
     break;
-
-  case ODIN_TYPE_VECTOR:
-
-    // Check if data fits in the buffer
-    uint16_t *num_elements = (uint16_t *)parameter->data;
-    read_size = *num_elements * parameter->element_size / parameter->max_elements;
+  }
+  case ODIN_TYPE_VECTOR: {
+    // Copy the actual data in the buffer
+    read_size = ODIN_get_data_size(parameter);
 
     if (size < read_size) {
       LOG_ERR(TAG, "Read size to little (%zu < %u) when reading %s", size,
@@ -111,14 +122,14 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data,
       return ODIN_ERROR_SIZE_MISMATCH;
     }
 
-    // Copy the actual data in the buffer
-    void *vector_data = (void *)((uint8_t *)parameter->data + sizeof(uint16_t));
+    ODIN_vector_structure_t *vector_structure =
+        (ODIN_vector_structure_t *)parameter->data;
 
     // Copy the data
-    memcpy(data, vector_data, read_size);
+    memcpy(data, vector_structure->data, read_size);
 
     break;
-
+  }
   default:
     return ODIN_ERROR;
   }
