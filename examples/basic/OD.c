@@ -191,48 +191,49 @@ const root_type_t root = {
          .name_and_description =
              "test_variable_char\0A test variable of type character",
          .extension = NULL},
-    .group_A = {.group_A = {.other_child =
-                                {.odin_type = ODIN_TYPE_PARAMETER,
-                                 .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
-                                 .flags = 0,
-                                 .index = 0x00000031,
-                                 .element_size = sizeof(float),
-                                 .data = &root_ram.group_A.group_A.other_child,
-                                 .name_and_description =
-                                     "other_child\0A test variable",
-                                 .extension = NULL}
+    .group_A =
+        {.group_A = {.other_child = {.odin_type = ODIN_TYPE_PARAMETER,
+                                     .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
+                                     .flags = 0,
+                                     .index = 0x00000031,
+                                     .element_size = sizeof(float),
+                                     .data =
+                                         &root_ram.group_A.group_A.other_child,
+                                     .name_and_description =
+                                         "other_child\0A test variable",
+                                     .extension = NULL}
 
-                },
-                .test_variable_A = {.odin_type = ODIN_TYPE_PARAMETER,
-                                    .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
-                                    .flags = 0,
-                                    .index = 0x00000011,
-                                    .element_size = sizeof(float),
-                                    .data = &root_ram.group_A.test_variable_A,
-                                    .name_and_description =
-                                        "test_variable_A\0A test variable",
-                                    .extension = NULL},
-                .test_variable_B = {.odin_type = ODIN_TYPE_PARAMETER,
-                                    .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
-                                    .flags = 0,
-                                    .index = 0x00000011,
-                                    .element_size = sizeof(float),
-                                    .data = &root_ram.group_A.test_variable_B,
-                                    .name_and_description =
-                                        "test_variable_B\0A test variable",
-                                    .extension = NULL},
-                .test_variable_small =
-                    {.odin_type = ODIN_TYPE_PARAMETER,
-                     .element_type = ODIN_ELEMENT_TYPE_UINT8,
-                     .flags = 0,
-                     .index = 0x00000011,
-                     .element_size = sizeof(uint8_t),
-                     .data = &root_ram.group_A.test_variable_small,
-                     .name_and_description =
-                         "test_variable_small\0A small test variable",
-                     .extension = NULL}
+         },
+         .test_variable_A = {.odin_type = ODIN_TYPE_PARAMETER,
+                             .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
+                             .flags = 0,
+                             .index = 0x00000011,
+                             .element_size = sizeof(float),
+                             .data = &root_ram.group_A.test_variable_A,
+                             .name_and_description =
+                                 "test_variable_A\0A test variable",
+                             .extension = NULL},
+         .test_variable_B = {.odin_type = ODIN_TYPE_PARAMETER,
+                             .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
+                             .flags = 0,
+                             .index = 0x00000011,
+                             .element_size = sizeof(float),
+                             .data = &root_ram.group_A.test_variable_B,
+                             .name_and_description =
+                                 "test_variable_B\0A test variable",
+                             .extension = NULL},
+         .test_variable_small =
+             {.odin_type = ODIN_TYPE_PARAMETER,
+              .element_type = ODIN_ELEMENT_TYPE_UINT8,
+              .flags = 0,
+              .index = 0x00000011,
+              .element_size = sizeof(uint8_t),
+              .data = &root_ram.group_A.test_variable_small,
+              .name_and_description =
+                  "test_variable_small\0A small test variable",
+              .extension = NULL}
 
-    },
+        },
     .test_variable_small = {.odin_type = ODIN_TYPE_PARAMETER,
                             .element_type = ODIN_ELEMENT_TYPE_UINT64,
                             .flags = 0,
