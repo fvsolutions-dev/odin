@@ -33,7 +33,8 @@ int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter, void *out
         return ODIN_ERROR_SIZE_MISMATCH;
     }
 
-    return ODIN_parameter_read(parameter, output_buffer, total_size, access_group);
+    int e =  ODIN_parameter_read(parameter, output_buffer, total_size, access_group);
+    return e;
 }
 
 /**
@@ -93,7 +94,7 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t si
             break;
 
         case ODIN_TYPE_ARRAY: {
-            int read_size = ODIN_get_data_size(parameter);
+            read_size = ODIN_get_data_size(parameter);
 
             // Check if the size is exactly the same
             if (size != read_size) {

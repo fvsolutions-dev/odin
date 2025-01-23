@@ -2,6 +2,7 @@
 
 #include "encoding/encode_string.h"
 #include "odin.h"
+#include "ansi_colors.h"
 
 const char *ODIN_error_to_string(int error) {
     switch (error) {
@@ -28,6 +29,9 @@ const char *ODIN_error_to_string(int error) {
 }
 
 void ODIN_dump_recursive_tree(const ODIN_parameter_group_t *group, int depth) {
+    uint8_t value_buffer[256];
+    char str_buffer[256];
+
     for (int i = 0; i < group->count; i++) {
         ODIN_parameter_generic_t *parameter = (ODIN_parameter_generic_t *)group->parameters[i];
 
@@ -36,21 +40,18 @@ void ODIN_dump_recursive_tree(const ODIN_parameter_group_t *group, int depth) {
             case ODIN_TYPE_ARRAY:
             case ODIN_TYPE_VECTOR: {
                 ODIN_parameter_t *parameter = (ODIN_parameter_t *)group->parameters[i];
-                uint8_t data[256];
-                char buffer[256] = {0};
-                int ret = ODIN_encode_to_string(parameter, buffer, sizeof(buffer), 0);
+                int ret = ODIN_encode_to_string(parameter, str_buffer, sizeof(str_buffer), 0);
                 if (ret < 0) {
-                    printf("Error: %s\n", ODIN_error_to_string(ret));
-                    continue;
+                    ret = sprintf(str_buffer, "Error: %s", ODIN_error_to_string(ret));
                 }
 
-                printf("%*s%s: %s\n", depth, "", parameter->name_and_description, buffer);
+                printf("%*s"ANSI_CYN"%s"ANSI_RESET": "ANSI_BLK"%s"ANSI_RESET"\n", depth, "", parameter->name_and_description, str_buffer);
             } break;
 
             case ODIN_TYPE_GROUP: {
                 ODIN_parameter_group_t *parameter = (ODIN_parameter_group_t *)group->parameters[i];
-                printf("%*s%s\n", depth, "", parameter->name_and_description);
-                ODIN_dump_recursive_tree(parameter, depth + 2);
+                printf("%*s"ANSI_GRN"[%s]"ANSI_RESET"\n", depth, "", parameter->name_and_description);
+                ODIN_dump_recursive_tree(parameter, depth + 4);
 
             } break;
         }

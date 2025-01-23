@@ -1,8 +1,3 @@
-/*
- * This is free and unencumbered software released into the public domain.
- *
- * For more information, please refer to <https://unlicense.org>
- */
 
 //Regular text
 #define ANSI_BLK "\e[0;30m"
@@ -76,5 +71,3 @@
 
 //Reset
 #define ANSI_RESET "\e[0m"
-#define ANSI_CRESET "\e[0m"
-#define ANSI_COLOR_RESET "\e[0m"
