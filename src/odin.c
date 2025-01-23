@@ -52,8 +52,13 @@ int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter, void *out
 int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group) {
     // Check if the parameter exists
     if (parameter == NULL) {
-        return ODIN_ERROR_NO_PARAMETER;
+        return ODIN_ERROR_INVALID_ARGUMENT;
     }
+
+    if (data == NULL) {
+        return ODIN_ERROR_INVALID_ARGUMENT;
+    }
+
 
     // Check if the permission is allowed
     // if (!ODIN_check_access(parameter, access_group, ODIN_READ_ACCESS))
@@ -112,7 +117,7 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t si
             read_size = ODIN_get_data_size(parameter);
 
             if (size < read_size) {
-                LOG_ERR(TAG, "Read size to little (%zu < %u) when reading %s", size, read_size,
+                LOG_ERR(TAG, "Read size to small (%zu < %u) when reading %s", size, read_size,
                         parameter->name_and_description);
                 return ODIN_ERROR_SIZE_MISMATCH;
             }

@@ -17,6 +17,7 @@ typedef enum {
     ODIN_SUCCESS = 0,
     ODIN_ERROR = -20,
     ODIN_ERROR_NO_PARAMETER = -1,
+    ODIN_ERROR_INVALID_ARGUMENT = -100,
     ODIN_ERROR_PARAMETER_NOT_FOUND = -6,
     ODIN_ERROR_SIZE_MISMATCH = -2,
     ODIN_ERROR_PERMISSION_DENIED = -3,
@@ -160,3 +161,4 @@ typedef struct {
 
 int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group);
 int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group);
+int ODIN_get_data_size(const ODIN_parameter_t *parameter);
