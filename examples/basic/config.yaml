@@ -116,3 +116,172 @@ test_variable_small:
   type: u64
   description: A small test variable
   default: 86080530548
+
+
+u8_array:
+  local_id: 0x1
+  type: u8
+  elements: 10
+  description: A test variable
+  default: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+u8_variable_length_array:
+  local_id: 0x2
+  type: u8
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: [1, 5, 3]
+
+i8_array:
+  local_id: 0x3
+  type: i8
+  elements: 10
+  description: A test variable
+  default: [-128, -127, -126, -125, -124, 5, 6, 7, 8, 9]
+
+i8_variable_length_array:
+  local_id: 0x4
+  type: i8
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: [-128, -127, -126, -125, -124, 5, 6, 7, 8, 9]
+
+u16_array:
+  local_id: 0x5
+  type: u16
+  elements: 10
+  description: A test variable
+  default: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+u16_variable_length_array:
+  local_id: 0x6
+  type: u16
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: [1, 5, 3]
+
+i16_array:
+  local_id: 0x7
+  type: i16
+  elements: 10
+  description: A test variable
+  default: [-32768, -32767, -32766, -32765, -32764, 5, 6, 7, 8, 9]
+
+i16_variable_length_array:
+  local_id: 0x8
+  type: i16
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: [-32768, -32767, -32766, -32765, -32764, 5, 6, 7, 8, 9]
+
+u32_array:
+  local_id: 0x9
+  type: u32
+  elements: 10
+  description: A test variable
+  default: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+u32_variable_length_array:
+  local_id: 0xA
+  type: u32
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: [1, 5, 3]
+
+i32_array:
+  local_id: 0xB
+  type: i32
+  elements: 10
+  description: A test variable
+  default: [-2147483648, -2147483647, -2147483646, -2147483645, -2147483644, 5, 6, 7, 8, 9]
+
+i32_variable_length_array:
+  local_id: 0xC
+  type: i32
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: [-2147483648, -2147483647, -2147483646, -2147483645, -2147483644, 5, 6, 7, 8, 9]
+
+u64_array:
+  local_id: 0xD
+  type: u64
+  elements: 10
+  description: A test variable
+  default: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+u64_variable_length_array:
+  local_id: 0xE
+  type: u64
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: [1, 5, 3]
+
+i64_array:
+  local_id: 0xF
+  type: i64
+  elements: 10
+  description: A test variable
+  default: [-922337203685475808, -922332036854775807, -922337236854775806, -922337036854775805, -923372036854775804, 5, 6, 7, 8, 9]
+
+i64_variable_length_array:
+  local_id: 0x10
+  type: i64
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: [-922337203685475808, -922337203854775807, -922337203684775806, -922337203854775805, -922372036854775804, 5, 6, 7, 8, 9]
+
+float32_array:
+  local_id: 0x11
+  type: f32
+  elements: 10
+  description: A test variable
+  default: [0.0, 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9]
+
+float32_variable_length_array:
+  local_id: 0x12
+  type: f32
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: [1.1, 5.5, 3.3]
+
+float64_array:
+  local_id: 0x13
+  type: f64
+  elements: 10
+  description: A test variable
+  default: [0.0, 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9]
+
+float64_variable_length_array:
+  local_id: 0x14
+  type: f64
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: [1.1, 5.5, 3.3]
+
+bool_array:
+  local_id: 0x15
+  type: bool
+  elements: 10
+  description: A test variable
+  default: [true, false, true, false, true, false, true, false, true, false]
+
+bool_variable_length_array:
+  local_id: 0x16
+  type: bool
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: [true, false, true]
+
+char_array:
+  local_id: 0x17
+  type: char
+  elements: 10
+  description: A test variable
+  default: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+
+char_variable_length_array:
+  local_id: 0x18
+  type: char
+  max_elements: 50
+  description: My variable length array, allowing writes with a variable length, it also stores a reference to the length of the array
+  default: ['a', 'b', 'c']

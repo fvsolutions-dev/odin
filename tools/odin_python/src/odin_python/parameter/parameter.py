@@ -76,7 +76,7 @@ class ODIN_ArrayModel(BaseModel):
                 ),
                 "flags": cc.TextModifier(str(self.access_group)),
                 "index": cc.TextModifier(f"0x{self.index:08X}"),
-                "size": cc.TextModifier(f"sizeof({self.type.c_typename})"),
+                "size": cc.TextModifier(f"sizeof({self.type.c_typename})*{self.num_elements}"),
                 "data": cc.TextModifier(f"&{self.data}"),
                 "name_and_description": rf"{self.name}\0{escape_string(self.description)}",
                 "extension": cc.TextModifier(self.extension)
