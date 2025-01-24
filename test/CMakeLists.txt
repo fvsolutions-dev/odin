@@ -9,7 +9,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(${CMAKE_SOURCE_DIR}/../googletest ${CMAKE_BINARY_DIR}/googletest)
 
 # Create a test executable
-add_executable(tests test.cpp ${CMAKE_SOURCE_DIR}/test/basic_config/OD.c)
+add_executable(tests test.cpp ${CMAKE_SOURCE_DIR}/test/basic_config/OD.c basic_config/write_tests.cpp)
 target_link_libraries(tests PRIVATE gtest gtest_main odin)
 target_include_directories(tests PRIVATE ${CMAKE_SOURCE_DIR})
 

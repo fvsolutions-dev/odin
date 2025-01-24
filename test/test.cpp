@@ -9,9 +9,9 @@ extern "C" {
 #include "odin_core.h"
 }
 
-const ODIN_parameter_t* base_test_param = &root.test_variable_i32;
-const ODIN_parameter_t* base_array_param = &root.i32_array;
-const ODIN_parameter_t* base_vector_param = &root.i32_variable_length_array;
+static const ODIN_parameter_t* base_test_param = &root.test_variable_i32;
+static const ODIN_parameter_t* base_array_param = &root.i32_array;
+static const ODIN_parameter_t* base_vector_param = &root.i32_variable_length_array;
 
 TEST(ODINParameterReadTest, Nominal) {
     int32_t output_data = 0;

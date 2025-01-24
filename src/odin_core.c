@@ -1,4 +1,5 @@
 #include "odin_core.h"
+
 #include "string.h"
 
 #define TAG "ODIN"
@@ -17,14 +18,9 @@
  */
 int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group) {
     // Check if the parameter exists
-    if (parameter == NULL) {
+    if (parameter == NULL || data == NULL) {
         return ODIN_ERROR_INVALID_ARGUMENT;
     }
-
-    if (data == NULL) {
-        return ODIN_ERROR_INVALID_ARGUMENT;
-    }
-
 
     // Check if the permission is allowed
     // if (!ODIN_check_access(parameter, access_group, ODIN_READ_ACCESS))
@@ -47,56 +43,29 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t si
     // }
 
     // Otherwise, copy the data to the buffer
-    int read_size = 0;
+    int read_size = ODIN_get_data_size(parameter);
 
-    switch (parameter->odin_type) {
-        case ODIN_TYPE_PARAMETER:
-
-            // Check if the size is exactly the same
-            if (size != parameter->element_size) {
-                LOG_ERR(TAG, "Read size mismatch (%zu != %u) when reading %s", size, parameter->element_size,
-                        parameter->name_and_description);
-                return ODIN_ERROR_SIZE_MISMATCH;
-            }
-
-            // Copy the data to the buffer
-            memcpy(data, parameter->data, parameter->element_size);
-            read_size = parameter->element_size;
-            break;
-
-        case ODIN_TYPE_ARRAY: {
-            read_size = ODIN_get_data_size(parameter);
-
-            // Check if the size is exactly the same
-            if (size != read_size) {
-                LOG_ERR(TAG, "Read size mismatch (%zu != %u) when reading %s", size, read_size,
-                        parameter->name_and_description);
-                return ODIN_ERROR_SIZE_MISMATCH;
-            }
-
-            // Copy the data to the buffer
-            memcpy(data, parameter->data, read_size);
-            break;
+    // Check if the size matches the read size
+    if (parameter->odin_type == ODIN_TYPE_VECTOR) {
+        if (size < read_size) {
+            LOG_ERR(TAG, "Read size to small (%zu < %u) when reading %s", size, read_size,
+                    parameter->name_and_description);
+            return ODIN_ERROR_SIZE_MISMATCH;
         }
-        case ODIN_TYPE_VECTOR: {
-            // Copy the actual data in the buffer
-            read_size = ODIN_get_data_size(parameter);
 
-            if (size < read_size) {
-                LOG_ERR(TAG, "Read size to small (%zu < %u) when reading %s", size, read_size,
-                        parameter->name_and_description);
-                return ODIN_ERROR_SIZE_MISMATCH;
-            }
+        ODIN_vector_structure_t *vector_structure = (ODIN_vector_structure_t *)parameter->data;
 
-            ODIN_vector_structure_t *vector_structure = (ODIN_vector_structure_t *)parameter->data;
+        // Copy the data
+        memcpy(data, vector_structure->data, read_size);
 
-            // Copy the data
-            memcpy(data, vector_structure->data, read_size);
-
-            break;
+    } else {
+        if (size != read_size) {
+            LOG_ERR(TAG, "Read size mismatch (%zu != %u) when reading %s", size, parameter->element_size,
+                    parameter->name_and_description);
+            return ODIN_ERROR_SIZE_MISMATCH;
         }
-        default:
-            return ODIN_ERROR;
+
+        memcpy(data, parameter->data, read_size);
     }
 
     // Log the access
@@ -116,10 +85,9 @@ int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter, void *out
         return ODIN_ERROR_SIZE_MISMATCH;
     }
 
-    int e =  ODIN_parameter_read(parameter, output_buffer, total_size, access_group);
+    int e = ODIN_parameter_read(parameter, output_buffer, total_size, access_group);
     return e;
 }
-
 
 int ODIN_get_data_size(const ODIN_parameter_t *parameter) {
     if (parameter->odin_type == ODIN_TYPE_VECTOR) {
@@ -134,4 +102,105 @@ int ODIN_get_data_size(const ODIN_parameter_t *parameter) {
     } else {
         return parameter->element_size;
     }
+}
+/**
+ * @brief Method to get the maximum data size of a parameter
+ *
+ * @param parameter Pointer to the parameter
+ *
+ * @return The maximum data size in bytes
+ */
+int ODIN_get_max_data_size(const ODIN_parameter_t *parameter) {
+    switch (parameter->odin_type) {
+        case ODIN_TYPE_VECTOR:
+        case ODIN_TYPE_ARRAY:
+            return parameter->element_size * parameter->max_elements;
+
+        case ODIN_TYPE_PARAMETER:
+            return parameter->element_size;
+
+        case ODIN_TYPE_GROUP:
+            return 0;
+    }
+}
+
+/**
+ * @brief Method to write a parameter
+ *
+ * @param parameter Pointer to the parameter
+ * @param data Pointer to the data buffer
+ * @param size Size of the data to write, needs to be exactly the size of the
+ * parameter in case of a parameter or array
+ * @param access_group The access group, which is requesting the write
+ *
+ * @return if negative an error code is returned, otherwise the size of the data
+ * written in bytes
+ */
+int ODIN_parameter_write(const ODIN_parameter_t *parameter, const void *data, size_t size, uint16_t access_group) {
+    // Check if all the parameters are valid
+    if (parameter == NULL || data == NULL) {
+        return ODIN_ERROR_INVALID_ARGUMENT;
+    }
+
+    // Check if the permission is allowed
+    // if (!ODIN_check_access(parameter, access_group, ODIN_WRITE_ACCESS))
+    // {
+    //     LOG_ERR(TAG, "Permission denied when writing %s",
+    //     parameter->name_and_description); return ODIN_ERROR_PERMISSION_DENIED;
+    // }
+
+    // Handle the extension (TODO)
+    // if (parameter->extension != NULL && parameter->extension->ops->write !=
+    // NULL)
+    // {
+    //     int ret = parameter->extension->ops->write(parameter, data, size,
+    //     access_group); if (ret)
+    //     {
+    //         LOG_ERR(TAG, "Extension write failed, error %d ,parameter %s", ret,
+    //         parameter->name);
+    //     }
+    //     return ret;
+    // }
+
+    // Otherwise, copy the data to the buffer
+    int max_write_size = ODIN_get_max_data_size(parameter);
+
+    // Check if the size matches the write size
+    if (parameter->odin_type == ODIN_TYPE_VECTOR) {
+        if (size > max_write_size) {
+            LOG_ERR(TAG, "Write size to large (%zu > %u) when writing %s", size, max_write_size,
+                    parameter->name_and_description);
+            return ODIN_ERROR_SIZE_MISMATCH;
+        }
+
+        // Check if a non fractional number of elements is written
+        if (size % parameter->element_size != 0) {
+            LOG_ERR(TAG, "Write size not a multiple of element size (%zu %% %u != 0) when writing %s", size,
+                    parameter->element_size, parameter->name_and_description);
+            return ODIN_ERROR_SIZE_MISMATCH;
+        }
+
+        ODIN_vector_structure_t *vector_structure = (ODIN_vector_structure_t *)parameter->data;
+
+        // Copy the data
+        memcpy(vector_structure->data, data, size);
+
+        // Update the element count
+        vector_structure->num_elements = size / parameter->element_size;
+
+    } else {
+        
+        if (size != max_write_size) {
+            LOG_ERR(TAG, "Write size mismatch (%zu != %u) when writing %s", size, max_write_size,
+                    parameter->name_and_description);
+            return ODIN_ERROR_SIZE_MISMATCH;
+        }
+
+        memcpy(parameter->data, data, size);
+    }
+
+    // Log the access
+    // ODIN_conditionally_log_access(parameter, access_group, ODIN_WRITE_ACCESS);
+
+    return size;
 }
