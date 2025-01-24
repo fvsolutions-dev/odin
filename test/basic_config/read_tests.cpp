@@ -4,7 +4,7 @@
 #include <cstdint>
 
 extern "C" {
-#include "basic_config/OD.h"
+#include "OD.h"
 #include "encoding/encode_string.h"
 #include "odin_core.h"
 }

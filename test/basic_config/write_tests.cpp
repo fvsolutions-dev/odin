@@ -2,7 +2,9 @@
 #include <stdint.h>
 
 #include <cstdint>
+
 #include "odin.h"
+
 
 extern "C" {
 #include "OD.h"
@@ -148,8 +150,8 @@ TEST(ODINVectorWriteTest, InvalidDataWrite) {
 
 TEST(ODINVectorWriteTest, InvalidSizeWrite) {
     uint32_t input_data[500] = {0};
-    
-    int result = ODIN_parameter_write(base_vector_param, input_data, sizeof(input_data) , 0);
+
+    int result = ODIN_parameter_write(base_vector_param, input_data, sizeof(input_data), 0);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }
 
