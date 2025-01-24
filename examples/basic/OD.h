@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <odin.h>
+#include <odin_security.h>
 
 typedef struct
 {
@@ -156,6 +157,6 @@ typedef struct
 
 extern root_ram_t root_ram;
 extern const root_type_t root;
-extern const ODIN_parameter_group_t odin_store;
-extern const ODIN_parameter_group_t odin_store_group_A;
 extern const ODIN_parameter_group_t odin_store_group_A_group_A;
+extern const ODIN_parameter_group_t odin_store_group_A;
+extern const ODIN_parameter_group_t odin_store;

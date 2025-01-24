@@ -1,7 +1,10 @@
 #include "odin.h"
 #include "stdint.h"
 
-#define ODIN_ACCES_SIZE_BITS 2
+#ifndef ODIN_SECURITY_H
+#define ODIN_SECURITY_H
+
+#define ODIN_ACCES_SIZE_BITS 3
 #define ODIN_ACCESS_MAX ((1 << (ODIN_ACCES_SIZE_BITS)) - 1)
 #define GROUP_MASK(group) (ODIN_ACCESS_MAX << (ODIN_ACCES_SIZE_BITS * group))
 
@@ -38,3 +41,5 @@ typedef enum {
 bool ODIN_check_access(const ODIN_parameter_t *parameter, odin_access_group_t access_group, odin_acces_operation_t operation);
 odin_error_t ODIN_validate_access(const ODIN_parameter_t *parameter, odin_access_group_t access_group,
                                   odin_acces_operation_t operation);
+
+#endif  // ODIN_SECURITY_H

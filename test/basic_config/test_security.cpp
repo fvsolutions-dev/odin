@@ -3,11 +3,11 @@
 
 #include <cstdint>
 
-#include "odin.h"
-
 extern "C" {
 #include "encoding/encode_string.h"
+#include "odin.h"
 #include "odin_core.h"
+
 }
 
 // Group 0 RW

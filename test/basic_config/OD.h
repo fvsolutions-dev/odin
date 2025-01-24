@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <odin.h>
+#include <odin_security.h>
 
 typedef struct
 {

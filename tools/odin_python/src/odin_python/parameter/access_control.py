@@ -77,6 +77,9 @@ class AccesControlEntry(BaseModel):
         model.default = AccesContolEnum.parse(model.default)
         if model.override is not None:
             model.override = AccesContolEnum.parse(model.override)
+            # Add to default if not already present
+            model.default = model.default.union(model.override)
+            
         return model
 
     @classmethod
@@ -91,7 +94,9 @@ class AccesControlEntry(BaseModel):
             return AccesControlEntry(override=other.override, default=other.override)
 
         else:
-            return AccesControlEntry(default=self.default.union(other.default))  # type: ignore
+            return AccesControlEntry(
+                override=self.override, default=self.default.union(other.default)
+            )  # type: ignore
 
     @classmethod
     def normalize(
@@ -104,6 +109,7 @@ class AccesControlEntry(BaseModel):
 
     def to_statement(self, group_name: str) -> str | None:
         permissions = []
+
         for permission in self.default:
             permissions.append(f"ODIN_ACCESS_{permission.name.upper()}")
 
@@ -129,12 +135,14 @@ class AccesControlCollection(RootModel[Dict[str, AccesControlEntry | Set[str] | 
             statement = entry.to_statement(group_name)
             if statement is not None:
                 statements.append(statement)
+
+        if len(statements) == 0:
+            return "0"
+
         return " | ".join(statements)
 
     def get_defs(self) -> str:
-        print("Deriving state")
         acl_chain = self.recursive_get_build_permission_chain(self)
-        print(acl_chain)
 
         last = None
         for item in acl_chain:
@@ -205,7 +213,7 @@ class AccesControlCollection(RootModel[Dict[str, AccesControlEntry | Set[str] | 
             else:
                 items[name] = items[name].merge(item)
 
-        return AccesControlCollection(**items)  # type: ignore
+        return AccesControlCollection(root=items)  # type: ignore
 
     # def to_access_control_header(self) -> str:
     #     cw = cc.CodeWriter()

@@ -37,7 +37,7 @@ int main() {
     printf("len: %d\n", len);
     printf("buffer: %s\n", buffer);
 
-    ODIN_dump_recursive_tree(&odin_store, 0);
+    // ODIN_dump_recursive_tree(&odin_store, 0);
 
     printf("Finish!\n");
 

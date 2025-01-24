@@ -265,7 +265,7 @@ class ReferenceParameterModel(BaseParameterModel):
 
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
-            access_group=0,
+            access_group=self.access_control.get_defs(),
             index=self.global_id,
             data=self.reference,
             name=self._name,
@@ -329,7 +329,7 @@ class ArrayParameterModel(BaseParameterModel):
 
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
-            access_group=0,
+            access_group=self.access_control.get_defs(),
             index=self.global_id,
             data=self._data_storage_reference,
             name=self._name,
@@ -414,7 +414,7 @@ class VectorParameterModel(BaseParameterModel):
 
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
-            access_group=0,
+            access_group=self.access_control.get_defs(),
             index=self.global_id,
             data=self._data_storage_reference,
             name=self._name,
@@ -426,7 +426,7 @@ class VectorParameterModel(BaseParameterModel):
 
     # def to_c_odin_parameter_initialiser(self, **kwargs) -> cc.Variable:
     #     # permission_flags = self._access_configuration.get_permission_flags()
-    #     assert isinstance(self._resolved_type, RegularCDataType)
+    #     assert isinstance(self._resolved_type, RegularCDataType)parameters
     #     return cc.Variable(
     #         name=self._name,
     #         primitive=ODIN_VECTOR_PARAMETER_TYPE,
@@ -488,6 +488,14 @@ class BaseParameterGroupModel(BaseParameterModel):
     ) -> List[cc.Variable]:
         variables = []
 
+        for parameter_name, parameter in self.children.items():
+            if isinstance(parameter, ParameterGroupModel):
+                variables.extend(
+                    parameter.to_c_odin_parameter_group_initialiser(
+                        param_name=f"{param_name}_{parameter_name}"
+                    )
+                )
+                
         # self._group_storage_reference = self._name
         self._parameter_storage_reference = param_name
 
@@ -503,6 +511,17 @@ class BaseParameterGroupModel(BaseParameterModel):
         #     },
         # };
 
+        parameters = []
+        for parameter_name, parameter in self.children.items():
+    
+            assert (
+                parameter._parameter_storage_reference is not None
+            ), "Parameter storage reference is not set"
+
+            parameters.append(
+                cc.TextModifier(f"&{parameter._parameter_storage_reference}")
+            )
+
         variable = cc.Variable(
             name=param_name,
             primitive="ODIN_parameter_group_t",
@@ -512,21 +531,11 @@ class BaseParameterGroupModel(BaseParameterModel):
                 "index": cc.TextModifier(f"0x{self.global_id:08X}"),
                 "shift": cc.TextModifier(str(4)),
                 "count": cc.TextModifier(str(len(self.children))),
-                "parameters": [
-                    cc.TextModifier(f"&{param_value._parameter_storage_reference}")
-                    for param_name, param_value in self.children.items()
-                ],
+                "parameters": parameters,
             },
         )
         variables.append(variable)
 
-        for parameter_name, parameter in self.children.items():
-            if isinstance(parameter, ParameterGroupModel):
-                variables.extend(
-                    parameter.to_c_odin_parameter_group_initialiser(
-                        param_name=f"{param_name}_{parameter_name}"
-                    )
-                )
 
         return variables
 
@@ -647,7 +656,6 @@ class RootParameterModel(BaseParameterGroupModel):
         )
 
     def to_access_control_header(self) -> List[str]:
-        
         # todo possible move this into acces contol info?
         assert self.access_control is not None, "Access control info is not set"
         groups = self.access_control.validate_group()

@@ -5,7 +5,7 @@ from pydantic_yaml import parse_yaml_file_as
 
 from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.generator.generate_c import CGenerator
-from .loader import SimpleLoaderModel
+from .loader import AdvancedLoaderModel, SimpleLoaderModel
 from odin_python.parameter.parameter import RootParameterModel
 
 DEFAULT_NAME = "OD"
@@ -20,7 +20,8 @@ def cli():
 @click.argument("input_file")
 @click.argument("output_dir")
 @click.option("name", "--name", default=DEFAULT_NAME, help="Name of the output files")
-def gen_c(input_file: str, output_dir: str, name: str) -> None:
+@click.option("--advanced", is_flag=True, help="Use advanced loader")
+def gen_c(input_file: str, output_dir: str, name: str, advanced: bool):
     assert os.path.exists(input_file), f"Input file {input_file} does not exist"
     assert os.path.exists(output_dir), f"Output directory {output_dir} does not exist"
 
@@ -31,10 +32,16 @@ def gen_c(input_file: str, output_dir: str, name: str) -> None:
 
     registry = TypeRegistry()
     registry.register(BASE_DATA_TYPES)
+    
+    if advanced:
+        model = AdvancedLoaderModel.from_yaml(input_file)
+        root_parameters = RootParameterModel(
+            children=model.parameters, access_control=model.access_control
+        )
+    else:
+        model = SimpleLoaderModel.from_yaml(input_file)
+        root_parameters = RootParameterModel(children=model.root)
 
-    model = SimpleLoaderModel.from_yaml(input_file)
-
-    root_parameters = RootParameterModel(children=model.root)  # type: ignore
     root_parameters.post_load_resolve(None, "root", registry)
 
     with open(os.path.join(output_dir, f"{name}.c"), "w") as f:
