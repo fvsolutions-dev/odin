@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #include "inttypes.h"
-#include "odin.h"
+#include "odin_core.h"
 
 static const char *TAG = "ODIN_STR";
 

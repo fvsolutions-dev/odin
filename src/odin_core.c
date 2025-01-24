@@ -1,41 +1,7 @@
-#include "odin.h"
-
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
+#include "odin_core.h"
+#include "string.h"
 
 #define TAG "ODIN"
-
-int ODIN_get_data_size(const ODIN_parameter_t *parameter) {
-    if (parameter->odin_type == ODIN_TYPE_VECTOR) {
-        uint16_t *num_elements = (uint16_t *)parameter->data;
-        if (*num_elements > parameter->max_elements) {
-            return parameter->element_size * parameter->max_elements;
-        } else {
-            return parameter->element_size * *num_elements;
-        }
-    } else if (parameter->odin_type == ODIN_TYPE_ARRAY) {
-        return parameter->element_size * parameter->max_elements;
-    } else {
-        return parameter->element_size;
-    }
-}
-
-int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter, void *output_buffer, size_t output_buffer_size,
-                                    uint16_t access_group) {
-    int total_size = ODIN_get_data_size(parameter);
-
-    // Check if the buffer is large enough
-    if (output_buffer_size < total_size) {
-        LOG_ERR(TAG, "Buffer too small (%zu < %u) when reading %s", output_buffer_size, total_size,
-                parameter->name_and_description);
-        return ODIN_ERROR_SIZE_MISMATCH;
-    }
-
-    int e =  ODIN_parameter_read(parameter, output_buffer, total_size, access_group);
-    return e;
-}
 
 /**
  * @brief Method to read a parameter
@@ -139,66 +105,33 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t si
     return read_size;
 }
 
-/**
- * @brief Method to write a parameter
- *
- * @param parameter Pointer to the parameter
- * @param data Pointer to the data buffer
- * @param size Size of the data buffer
- * @param access_group Access group
- *
- * @return int Size of the data written, or error code
- */
-// int ODIN_parameter_write(ODIN_parameter_t *parameter, void *data, size_t
-// size, uint16_t access_group)
-// {
-//     if (parameter == NULL)
-//     {
-//         return ODIN_ERROR_NO_PARAMETER;
-//     }
+int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter, void *output_buffer, size_t output_buffer_size,
+                                    uint16_t access_group) {
+    int total_size = ODIN_get_data_size(parameter);
 
-//     if (size != parameter->size)
-//     {
-//         LOG_ERR(TAG, "Write size mismatch, (%d != %d), parameter '%s'", size,
-//         parameter->size, parameter->name); return ODIN_ERROR_SIZE_MISMATCH;
-//     }
+    // Check if the buffer is large enough
+    if (output_buffer_size < total_size) {
+        LOG_ERR(TAG, "Buffer too small (%zu < %u) when reading %s", output_buffer_size, total_size,
+                parameter->name_and_description);
+        return ODIN_ERROR_SIZE_MISMATCH;
+    }
 
-//     if (!ODIN_check_access(parameter, access_group, ODIN_WRITE_ACCESS))
-//     {
-//         LOG_ERR(TAG, "Permission denied, parameter %s", parameter->name);
-//         return ODIN_ERROR_PERMISSION_DENIED;
-//     }
+    int e =  ODIN_parameter_read(parameter, output_buffer, total_size, access_group);
+    return e;
+}
 
-//     // Validate
-//     if (parameter->extension != NULL && parameter->extension->ops->validate
-//     != NULL)
-//     {
-//         int rc = parameter->extension->ops->validate(parameter, data, size,
-//         access_group); if (rc != ODIN_SUCCESS)
-//         {
-//             return rc;
-//         }
-//     }
 
-//     if (parameter->extension != NULL && parameter->extension->ops->write !=
-//     NULL)
-//     {
-//         int rc = parameter->extension->ops->write(parameter, data, size,
-//         access_group); if (rc != ODIN_SUCCESS)
-//         {
-//             LOG_ERR(TAG, "Extension write failed, error %d ,parameter %s",
-//             rc, parameter->name); return rc;
-//         }
-//     }
-//     else
-//     {
-//         // Copy the data into the parameter
-//         memcpy(parameter->data, data, parameter->size);
-
-//         // Log the access
-//         ODIN_conditionally_log_access(parameter, access_group,
-//         ODIN_WRITE_ACCESS);
-//     }
-
-//     return ODIN_SUCCESS;
-// }
+int ODIN_get_data_size(const ODIN_parameter_t *parameter) {
+    if (parameter->odin_type == ODIN_TYPE_VECTOR) {
+        uint16_t *num_elements = (uint16_t *)parameter->data;
+        if (*num_elements > parameter->max_elements) {
+            return parameter->element_size * parameter->max_elements;
+        } else {
+            return parameter->element_size * *num_elements;
+        }
+    } else if (parameter->odin_type == ODIN_TYPE_ARRAY) {
+        return parameter->element_size * parameter->max_elements;
+    } else {
+        return parameter->element_size;
+    }
+}

@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #pragma once
 
@@ -158,7 +159,3 @@ typedef struct {
     const char *name_and_description;
     const void *parameters[];
 } ODIN_parameter_group_t;
-
-int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group);
-int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group);
-int ODIN_get_data_size(const ODIN_parameter_t *parameter);

@@ -6,7 +6,7 @@
 extern "C" {
 #include "basic_config/OD.h"
 #include "encoding/encode_string.h"
-#include "odin.h"
+#include "odin_core.h"
 }
 
 const ODIN_parameter_t* base_test_param = &root.test_variable_i32;

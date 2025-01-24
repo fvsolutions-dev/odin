@@ -1,5 +1,5 @@
 add_library(odin STATIC
-    odin.c
+    odin_core.c
     encoding/encode_string.c
     odin_utils.c
 )
