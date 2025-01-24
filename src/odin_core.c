@@ -189,7 +189,6 @@ int ODIN_parameter_write(const ODIN_parameter_t *parameter, const void *data, si
         vector_structure->num_elements = size / parameter->element_size;
 
     } else {
-        
         if (size != max_write_size) {
             LOG_ERR(TAG, "Write size mismatch (%zu != %u) when writing %s", size, max_write_size,
                     parameter->name_and_description);
@@ -201,6 +200,155 @@ int ODIN_parameter_write(const ODIN_parameter_t *parameter, const void *data, si
 
     // Log the access
     // ODIN_conditionally_log_access(parameter, access_group, ODIN_WRITE_ACCESS);
+
+    return size;
+}
+
+/**
+ * @brief Method to write an element of an array
+ *
+ * @param parameter Pointer to the parameter
+ * @param index Index of the element to write
+ * @param data Pointer to the data buffer
+ * @param size Size of the data to write
+ * @param access_group The access group, which is requesting the write
+ *
+ * @return if negative an error code is returned, otherwise the size of the data
+ * written in bytes
+ */
+
+int ODIN_array_write_element(const ODIN_parameter_t *parameter, int index, const void *data, size_t size,
+                             uint16_t access_group) {
+    // Check if all the parameters are valid
+    if (parameter == NULL || data == NULL) {
+        return ODIN_ERROR_INVALID_ARGUMENT;
+    }
+
+    // Check if type is array
+    if (parameter->odin_type != ODIN_TYPE_ARRAY) {
+        LOG_ERR(TAG, "Invalid type for array write %d", parameter->odin_type);
+        return ODIN_ERROR_INVALID_ARGUMENT;
+    }
+
+    // Check if the permission is allowed
+    // if (!ODIN_check_access(parameter, access_group, ODIN_WRITE_ACCESS))
+    // {
+    //     LOG_ERR(TAG, "Permission denied when writing %s",
+    //     parameter->name_and_description); return ODIN_ERROR_PERMISSION_DENIED;
+    // }
+
+    // Handle the extension (TODO)
+    // if (parameter->extension != NULL && parameter->extension->ops->write !=
+    // NULL)
+    // {
+    //     int ret = parameter->extension->ops->write(parameter, data, size,
+    //     access_group); if (ret)
+    //     {
+    //         LOG_ERR(TAG, "Extension write failed, error %d ,parameter %s", ret,
+    //         parameter->name);
+    //     }
+    //     return ret;
+    // }
+
+    // Otherwise, copy the data to the buffer
+    int max_write_size = ODIN_get_max_data_size(parameter);
+
+    // Check if the size matches the write size
+    if (index >= parameter->max_elements) {
+        LOG_ERR(TAG, "Write index out of bounds (%d >= %u) when writing %s", index, parameter->max_elements,
+                parameter->name_and_description);
+        return ODIN_ERROR_SIZE_MISMATCH;
+    }
+
+    // Check if the size matches the write size
+    if (size != parameter->element_size) {
+        LOG_ERR(TAG, "Write size mismatch (%zu != %u) when writing %s", size, parameter->element_size,
+                parameter->name_and_description);
+        return ODIN_ERROR_SIZE_MISMATCH;
+    }
+
+    // Calculate the offset
+    int offset = index * parameter->element_size;
+
+    // Copy the data
+    memcpy(parameter->data + offset, data, size);
+
+    // Log the access
+    // ODIN_conditionally_log_access(parameter, access_group, ODIN_WRITE_ACCESS);
+
+    return size;
+}
+
+/**
+ * @brief Method to read an element of an array
+*
+* @param parameter Pointer to the parameter
+* @param index Index of the element to read
+* @param data Pointer to the data buffer
+* @param size Size of the data to read
+* @param access_group The access group, which is requesting the read
+*
+* @return if negative an error code is returned, otherwise the size of the data
+read in bytes
+*/
+int ODIN_array_read_element(const ODIN_parameter_t *parameter, int index, void *data, size_t size,
+                            uint16_t access_group) {
+    // Check if all the parameters are valid
+    if (parameter == NULL || data == NULL) {
+        return ODIN_ERROR_INVALID_ARGUMENT;
+    }
+
+    // Check if type is array
+    if (parameter->odin_type != ODIN_TYPE_ARRAY) {
+        LOG_ERR(TAG, "Invalid type for array read %d", parameter->odin_type);
+        return ODIN_ERROR_INVALID_ARGUMENT;
+    }
+
+    // Check if the permission is allowed
+    // if (!ODIN_check_access(parameter, access_group, ODIN_READ_ACCESS))
+    // {
+    //     LOG_ERR(TAG, "Permission denied when reading %s",
+    //     parameter->name_and_description); return ODIN_ERROR_PERMISSION_DENIED;
+    // }
+
+    // Handle the extension (TODO)
+    // if (parameter->extension != NULL && parameter->extension->ops->read !=
+    // NULL)
+    // {
+    //     int ret = parameter->extension->ops->read(parameter, data, size,
+    //     access_group); if (ret)
+    //     {
+    //         LOG_ERR(TAG, "Extension read failed, error %d ,parameter %s", ret,
+    //         parameter->name);
+    //     }
+    //     return ret;
+    // }
+
+    // Otherwise, copy the data to the buffer
+    int max_read_size = ODIN_get_max_data_size(parameter);
+
+    // Check if the size matches the read size
+    if (index >= parameter->max_elements) {
+        LOG_ERR(TAG, "Read index out of bounds (%d >= %u) when reading %s", index, parameter->max_elements,
+                parameter->name_and_description);
+        return ODIN_ERROR_SIZE_MISMATCH;
+    }
+
+    // Check if the size matches the read size
+    if (size != parameter->element_size) {
+        LOG_ERR(TAG, "Read size mismatch (%zu != %u) when reading %s", size, parameter->element_size,
+                parameter->name_and_description);
+        return ODIN_ERROR_SIZE_MISMATCH;
+    }
+
+    // Calculate the offset
+    int offset = index * parameter->element_size;
+
+    // Copy the data
+    memcpy(data, parameter->data + offset, size);
+
+    // Log the access
+    // ODIN_conditionally_log_access
 
     return size;
 }

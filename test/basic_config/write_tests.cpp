@@ -5,7 +5,6 @@
 
 #include "odin.h"
 
-
 extern "C" {
 #include "OD.h"
 #include "encoding/encode_string.h"

@@ -119,9 +119,7 @@ TEST(ODINVectorReadTest, Nominal) {
 
     // Check if the last element +1 is untouched
     EXPECT_EQ(data[root_ram.i32_variable_length_array.num_elements], 0x12345678);
-
 }
-
 
 TEST(ODINVectorReadTest, InvalidDataRead) {
     ODIN_vector_structure_t output_data = {0};

@@ -91,52 +91,36 @@ int ODIN_encode_to_string(const ODIN_parameter_t *parameter, char *output_buffer
         case ODIN_TYPE_PARAMETER:
             return ODIN_element_to_string(parameter->element_type, data_buffer, output_buffer, output_buffer_size);
 
-            // case ODIN_TYPE_ARRAY:
-            //     // Print all elements in the array
-            //     {
-            //         int len = 0;
-            //         for (int i = 0; i < parameter->max_elements; i++) {
-            //             len += ODIN_element_to_string(parameter->element_type, data_buffer + i *
-            //             parameter->element_size,
-            //                                           output_buffer + len, output_buffer_size - len);
-            //             if (i < parameter->max_elements - 1) {
-            //                 len += snprintf(output_buffer + len, output_buffer_size - len, ", ");
-            //             }
-            //         }
-            //         return len;
-            //     }
-
         case ODIN_TYPE_VECTOR:
-        case ODIN_TYPE_ARRAY:
-            // Print all elements in the vector
-            {
-                int len = 0;
-                output_buffer[len++] = '[';
-                uint8_t *data_buffer_ptr = data_buffer;
+        case ODIN_TYPE_ARRAY: {
+            // Print all elements formatted in square brackets
 
-                for (; data_buffer_ptr < data_buffer + ret_size; data_buffer_ptr += parameter->element_size) {
-                    len += ODIN_element_to_string(parameter->element_type, data_buffer_ptr, output_buffer + len,
-                                                  output_buffer_size - len);
-                    // cast fo rdouble
-                    double *data = (double *)data_buffer_ptr;
-                    // if not last
-                    if (data_buffer_ptr < data_buffer + ret_size - parameter->element_size) {
-                        output_buffer[len++] = ',';
-                        output_buffer[len++] = ' ';
-                    }
+            int len = 0;
+            output_buffer[len++] = '[';
+            uint8_t *data_buffer_ptr = data_buffer;
 
-                    // if buffer is, nearly full add ... and break
-                    if (len >= output_buffer_size - 10) {
-                        len += snprintf(output_buffer + len, output_buffer_size - len, "...");
-                        break;
-                    }
+            for (; data_buffer_ptr < data_buffer + ret_size; data_buffer_ptr += parameter->element_size) {
+                len += ODIN_element_to_string(parameter->element_type, data_buffer_ptr, output_buffer + len,
+                                              output_buffer_size - len);
+                // cast fo rdouble
+                double *data = (double *)data_buffer_ptr;
+                // if not last
+                if (data_buffer_ptr < data_buffer + ret_size - parameter->element_size) {
+                    output_buffer[len++] = ',';
+                    output_buffer[len++] = ' ';
                 }
-                output_buffer[len++] = ']';
-                output_buffer[len] = '\0';
 
-                return len;
+                // if buffer is, nearly full add ... and break
+                if (len >= output_buffer_size - 10) {
+                    len += snprintf(output_buffer + len, output_buffer_size - len, "...");
+                    break;
+                }
             }
-            break;
+            output_buffer[len++] = ']';
+            output_buffer[len] = '\0';
+
+            return len;
+        } break;
 
         default:
             return ODIN_ERROR_NOT_SUPPORTED;
