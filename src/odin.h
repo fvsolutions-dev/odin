@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+
 #pragma once
 
 // Temp references
@@ -13,6 +14,8 @@ struct my_struct {
 
 extern struct my_struct my;
 #define LOG_ERR(tag, format, ...) printf(format, ##__VA_ARGS__)
+
+
 
 typedef enum {
     ODIN_SUCCESS = 0,
@@ -27,7 +30,6 @@ typedef enum {
     ODIN_ERR_FILE_NOT_FOUND = -7
 } odin_error_t;
 
-typedef enum { ODIN_READ_ACCESS = 0, ODIN_WRITE_ACCESS = 1 } odin_access_t;
 
 typedef enum {
     ODIN_TYPE_PARAMETER,  // Single value
@@ -159,3 +161,14 @@ typedef struct {
     const char *name_and_description;
     const void *parameters[];
 } ODIN_parameter_group_t;
+
+// A return eatly macro if not successful, which only executes the code once
+#define RETURN_ON_FAIL(x) \
+    do {                               \
+        int ret = (x);                 \
+        if (ret < 0) {                 \
+            return ret;                \
+        }                              \
+    } while (0)
+
+

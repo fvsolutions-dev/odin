@@ -23,7 +23,7 @@ TEST(ODINParameterArrayTest, ReadWriteElement) {
     // Read/Write elements separately
     for (int i = 0; i < base_array_param->max_elements; i++) {
         int32_t input_data = i * 100;
-        int result = ODIN_array_write_element(base_array_param, i, &input_data, sizeof(input_data), 0);
+        int result = ODIN_array_write_element(base_array_param, i, &input_data, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
         EXPECT_GE(result, ODIN_SUCCESS);
 
         // Check if the size is exactly the same
@@ -35,7 +35,7 @@ TEST(ODINParameterArrayTest, ReadWriteElement) {
     
         // Read back the element
         int32_t output_data = 0;
-        result = ODIN_array_read_element(base_array_param, i, &output_data, sizeof(output_data), 0);
+        result = ODIN_array_read_element(base_array_param, i, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_INTERNAL);
 
         // Check if the size is exactly the same
         EXPECT_EQ(sizeof(output_data), result);
@@ -49,52 +49,52 @@ TEST(ODINParameterArrayTest, ReadWriteElement) {
 // Not nominal tests
 TEST(ODINParameterArrayTest, NullWriteElement) {
     int32_t input_data = 0x12345678;
-    int result = ODIN_array_write_element(NULL, 0, &input_data, sizeof(input_data), 0);
+    int result = ODIN_array_write_element(NULL, 0, &input_data, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINParameterArrayTest, NullDataWriteElement) {
-    int result = ODIN_array_write_element(base_array_param, 0, NULL, sizeof(int32_t), 0);
+    int result = ODIN_array_write_element(base_array_param, 0, NULL, sizeof(int32_t), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINParameterArrayTest, InvalidSizeWriteElement) {
     int32_t input_data = 0x12345678;
-    int result = ODIN_array_write_element(base_array_param, 0, &input_data, sizeof(input_data) - 1, 0);
+    int result = ODIN_array_write_element(base_array_param, 0, &input_data, sizeof(input_data) - 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 
-    result = ODIN_array_write_element(base_array_param, 0, &input_data, sizeof(input_data) + 1, 0);
+    result = ODIN_array_write_element(base_array_param, 0, &input_data, sizeof(input_data) + 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }
 
 TEST(ODINParameterArrayTest, OutOfBoundsWriteElement) {
     int32_t input_data = 0x12345678;
-    int result = ODIN_array_write_element(base_array_param, base_array_param->max_elements, &input_data, sizeof(input_data), 0);
+    int result = ODIN_array_write_element(base_array_param, base_array_param->max_elements, &input_data, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }
 
 TEST(ODINParameterArrayTest, NullReadElement) {
     int32_t output_data = 0;
-    int result = ODIN_array_read_element(NULL, 0, &output_data, sizeof(output_data), 0);
+    int result = ODIN_array_read_element(NULL, 0, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINParameterArrayTest, NullDataReadElement) {
-    int result = ODIN_array_read_element(base_array_param, 0, NULL, sizeof(int32_t), 0);
+    int result = ODIN_array_read_element(base_array_param, 0, NULL, sizeof(int32_t), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINParameterArrayTest, InvalidSizeReadElement) {
     int32_t output_data = 0;
-    int result = ODIN_array_read_element(base_array_param, 0, &output_data, sizeof(output_data) - 1, 0);
+    int result = ODIN_array_read_element(base_array_param, 0, &output_data, sizeof(output_data) - 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 
-    result = ODIN_array_read_element(base_array_param, 0, &output_data, sizeof(output_data) + 1, 0);
+    result = ODIN_array_read_element(base_array_param, 0, &output_data, sizeof(output_data) + 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }
 
 TEST(ODINParameterArrayTest, OutOfBoundsReadElement) {
     int32_t output_data = 0;
-    int result = ODIN_array_read_element(base_array_param, base_array_param->max_elements, &output_data, sizeof(output_data), 0);
+    int result = ODIN_array_read_element(base_array_param, base_array_param->max_elements, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }

@@ -11,13 +11,19 @@
             "program": "${file}",
             "console": "integratedTerminal"
         },
-        
         {
             "name": "Python Debugger: TEST",
             "type": "debugpy",
             "request": "launch",
             "program": "test/test_process_configs.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Python Debugger: TEST Advanced",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "test/test_process_advanced_configs.py",
+            "console": "integratedTerminal"
         }
     ]
-}   
+}

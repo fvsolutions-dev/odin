@@ -54,6 +54,7 @@ class CGenerator:
         cw.add_line("#include <stdint.h>")
         cw.add_line("#include <stdbool.h>")
         cw.add_line("#include <odin.h>")
+        cw.add_line("#include <odin_security.h>")
         cw.add_line("")
 
         cw.add_struct(model.to_ram_typedef(CGenerator.RAM_TYPE))
@@ -62,6 +63,10 @@ class CGenerator:
         cw.add_struct(model.to_odin_parameter_typedef(type_name=CGenerator.STORE_TYPE))
         cw.add_line("")
 
+        # Generate acces control definitions
+        for line in model.to_access_control_header():
+            cw.add_line(line)
+            
         # Add external references
         cw.add_variable_declaration(
             model.to_ram_initialiser(CGenerator.RAM_NAME, CGenerator.RAM_TYPE),

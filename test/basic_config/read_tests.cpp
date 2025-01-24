@@ -15,7 +15,7 @@ static const ODIN_parameter_t* base_vector_param = &root.i32_variable_length_arr
 
 TEST(ODINParameterReadTest, Nominal) {
     int32_t output_data = 0;
-    int result = ODIN_parameter_read(base_test_param, &output_data, sizeof(output_data), 0);
+    int result = ODIN_parameter_read(base_test_param, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_GE(result, ODIN_SUCCESS);
 
     // Check if the size is exactly the same
@@ -27,22 +27,22 @@ TEST(ODINParameterReadTest, Nominal) {
 
 TEST(ODINParameterReadTest, Null) {
     int32_t output_data = 0;
-    int result = ODIN_parameter_read(NULL, &output_data, sizeof(output_data), 0);
+    int result = ODIN_parameter_read(NULL, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINParameterReadTest, InvalidSize) {
     int32_t output_data = 0;
-    int result = ODIN_parameter_read(base_test_param, &output_data, sizeof(output_data) - 1, 0);
+    int result = ODIN_parameter_read(base_test_param, &output_data, sizeof(output_data) - 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 
-    result = ODIN_parameter_read(base_test_param, &output_data, sizeof(output_data) + 1, 0);
+    result = ODIN_parameter_read(base_test_param, &output_data, sizeof(output_data) + 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }
 
 TEST(ODINParameterReadTest, InvalidData) {
     int32_t output_data = 0;
-    int result = ODIN_parameter_read(base_test_param, NULL, sizeof(output_data), 0);
+    int result = ODIN_parameter_read(base_test_param, NULL, sizeof(output_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
@@ -55,7 +55,7 @@ TEST(ODINArrayReadTest, Nominal) {
     // Set last element to a non-zero value
     output_data[sizeof(root_ram.i32_array) / element_size] = 0x12345678;
 
-    int result = ODIN_parameter_read(base_array_param, output_data, sizeof(output_data) - element_size, 0);
+    int result = ODIN_parameter_read(base_array_param, output_data, sizeof(output_data) - element_size, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_GE(result, ODIN_SUCCESS);
 
     // Check if the size is exactly the same
@@ -72,25 +72,25 @@ TEST(ODINArrayReadTest, Nominal) {
 
 TEST(ODINArrayReadTest, NullRead) {
     int32_t output_data[10] = {0};
-    int result = ODIN_parameter_read(NULL, output_data, sizeof(output_data), 0);
+    int result = ODIN_parameter_read(NULL, output_data, sizeof(output_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINArrayReadTest, InvalidDataRead) {
     int32_t output_data[10] = {0};
-    int result = ODIN_parameter_read(base_array_param, NULL, sizeof(output_data), 0);
+    int result = ODIN_parameter_read(base_array_param, NULL, sizeof(output_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINArrayReadTest, InvalidSizeRead) {
     int32_t output_data[10] = {0};
-    int result = ODIN_parameter_read(base_array_param, output_data, sizeof(output_data) - 1, 0);
+    int result = ODIN_parameter_read(base_array_param, output_data, sizeof(output_data) - 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 
-    result = ODIN_parameter_read(base_array_param, output_data, sizeof(output_data) + 1, 0);
+    result = ODIN_parameter_read(base_array_param, output_data, sizeof(output_data) + 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 
-    result = ODIN_parameter_read(base_array_param, output_data, 0, 0);
+    result = ODIN_parameter_read(base_array_param, output_data, 0, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }
 
@@ -105,7 +105,7 @@ TEST(ODINVectorReadTest, Nominal) {
         data[i] = 0x12345678;
     }
 
-    int result = ODIN_parameter_read(base_vector_param, data, sizeof(data), 0);
+    int result = ODIN_parameter_read(base_vector_param, data, sizeof(data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_GE(result, ODIN_SUCCESS);
 
     // Get the size of the data
@@ -123,18 +123,18 @@ TEST(ODINVectorReadTest, Nominal) {
 
 TEST(ODINVectorReadTest, InvalidDataRead) {
     ODIN_vector_structure_t output_data = {0};
-    int result = ODIN_parameter_read(base_vector_param, NULL, sizeof(output_data), 0);
+    int result = ODIN_parameter_read(base_vector_param, NULL, sizeof(output_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINVectorReadTest, InvalidSizeRead) {
     ODIN_vector_structure_t output_data = {0};
-    int result = ODIN_parameter_read(base_vector_param, &output_data, sizeof(output_data) - 1, 0);
+    int result = ODIN_parameter_read(base_vector_param, &output_data, sizeof(output_data) - 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 
-    result = ODIN_parameter_read(base_vector_param, &output_data, sizeof(output_data) + 1, 0);
+    result = ODIN_parameter_read(base_vector_param, &output_data, sizeof(output_data) + 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 
-    result = ODIN_parameter_read(base_vector_param, &output_data, 0, 0);
+    result = ODIN_parameter_read(base_vector_param, &output_data, 0, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }

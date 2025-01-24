@@ -18,7 +18,7 @@ static const ODIN_parameter_t* base_vector_param = &root.i32_variable_length_arr
 // Single parameter tests
 TEST(ODINParameterWriteTest, Nominal) {
     int32_t input_data = 0x12345678;
-    int result = ODIN_parameter_write(base_test_param, &input_data, sizeof(input_data), 0);
+    int result = ODIN_parameter_write(base_test_param, &input_data, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_GE(result, ODIN_SUCCESS);
 
     // Check if the size is exactly the same
@@ -30,22 +30,22 @@ TEST(ODINParameterWriteTest, Nominal) {
 
 TEST(ODINParameterWriteTest, Null) {
     int32_t input_data = 0x12345678;
-    int result = ODIN_parameter_write(NULL, &input_data, sizeof(input_data), 0);
+    int result = ODIN_parameter_write(NULL, &input_data, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINParameterWriteTest, InvalidSize) {
     int32_t input_data = 0x12345678;
-    int result = ODIN_parameter_write(base_test_param, &input_data, sizeof(input_data) - 1, 0);
+    int result = ODIN_parameter_write(base_test_param, &input_data, sizeof(input_data) - 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 
-    result = ODIN_parameter_write(base_test_param, &input_data, sizeof(input_data) + 1, 0);
+    result = ODIN_parameter_write(base_test_param, &input_data, sizeof(input_data) + 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }
 
 TEST(ODINParameterWriteTest, InvalidData) {
     int32_t input_data = 0x12345678;
-    int result = ODIN_parameter_write(base_test_param, NULL, sizeof(input_data), 0);
+    int result = ODIN_parameter_write(base_test_param, NULL, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
@@ -61,7 +61,7 @@ TEST(ODINArrayWriteTest, Nominal) {
         input_data[i] = 0x12345678;
     }
 
-    int result = ODIN_parameter_write(base_array_param, input_data, array_size_bytes, 0);
+    int result = ODIN_parameter_write(base_array_param, input_data, array_size_bytes, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_GE(result, ODIN_SUCCESS);
 
     // Check if the size is exactly the same
@@ -78,25 +78,25 @@ TEST(ODINArrayWriteTest, Nominal) {
 
 TEST(ODINArrayWriteTest, NullWrite) {
     int32_t input_data[10] = {0};
-    int result = ODIN_parameter_write(NULL, input_data, sizeof(input_data), 0);
+    int result = ODIN_parameter_write(NULL, input_data, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINArrayWriteTest, InvalidDataWrite) {
     int32_t input_data[10] = {0};
-    int result = ODIN_parameter_write(base_array_param, NULL, sizeof(input_data), 0);
+    int result = ODIN_parameter_write(base_array_param, NULL, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINArrayWriteTest, InvalidSizeWrite) {
     int32_t input_data[10] = {0};
-    int result = ODIN_parameter_write(base_array_param, input_data, sizeof(input_data) - 1, 0);
+    int result = ODIN_parameter_write(base_array_param, input_data, sizeof(input_data) - 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 
-    result = ODIN_parameter_write(base_array_param, input_data, sizeof(input_data) + 1, 0);
+    result = ODIN_parameter_write(base_array_param, input_data, sizeof(input_data) + 1, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 
-    result = ODIN_parameter_write(base_array_param, input_data, 0, 0);
+    result = ODIN_parameter_write(base_array_param, input_data, 0, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }
 
@@ -111,7 +111,7 @@ TEST(ODINVectorWriteTest, Nominal) {
         input_data[i] = i * 100;
     }
 
-    int result = ODIN_parameter_write(base_vector_param, input_data, sizeof(input_data), 0);
+    int result = ODIN_parameter_write(base_vector_param, input_data, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_GE(result, ODIN_SUCCESS);
 
     // Check if the size is exactly the same
@@ -131,31 +131,31 @@ TEST(ODINVectorWriteTest, Nominal) {
     EXPECT_EQ(num_elements, root_ram.i32_variable_length_array.num_elements);
 
     // Swite zero size
-    result = ODIN_parameter_write(base_vector_param, input_data, 0, 0);
+    result = ODIN_parameter_write(base_vector_param, input_data, 0, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_SUCCESS);
 }
 
 TEST(ODINVectorWriteTest, NullWrite) {
     uint32_t input_data[10] = {0};
-    int result = ODIN_parameter_write(NULL, input_data, sizeof(input_data), 0);
+    int result = ODIN_parameter_write(NULL, input_data, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINVectorWriteTest, InvalidDataWrite) {
     uint32_t input_data[10] = {0};
-    int result = ODIN_parameter_write(base_vector_param, NULL, sizeof(input_data), 0);
+    int result = ODIN_parameter_write(base_vector_param, NULL, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_INVALID_ARGUMENT);
 }
 
 TEST(ODINVectorWriteTest, InvalidSizeWrite) {
     uint32_t input_data[500] = {0};
 
-    int result = ODIN_parameter_write(base_vector_param, input_data, sizeof(input_data), 0);
+    int result = ODIN_parameter_write(base_vector_param, input_data, sizeof(input_data), ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }
 
 TEST(ODINVectorWriteTest, InvalidElementSizeWrite) {
     uint32_t input_data[10] = {0};
-    int result = ODIN_parameter_write(base_vector_param, input_data, 7, 0);
+    int result = ODIN_parameter_write(base_vector_param, input_data, 7, ODIN_ACCESS_GROUP_INTERNAL);
     EXPECT_EQ(result, ODIN_ERROR_SIZE_MISMATCH);
 }

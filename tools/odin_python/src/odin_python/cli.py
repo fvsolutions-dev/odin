@@ -5,7 +5,7 @@ from pydantic_yaml import parse_yaml_file_as
 
 from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.generator.generate_c import CGenerator
-from odin_python.loader import LoaderModel
+from .loader import SimpleLoaderModel
 from odin_python.parameter.parameter import RootParameterModel
 
 DEFAULT_NAME = "OD"
@@ -32,7 +32,7 @@ def gen_c(input_file: str, output_dir: str, name: str) -> None:
     registry = TypeRegistry()
     registry.register(BASE_DATA_TYPES)
 
-    model = LoaderModel.from_yaml(input_file)
+    model = SimpleLoaderModel.from_yaml(input_file)
 
     root_parameters = RootParameterModel(children=model.root)  # type: ignore
     root_parameters.post_load_resolve(None, "root", registry)

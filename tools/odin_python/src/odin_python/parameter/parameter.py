@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from os import access
 from typing import Any, Dict, List
 
 import csnake as cc
+from odin_python.parameter.access_control import AccesControlCollection
 from odin_python.utils.csnake_custom import StructVariable
 from odin_python.utils.string import escape_string
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
@@ -13,7 +15,7 @@ ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
 
 
 class ODIN_ParameterModel(BaseModel):
-    access_group: int = Field(description="Access group")
+    access_group: str = Field(description="Access group")
     index: int = Field(description="Index of the parameter")
     data: str = Field(description="Reference to the data")
     type: DataType = Field(description="Resolved type of the parameter")
@@ -48,7 +50,7 @@ class ODIN_ParameterModel(BaseModel):
 
 
 class ODIN_ArrayModel(BaseModel):
-    access_group: int = Field(description="Access group")
+    access_group: str = Field(description="Access group")
     index: int = Field(description="Index of the parameter")
     data: str = Field(description="Reference to the data")
     type: DataType = Field(description="Resolved type of the parameter")
@@ -109,6 +111,11 @@ class BaseParameterModel(BaseModel, ABC):
         description="Description of the parameter, optional", default=None
     )
 
+    access_control: AccesControlCollection = Field(
+        description="Access control configuration for the parameter",
+        default_factory=AccesControlCollection.empty,
+    )
+
     def post_load_resolve(
         self,
         parent: "BaseParameterModel | None",
@@ -120,6 +127,7 @@ class BaseParameterModel(BaseModel, ABC):
         del type_registry  # type_registry is not used here
         self._parent = parent
         self._name = name
+        self.access_control._parent = self
 
     @property
     def resolved_description(self) -> str:
@@ -208,16 +216,16 @@ class ParameterModel(BaseParameterModel):
 
         assert isinstance(self._resolved_type, RegularCDataType)
 
-        assert self._data_storage_reference is not None, (
-            "Data storage reference is not set, call to_c_initialiser first to set the reference"
-        )
+        assert (
+            self._data_storage_reference is not None
+        ), "Data storage reference is not set, call to_c_initialiser first to set the reference"
 
         # Store a reference to the parameter name
         self._parameter_storage_reference = f"{absolute_reference}.{self._name}"
 
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
-            access_group=0,
+            access_group=self.access_control.get_defs(),
             index=self.global_id,
             data=self._data_storage_reference,
             name=self._name,
@@ -313,9 +321,9 @@ class ArrayParameterModel(BaseParameterModel):
         self, absolute_reference: str, **kwargs
     ) -> cc.Variable:
         assert isinstance(self._resolved_type, RegularCDataType)
-        assert self._data_storage_reference is not None, (
-            "Data storage reference is not set"
-        )
+        assert (
+            self._data_storage_reference is not None
+        ), "Data storage reference is not set"
 
         self._parameter_storage_reference = f"{absolute_reference}.{self._name}"
 
@@ -398,9 +406,9 @@ class VectorParameterModel(BaseParameterModel):
     ) -> cc.Variable:
         assert isinstance(self._resolved_type, RegularCDataType)
 
-        assert self._data_storage_reference is not None, (
-            "Data storage reference is not set"
-        )
+        assert (
+            self._data_storage_reference is not None
+        ), "Data storage reference is not set"
 
         self._parameter_storage_reference = f"{absolute_reference}.{self._name}"
 
@@ -498,7 +506,7 @@ class BaseParameterGroupModel(BaseParameterModel):
         variable = cc.Variable(
             name=param_name,
             primitive="ODIN_parameter_group_t",
-            value={
+            value={  # type: ignore
                 "name_and_description": rf"{self._name}\0{escape_string(self.resolved_description)}",
                 "odin_type": cc.TextModifier(str(ODIN_TypeEnum.ODIN_TYPE_GROUP.value)),
                 "index": cc.TextModifier(f"0x{self.global_id:08X}"),
@@ -637,3 +645,15 @@ class RootParameterModel(BaseParameterGroupModel):
             primitive=type_name,
             value=values,  # type: ignore
         )
+
+    def to_access_control_header(self) -> List[str]:
+        
+        # todo possible move this into acces contol info?
+        assert self.access_control is not None, "Access control info is not set"
+        groups = self.access_control.validate_group()
+
+        defines = []
+        for id, name in groups.items():
+            defines.append(f"#define ODIN_ACCESS_{name.upper()} ODIN_ACCESS_GROUP_{id}")
+
+        return defines

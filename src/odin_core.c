@@ -16,31 +16,14 @@
  * @return if negative an error code is returned, otherwise the size of the data
  * read in bytes
  */
-int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group) {
+int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t size, odin_access_group_t access_group) {
     // Check if the parameter exists
     if (parameter == NULL || data == NULL) {
         return ODIN_ERROR_INVALID_ARGUMENT;
     }
 
     // Check if the permission is allowed
-    // if (!ODIN_check_access(parameter, access_group, ODIN_READ_ACCESS))
-    // {
-    //     LOG_ERR(TAG, "Permission denied when reading %s",
-    //     parameter->name_and_description); return ODIN_ERROR_PERMISSION_DENIED;
-    // }
-
-    // Handle the extension (TODO)
-    // if (parameter->extension != NULL && parameter->extension->ops->read !=
-    // NULL)
-    // {
-    //     int ret = parameter->extension->ops->read(parameter, data, size,
-    //     access_group); if (ret)
-    //     {
-    //         LOG_ERR(TAG, "Extension read failed, error %d ,parameter %s", ret,
-    //         parameter->name);
-    //     }
-    //     return ret;
-    // }
+    RETURN_ON_FAIL(ODIN_validate_access(parameter, access_group, ODIN_ACCESS_READ));
 
     // Otherwise, copy the data to the buffer
     int read_size = ODIN_get_data_size(parameter);
@@ -48,8 +31,7 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t si
     // Check if the size matches the read size
     if (parameter->odin_type == ODIN_TYPE_VECTOR) {
         if (size < read_size) {
-            LOG_ERR(TAG, "Read size to small (%zu < %u) when reading %s", size, read_size,
-                    parameter->name_and_description);
+            LOG_ERR(TAG, "Read size to small (%zu < %u) when reading %s", size, read_size, parameter->name_and_description);
             return ODIN_ERROR_SIZE_MISMATCH;
         }
 
@@ -75,7 +57,7 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t si
 }
 
 int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter, void *output_buffer, size_t output_buffer_size,
-                                    uint16_t access_group) {
+                                    odin_access_group_t access_group) {
     int total_size = ODIN_get_data_size(parameter);
 
     // Check if the buffer is large enough
@@ -136,18 +118,14 @@ int ODIN_get_max_data_size(const ODIN_parameter_t *parameter) {
  * @return if negative an error code is returned, otherwise the size of the data
  * written in bytes
  */
-int ODIN_parameter_write(const ODIN_parameter_t *parameter, const void *data, size_t size, uint16_t access_group) {
+int ODIN_parameter_write(const ODIN_parameter_t *parameter, const void *data, size_t size, odin_access_group_t access_group) {
     // Check if all the parameters are valid
     if (parameter == NULL || data == NULL) {
         return ODIN_ERROR_INVALID_ARGUMENT;
     }
 
     // Check if the permission is allowed
-    // if (!ODIN_check_access(parameter, access_group, ODIN_WRITE_ACCESS))
-    // {
-    //     LOG_ERR(TAG, "Permission denied when writing %s",
-    //     parameter->name_and_description); return ODIN_ERROR_PERMISSION_DENIED;
-    // }
+    RETURN_ON_FAIL(ODIN_validate_access(parameter, access_group, ODIN_ACCESS_WRITE));
 
     // Handle the extension (TODO)
     // if (parameter->extension != NULL && parameter->extension->ops->write !=
@@ -168,8 +146,7 @@ int ODIN_parameter_write(const ODIN_parameter_t *parameter, const void *data, si
     // Check if the size matches the write size
     if (parameter->odin_type == ODIN_TYPE_VECTOR) {
         if (size > max_write_size) {
-            LOG_ERR(TAG, "Write size to large (%zu > %u) when writing %s", size, max_write_size,
-                    parameter->name_and_description);
+            LOG_ERR(TAG, "Write size to large (%zu > %u) when writing %s", size, max_write_size, parameter->name_and_description);
             return ODIN_ERROR_SIZE_MISMATCH;
         }
 
@@ -218,7 +195,7 @@ int ODIN_parameter_write(const ODIN_parameter_t *parameter, const void *data, si
  */
 
 int ODIN_array_write_element(const ODIN_parameter_t *parameter, int index, const void *data, size_t size,
-                             uint16_t access_group) {
+                             odin_access_group_t access_group) {
     // Check if all the parameters are valid
     if (parameter == NULL || data == NULL) {
         return ODIN_ERROR_INVALID_ARGUMENT;
@@ -231,11 +208,7 @@ int ODIN_array_write_element(const ODIN_parameter_t *parameter, int index, const
     }
 
     // Check if the permission is allowed
-    // if (!ODIN_check_access(parameter, access_group, ODIN_WRITE_ACCESS))
-    // {
-    //     LOG_ERR(TAG, "Permission denied when writing %s",
-    //     parameter->name_and_description); return ODIN_ERROR_PERMISSION_DENIED;
-    // }
+    RETURN_ON_FAIL(ODIN_validate_access(parameter, access_group, ODIN_ACCESS_WRITE));
 
     // Handle the extension (TODO)
     // if (parameter->extension != NULL && parameter->extension->ops->write !=
@@ -292,7 +265,7 @@ int ODIN_array_write_element(const ODIN_parameter_t *parameter, int index, const
 read in bytes
 */
 int ODIN_array_read_element(const ODIN_parameter_t *parameter, int index, void *data, size_t size,
-                            uint16_t access_group) {
+                            odin_access_group_t access_group) {
     // Check if all the parameters are valid
     if (parameter == NULL || data == NULL) {
         return ODIN_ERROR_INVALID_ARGUMENT;
@@ -305,11 +278,7 @@ int ODIN_array_read_element(const ODIN_parameter_t *parameter, int index, void *
     }
 
     // Check if the permission is allowed
-    // if (!ODIN_check_access(parameter, access_group, ODIN_READ_ACCESS))
-    // {
-    //     LOG_ERR(TAG, "Permission denied when reading %s",
-    //     parameter->name_and_description); return ODIN_ERROR_PERMISSION_DENIED;
-    // }
+    RETURN_ON_FAIL(ODIN_validate_access(parameter, access_group, ODIN_ACCESS_READ));
 
     // Handle the extension (TODO)
     // if (parameter->extension != NULL && parameter->extension->ops->read !=
