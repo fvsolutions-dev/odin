@@ -9,6 +9,3 @@ add_library(odin STATIC
 target_include_directories(odin PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
-
-# (Optional) Set compiler options
-# target_compile_options(odin PRIVATE -Wall -Wextra -O2)
