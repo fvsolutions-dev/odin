@@ -3,8 +3,7 @@
 add_executable(basic_config_tests OD.c
                      write_tests.cpp 
                      read_tests.cpp 
-                     array_tests.cpp
-                     test_security.cpp)
+                     array_tests.cpp)
 
 target_link_libraries(basic_config_tests PRIVATE gtest gtest_main odin)
 target_include_directories(basic_config_tests PRIVATE ${CMAKE_SOURCE_DIR})

@@ -31,7 +31,8 @@ parameters:
         description: A test variable
         default: 1.23
         access_control:
-          ble: { override: [R] }
+          ble:
+            override: R
 
       test_variable_small:
         local_id: 0x1

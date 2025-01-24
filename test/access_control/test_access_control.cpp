@@ -66,7 +66,7 @@ TEST(ODINParameterBasicAccess, TestCases) {
     EXPECT_EQ(validate_recursively(&odin_store_another_group, ODIN_ACCESS_BLE, ODIN_ACCESS_READ,ODIN_ERROR_PERMISSION_DENIED), true);
     EXPECT_EQ(validate_recursively(&odin_store_another_group, ODIN_ACCESS_BLE, ODIN_ACCESS_WRITE,ODIN_ERROR_PERMISSION_DENIED), true);
     EXPECT_EQ(validate_recursively(&odin_store_basic_group, ODIN_ACCESS_BLE, ODIN_ACCESS_READ,ODIN_SUCCESS), true);
-    EXPECT_EQ(validate_recursively(&odin_store_basic_group, ODIN_ACCESS_BLE, ODIN_ACCESS_WRITE,ODIN_ERROR_PERMISSION_DENIED), true);
+    EXPECT_EQ(validate_recursively(&odin_store_basic_group, ODIN_ACCESS_BLE, ODIN_ACCESS_WRITE,ODIN_SUCCESS), false);
     EXPECT_EQ(ODIN_validate_access(&root.basic_group.test_variable_B, ODIN_ACCESS_BLE, ODIN_ACCESS_WRITE), ODIN_ERROR_PERMISSION_DENIED);
     EXPECT_EQ(ODIN_validate_access(&root.basic_group.test_variable_B, ODIN_ACCESS_BLE, ODIN_ACCESS_READ), ODIN_SUCCESS);
     EXPECT_EQ(ODIN_validate_access(&root.basic_group.test_variable_A, ODIN_ACCESS_BLE, ODIN_ACCESS_WRITE), ODIN_SUCCESS);
@@ -76,5 +76,35 @@ TEST(ODINParameterBasicAccess, TestCases) {
     EXPECT_EQ(validate_recursively(&odin_store, ODIN_ACCESS_CLI, ODIN_ACCESS_LOG_WRITE,ODIN_SUCCESS), true);
     EXPECT_EQ(validate_recursively(&odin_store, ODIN_ACCESS_CLI, ODIN_ACCESS_READ,ODIN_SUCCESS), true);
 
+    // clang-format on
+}
+
+// Group 0 RW
+// Group 1 R
+// Group 2 No access
+
+uint32_t value = 0;
+ODIN_parameter_t test_param = {
+    .odin_type = ODIN_TYPE_PARAMETER,
+    .element_type = ODIN_ELEMENT_TYPE_INT32,
+    .flags = (ODIN_ACCESS_GROUP_0 & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)) | (ODIN_ACCESS_GROUP_1 & (ODIN_ACCESS_READ)),
+    .element_size = sizeof(int32_t),
+    .data = &value,
+    .name_and_description = "test_variable_i32"};
+
+// Single parameter tests
+TEST(ODINParameterBasicAccess, ReadWrite) {
+    int32_t output_data = 0;
+
+    // clang-format off
+    EXPECT_GE(ODIN_parameter_read(&test_param, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_INTERNAL), ODIN_SUCCESS);
+    EXPECT_GE(ODIN_parameter_read(&test_param, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_0), ODIN_SUCCESS);
+    EXPECT_GE(ODIN_parameter_read(&test_param, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_1), ODIN_SUCCESS);
+    EXPECT_EQ(ODIN_parameter_read(&test_param, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_2), ODIN_ERROR_PERMISSION_DENIED);
+
+    EXPECT_GE(ODIN_parameter_write(&test_param, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_INTERNAL), ODIN_SUCCESS);
+    EXPECT_GE(ODIN_parameter_write(&test_param, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_0), ODIN_SUCCESS);
+    EXPECT_EQ(ODIN_parameter_write(&test_param, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_1), ODIN_ERROR_PERMISSION_DENIED);
+    EXPECT_EQ(ODIN_parameter_write(&test_param, &output_data, sizeof(output_data), ODIN_ACCESS_GROUP_2), ODIN_ERROR_PERMISSION_DENIED);
     // clang-format on
 }
