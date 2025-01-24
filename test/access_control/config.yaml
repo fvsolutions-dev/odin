@@ -39,7 +39,7 @@ parameters:
         type: u8
         description: A small test variable
         default: 88
-
+ 
   another_group:
     local_id: 0x2
     children:

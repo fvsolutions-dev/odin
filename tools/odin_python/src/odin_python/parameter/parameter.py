@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
-from os import access
 from typing import Any, Dict, List
 
 import csnake as cc
-from odin_python.parameter.access_control import AccesControlCollection
+from odin_python.parameter.access_control import AccessControlCollection
 from odin_python.utils.csnake_custom import StructVariable
 from odin_python.utils.string import escape_string
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
@@ -111,9 +110,9 @@ class BaseParameterModel(BaseModel, ABC):
         description="Description of the parameter, optional", default=None
     )
 
-    access_control: AccesControlCollection = Field(
+    access_control: AccessControlCollection = Field(
         description="Access control configuration for the parameter",
-        default_factory=AccesControlCollection.empty,
+        default_factory=AccessControlCollection.empty,
     )
 
     def post_load_resolve(
@@ -225,7 +224,7 @@ class ParameterModel(BaseParameterModel):
 
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
-            access_group=self.access_control.get_defs(),
+            access_group=self.access_control.collapse().to_c_definition(),
             index=self.global_id,
             data=self._data_storage_reference,
             name=self._name,
@@ -265,7 +264,7 @@ class ReferenceParameterModel(BaseParameterModel):
 
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
-            access_group=self.access_control.get_defs(),
+            access_group=self.access_control.collapse().to_c_definition(),
             index=self.global_id,
             data=self.reference,
             name=self._name,
@@ -329,7 +328,7 @@ class ArrayParameterModel(BaseParameterModel):
 
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
-            access_group=self.access_control.get_defs(),
+            access_group=self.access_control.collapse().to_c_definition(),
             index=self.global_id,
             data=self._data_storage_reference,
             name=self._name,
@@ -414,7 +413,7 @@ class VectorParameterModel(BaseParameterModel):
 
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
-            access_group=self.access_control.get_defs(),
+            access_group=self.access_control.collapse().to_c_definition(),
             index=self.global_id,
             data=self._data_storage_reference,
             name=self._name,
@@ -495,7 +494,7 @@ class BaseParameterGroupModel(BaseParameterModel):
                         param_name=f"{param_name}_{parameter_name}"
                     )
                 )
-                
+
         # self._group_storage_reference = self._name
         self._parameter_storage_reference = param_name
 
@@ -513,7 +512,6 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         parameters = []
         for parameter_name, parameter in self.children.items():
-    
             assert (
                 parameter._parameter_storage_reference is not None
             ), "Parameter storage reference is not set"
@@ -535,7 +533,6 @@ class BaseParameterGroupModel(BaseParameterModel):
             },
         )
         variables.append(variable)
-
 
         return variables
 
@@ -658,7 +655,7 @@ class RootParameterModel(BaseParameterGroupModel):
     def to_access_control_header(self) -> List[str]:
         # todo possible move this into acces contol info?
         assert self.access_control is not None, "Access control info is not set"
-        groups = self.access_control.validate_group()
+        groups = self.access_control.get_access_group_ids()
 
         defines = []
         for id, name in groups.items():

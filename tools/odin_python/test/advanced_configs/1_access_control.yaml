@@ -11,11 +11,15 @@ access_control:
   guest:
     default: []
 
+  admin:
+    override: RW
+
+
 parameters:
   basic_group:
     local_id: 0x1
     access_control:
-      ble: [read, write]
+      ble: [R, W]
       disk: { override: [] }
 
     children:

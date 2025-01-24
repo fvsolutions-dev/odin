@@ -1,7 +1,6 @@
 import os
 
 import click
-from pydantic_yaml import parse_yaml_file_as
 
 from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.generator.generate_c import CGenerator
@@ -32,7 +31,7 @@ def gen_c(input_file: str, output_dir: str, name: str, advanced: bool):
 
     registry = TypeRegistry()
     registry.register(BASE_DATA_TYPES)
-    
+
     if advanced:
         model = AdvancedLoaderModel.from_yaml(input_file)
         root_parameters = RootParameterModel(

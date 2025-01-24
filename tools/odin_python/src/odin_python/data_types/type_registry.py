@@ -70,12 +70,11 @@ class CharCDataType(RegularCDataType):
     def to_c_array_initialiser(
         self, name: str, defaults: List[Any], dimensions: List[int]
     ) -> cc.Variable:
-        
         return cc.Variable(
             name=name,
             primitive=self.c_typename,
             array=dimensions,
-            value= [cc.TextModifier(f"'{x}'") for x in defaults],  # type: ignore
+            value=[cc.TextModifier(f"'{x}'") for x in defaults],  # type: ignore
         )
 
 

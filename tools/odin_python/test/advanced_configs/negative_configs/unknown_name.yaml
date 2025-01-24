@@ -1,0 +1,16 @@
+access_control:
+  disk: [does_not_exist]
+
+parameters: {}
+  # basic_group:
+  #   local_id: 0x1
+  #   access_control:
+  #     ble: [does_not_exist]
+  #     disk: { override: [] }
+
+  #   children:
+  #     test_variable_A:
+  #       local_id: 0x1
+  #       type: f32
+  #       description: A test variable
+  #       default: 0.2

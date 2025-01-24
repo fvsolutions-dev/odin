@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 from typing import Dict, List, TYPE_CHECKING, Set
 
 
@@ -7,179 +7,252 @@ from pydantic import (
     Field,
     PrivateAttr,
     RootModel,
-    field_validator,
     model_validator,
 )
 
+MAX_ACCESS_GROUPS = 6  # Max supported unique access groups
+GROUP_ACCESS_PREFIX = "ODIN_ACCESS_"
+ACTION_PREFIX = "ODIN_ACCESS_"
 
 if TYPE_CHECKING:
-    from odin_python.parameter.parameter import BaseParameterModel, RootParameterModel
-
-MAX_ACCESS_GROUPS = 6
-
-# class AccesControlCollection(RootModel[]
+    from odin_python.parameter.parameter import BaseParameterModel  # pragma: no cover
 
 
-class AccesContolEnum(Enum):
-    """Access control enum, list all the possible access control items"""
+class AccessControlEnum(Enum):
+    """Access control enum, list all the possible access control items
+    Needs to match the odin definitions in the c library
+    """
 
-    READ = "read"
-    WRITE = "write"
-    LOG_WRITE = "log_write"
-    LOG_READ = "log_read"
+    READ = auto()
+    WRITE = auto()
+    LOG_WRITE = auto()
+    LOG_READ = auto()
 
     @staticmethod
-    def from_compact_representation(string: str) -> Set["AccesContolEnum"]:
+    def from_compact_representation(string: str) -> Set["AccessControlEnum"]:
+        """Converts compact representation to set of access control enum"""
         items = set()
         if "R" in string:
-            items.add(AccesContolEnum.READ)
+            items.add(AccessControlEnum.READ)
+            # Remove R from the string
+            string = string.replace("R", "")
+
         if "W" in string:
-            items.add(AccesContolEnum.WRITE)
+            items.add(AccessControlEnum.WRITE)
+            string = string.replace("W", "")
+
+        # If there are any other characters left, raise an error
+        if len(string) > 0:
+            raise ValueError(f"Unknown access control item {string}")
+
         return items
 
     @classmethod
-    def from_string(cls, input: str) -> "AccesContolEnum":
-        if input.upper() in AccesContolEnum.__members__:
-            return AccesContolEnum[input.upper()]
+    def from_string(cls, input: str) -> "AccessControlEnum":
+        """Converts string to access control enum"""
+        if input.upper() in AccessControlEnum.__members__:
+            return AccessControlEnum[input.upper()]
+
+        elif input == "R":
+            return AccessControlEnum.READ
+        elif input == "W":
+            return AccessControlEnum.WRITE
+
         else:
-            raise ValueError(f"Unknown access control item {input}")
+            raise ValueError(f"Unknown access control item '{input}' is invalid")
 
     @staticmethod
-    def parse(
-        input: "str | Set[str] | Set[AccesContolEnum]",
-    ) -> "Set[AccesContolEnum]":
+    def normalize(
+        input: "str | Set[str] | Set[AccessControlEnum]",
+    ) -> "Set[AccessControlEnum]":
+        """Parses input to a set of access control enums"""
         if isinstance(input, str):
-            return AccesContolEnum.from_compact_representation(input)
+            return AccessControlEnum.from_compact_representation(input)
 
         elif isinstance(input, set):
             items = set()
             for item in input:
                 if isinstance(item, str):
-                    items.add(AccesContolEnum.from_string(item))
+                    items.add(AccessControlEnum.from_string(item))
                 else:
                     items.add(item)
             return items
 
 
-class AccesControlEntry(BaseModel):
-    override: Set[str] | Set[AccesContolEnum] | str | None = Field(
+class AccesControlDefinition(BaseModel):
+    """Access control definition for a single access group"""
+
+    override: Set[str] | Set[AccessControlEnum] | str | None = Field(
         default=None,
         description="Override the default access control for the given group, if not specified it will not override",
     )
 
-    default: Set[str] | Set[AccesContolEnum] | str = Field(
+    default: Set[str] | Set[AccessControlEnum] | str = Field(
         default_factory=set, description="Default access control for the given group"
     )
 
-    # Field validator that converts to set
     @model_validator(mode="after")  # type: ignore
-    def convert_fields(cls, model: "AccesControlEntry") -> "AccesControlEntry":
-        model.default = AccesContolEnum.parse(model.default)
+    def convert_fields(
+        cls, model: "AccesControlDefinition"
+    ) -> "AccesControlDefinition":
+        """Parses the fields to the correct type"""
+
+        model.default = AccessControlEnum.normalize(model.default)
+
         if model.override is not None:
-            model.override = AccesContolEnum.parse(model.override)
-            # Add to default if not already present
+            model.override = AccessControlEnum.normalize(model.override)
             model.default = model.default.union(model.override)
-            
+
         return model
 
-    @classmethod
-    def empty(cls):
-        return cls()
+    def merge(self, other: "AccesControlDefinition") -> "AccesControlDefinition":
+        """Merges two access control definitions
 
-    def merge(self, other: "AccesControlEntry") -> "AccesControlEntry":
-        if self.override is not None and other.override is None:
-            return AccesControlEntry(override=self.override, default=self.override)
+        Args:
+            other (AccesControlDefinition): Other access control definition to merge with
+        """
 
-        elif other.override is not None:
-            return AccesControlEntry(override=other.override, default=other.override)
+        # If the child overrides the parent, use the child
+        if other.override is not None:
+            return AccesControlDefinition(
+                override=other.override,
+                default=other.override,  # type: ignore
+            )
 
+        # Otherwise merge the default permissions, and copy the parent override
         else:
-            return AccesControlEntry(
-                override=self.override, default=self.default.union(other.default)
+            return AccesControlDefinition(
+                override=self.override,
+                default=self.default.union(other.default),  # type: ignore
             )  # type: ignore
 
     @classmethod
     def normalize(
-        cls, input: "str | Set[str]|AccesControlEntry"
-    ) -> "AccesControlEntry":
-        if isinstance(input, AccesControlEntry):
+        cls, input: "str | Set[str]|AccesControlDefinition"
+    ) -> "AccesControlDefinition":
+        """Normalizes input to an access control definition"""
+        if isinstance(input, AccesControlDefinition):
             return input
 
-        return cls(default=AccesContolEnum.parse(input))
+        return cls(default=AccessControlEnum.normalize(input))
 
-    def to_statement(self, group_name: str) -> str | None:
+    def to_c_definition(self, group_name: str) -> str | None:
+        """Generates the C definition for the access control group"""
+
         permissions = []
 
         for permission in self.default:
-            permissions.append(f"ODIN_ACCESS_{permission.name.upper()}")
+            assert isinstance(permission, AccessControlEnum), "Invalid permission type"
+            permissions.append(f"{ACTION_PREFIX}{permission.name.upper()}")
 
         if len(permissions) == 0:
             return None
 
-        return f"(ODIN_ACCESS_{group_name.upper()} & ({' | '.join(permissions)}))"
+        return (
+            f"({GROUP_ACCESS_PREFIX}{group_name.upper()} & ({' | '.join(permissions)}))"
+        )
 
 
-class AccesControlCollection(RootModel[Dict[str, AccesControlEntry | Set[str] | str]]):
+class AccessControlCollection(
+    RootModel[Dict[str, AccesControlDefinition | Set[str] | str]]
+):
     # Reference to parent parameter model
     _parent: "BaseParameterModel | None" = PrivateAttr(default=None)
+    _access_groups: Dict[int, str] | None = PrivateAttr(default=None)
 
     pass
+
+    @model_validator(mode="after")  # type: ignore
+    def validate_access_control(
+        cls, model: "AccessControlCollection"
+    ) -> "AccessControlCollection":
+        """Validates the access control collection"""
+
+        return model.normalize()
 
     @classmethod
     def empty(cls):
         return cls({})
 
-    def to_defines(self) -> str:
-        statements = []
-        for group_name, entry in self.root.items():
-            statement = entry.to_statement(group_name)
-            if statement is not None:
-                statements.append(statement)
+    def to_c_definition(self) -> str:
+        """Generates the C definition for the access control collection"""
 
-        if len(statements) == 0:
+        definitions: List[str] = []
+
+        for group_name, entry in self.root.items():
+            assert isinstance(entry, AccesControlDefinition), "Invalid entry type"
+
+            definition = entry.to_c_definition(group_name)
+            if definition is not None:
+                definitions.append(definition)
+
+        # If no definitions are found, return 0, to avoid a c syntax error
+        if len(definitions) == 0:
             return "0"
 
-        return " | ".join(statements)
+        # Otherwise merge all the definitions into a single string
+        return " | ".join(definitions)
 
-    def get_defs(self) -> str:
-        acl_chain = self.recursive_get_build_permission_chain(self)
+    def normalize(self) -> "AccessControlCollection":
+        """Normalizes the access control collection"""
 
-        last = None
-        for item in acl_chain:
-            if last is None:
-                last = item
-                continue
-            last = last.merge(item)
+        for name, item in self.root.items():
+            if not isinstance(item, AccesControlDefinition):
+                item = AccesControlDefinition.normalize(item)
 
-        return last.to_defines()
+            self.root[name] = item
 
-    @staticmethod
-    def recursive_get_build_permission_chain(
-        current: "AccesControlCollection",
-    ) -> "List[AccesControlCollection]":
+        return self
+
+    def collapse(self) -> "AccessControlCollection":
+        """Collapses the access control collection into a single access control collection"""
+
+        # Create a list of all the access control collections from the root to the current collection
+        collections = self.recursive_get_build_permission_chain()
+
+        # Start with itself
+        merged_collection = self
+
+        # And merge all the children
+        for collection in collections:
+            merged_collection = merged_collection.merge(collection)
+
+        return merged_collection
+
+    def recursive_get_build_permission_chain(self) -> "List[AccessControlCollection]":
+        """Recursively gets the build permission chain"""
+
+        # I dont like this import here, but it is necessary to avoid circular imports
+        # There probably are better ways to do this, but i did not bother to implement them
+        # its only imported once anyway
+
         from odin_python.parameter.parameter import RootParameterModel
 
-        parameter = current._parent
+        self_parameter = self._parent
 
-        acls: List[AccesControlCollection]
+        access_control: List[AccessControlCollection]
 
-        if not isinstance(parameter, RootParameterModel):
-            assert parameter is not None, "No parameter found for this entry"
-            assert parameter._parent is not None, "No parent found for the parameter"
-
-            acls = AccesControlCollection.recursive_get_build_permission_chain(
-                parameter._parent.access_control
-            )
+        if isinstance(self_parameter, RootParameterModel):
+            access_control = []
 
         else:
-            acls = []
+            assert self_parameter is not None, "No parameter found for this entry"
+            assert (
+                self_parameter._parent is not None
+            ), "No parent found for the parameter"
 
-        acls.append(current)
-        return acls
+            access_control = (
+                AccessControlCollection.recursive_get_build_permission_chain(
+                    self_parameter._parent.access_control
+                )
+            )
 
-    _access_groups: Dict[int, str] | None = PrivateAttr(default=None)
+        access_control.append(self)
+        return access_control
 
-    def validate_group(self):
+    def get_access_group_ids(self) -> Dict[int, str]:
+        """Calculates the access group ids for the access control collection"""
+
         if self._access_groups is None:
             self._access_groups = {}
 
@@ -193,33 +266,21 @@ class AccesControlCollection(RootModel[Dict[str, AccesControlEntry | Set[str] | 
 
         return self._access_groups
 
-    def merge(self, other: "AccesControlCollection") -> "AccesControlCollection":
-        # Create master set of both access control groups
+    def merge(self, other: "AccessControlCollection") -> "AccessControlCollection":
+        """Merges two access control collection together, inheriting or overriding the permissions"""
 
-        items: Dict[str, AccesControlEntry] = {}
+        items: Dict[str, AccesControlDefinition] = {}
 
         for name, item in self.root.items():
-            if not isinstance(item, AccesControlEntry):
-                item = AccesControlEntry.normalize(item)
-
+            assert isinstance(item, AccesControlDefinition), "Invalid item type"
             items[name] = item
 
         for name, item in other.root.items():
-            if not isinstance(item, AccesControlEntry):
-                item = AccesControlEntry.normalize(item)
+            assert isinstance(item, AccesControlDefinition), "Invalid item type"
 
             if name not in items:
                 items[name] = item
             else:
                 items[name] = items[name].merge(item)
 
-        return AccesControlCollection(root=items)  # type: ignore
-
-    # def to_access_control_header(self) -> str:
-    #     cw = cc.CodeWriter()
-    #     for group_name, entry in self.access_control.items():
-    #         if entry.override:
-    #             cw.add_line(f"#define {group_name.upper()}_ACCESS_CONTROL {entry.override}")
-    #         else:
-    #             cw.add_line(f"#define {group_name.upper()}_ACCESS_CONTROL {entry.default}")
-    #     return str(cw)
+        return AccessControlCollection(root=items)  # type: ignore

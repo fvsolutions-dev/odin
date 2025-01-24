@@ -66,7 +66,7 @@ class CGenerator:
         # Generate acces control definitions
         for line in model.to_access_control_header():
             cw.add_line(line)
-            
+
         # Add external references
         cw.add_variable_declaration(
             model.to_ram_initialiser(CGenerator.RAM_NAME, CGenerator.RAM_TYPE),

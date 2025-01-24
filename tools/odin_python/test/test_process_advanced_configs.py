@@ -15,6 +15,7 @@ import glob
 
 
 CONFIGS = glob.glob("test/advanced_configs/*.yaml")
+NEGATIVE_CONFIGS = glob.glob("test/advanced_configs/negative_configs/*.yaml")
 
 
 def process_config(config: str):
@@ -44,10 +45,16 @@ def compile_file(file: str):
 
 # Parameterize with all the configs
 @pytest.mark.parametrize("config", CONFIGS)
-def test_basic_parse(config: str):
+def test_advanced_parse(config: str):
     file = process_config(config)
     compile_file(file)
 
+@pytest.mark.parametrize("config", NEGATIVE_CONFIGS)
+def test_advanced_parse_negative(config: str):
+    with pytest.raises(Exception):
+        file = process_config(config)
+        compile_file(file)
+        
 
 if __name__ == "__main__":
     CONFIGS = [r"test\advanced_configs\1_access_control.yaml"]

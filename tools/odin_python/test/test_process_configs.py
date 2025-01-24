@@ -1,23 +1,12 @@
-from typing import Dict
-
 from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.generator.generate_c import (
     CGenerator,
 )
 from odin_python.loader import SimpleLoaderModel
 from odin_python.parameter.parameter import (
-    ParameterGroupModel,
-    ParameterModel,
     RootParameterModel,
 )
-from pydantic import RootModel, ValidationError
-from pydantic_yaml import parse_yaml_file_as
 
-from odin_python.parameter.parameter import (
-    ArrayParameterModel,
-    ReferenceParameterModel,
-    VectorParameterModel,
-)
 
 import subprocess
 
