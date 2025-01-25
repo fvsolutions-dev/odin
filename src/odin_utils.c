@@ -41,7 +41,7 @@ void ODIN_dump_recursive_tree(const ODIN_parameter_group_t *group, int depth) {
             case ODIN_TYPE_ARRAY:
             case ODIN_TYPE_VECTOR: {
                 ODIN_parameter_t *parameter = (ODIN_parameter_t *)group->parameters[i];
-                int ret = ODIN_encode_to_string(parameter, str_buffer, sizeof(str_buffer), 0);
+                int ret = ODIN_encode_parameter_to_string(parameter, str_buffer, sizeof(str_buffer), 0);
                 if (ret < 0) {
                     ret = sprintf(str_buffer, "Error: %s", ODIN_error_to_string(ret));
                 }

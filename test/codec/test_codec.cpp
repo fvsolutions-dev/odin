@@ -93,3 +93,27 @@ TEST(ODINTestGroupBytesCodec, NominalTest) {
     // Check if the value is correct
     EXPECT_EQ(0, memcmp(ram_buffer, &root_ram, sizeof(root_ram)));
 }
+
+// Single parameter tests
+TEST(ODINTestProtobuffCodec, NominalTest) {
+    // Copy the contents to the RAM
+    uint8_t ram_buffer[512];
+    memcpy(ram_buffer, &root_ram, sizeof(root_ram));
+
+    uint8_t encoded_buffer[256] = {0};
+    parameter_group_encode_operation_t op;
+    EXPECT_EQ(ODIN_encode_parameter_group_to_protobuff_init(&odin_store, &op, ODIN_ACCESS_GROUP_INTERNAL), ODIN_SUCCESS);
+
+    int len = ODIN_encode_parameter_group_to_protobuff_buffer(&op, encoded_buffer, sizeof(encoded_buffer));
+    EXPECT_GE(len, ODIN_SUCCESS);
+
+    // Zero the RAM
+    memset(&root_ram, 0, sizeof(root_ram));
+
+    // load the value from the buffer
+    len = ODIN_decode_protobuff_buffer_to_parameter_group(&odin_store, encoded_buffer, len, ODIN_ACCESS_GROUP_INTERNAL);
+    EXPECT_GE(len, ODIN_SUCCESS);
+
+    // Check if the value is correct
+    EXPECT_EQ(0, memcmp(ram_buffer, &root_ram, sizeof(root_ram)));
+}

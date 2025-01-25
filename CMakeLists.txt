@@ -25,6 +25,13 @@ if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
 endif()
 
+
+# Add nanopb
+
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../nanopb/extra)
+find_package(Nanopb REQUIRED)
+
+
 add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(examples)

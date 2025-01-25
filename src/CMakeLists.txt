@@ -1,6 +1,7 @@
 add_library(odin STATIC
     odin_core.c
-    codec/bytes_codec.c
+    codec/TLV_codec.c
+    codec/protobuff_codec.c
     codec/string_codec.c
     odin_utils.c
     odin_security.c
@@ -11,3 +12,8 @@ add_library(odin STATIC
 target_include_directories(odin PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+
+nanopb_generate_cpp(TARGET proto codec/pb/odin.proto)
+
+target_link_libraries(odin proto)
