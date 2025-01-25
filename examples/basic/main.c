@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "encoding/encode_string.h"
+#include "odin_codec.h"
 #include "odin_core.h"
 #include "odin_lookup.h"
 #include "odin_utils.h"

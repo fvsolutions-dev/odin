@@ -1,6 +1,7 @@
 add_library(odin STATIC
     odin_core.c
-    encoding/encode_string.c
+    codec/bytes_codec.c
+    codec/string_codec.c
     odin_utils.c
     odin_security.c
     odin_lookup.c

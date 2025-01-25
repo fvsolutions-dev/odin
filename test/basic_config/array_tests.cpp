@@ -7,7 +7,8 @@
 
 extern "C" {
 #include "OD.h"
-#include "encoding/encode_string.h"
+#include "odin_codec.h"
+
 #include "odin_core.h"
 }
 

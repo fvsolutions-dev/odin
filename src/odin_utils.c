@@ -1,6 +1,7 @@
 #include <stdio.h>
 
-#include "encoding/encode_string.h"
+#include "odin_codec.h"
+
 #include "odin.h"
 #include "ansi_colors.h"
 
