@@ -22,3 +22,11 @@ Types of access:
 * lock/unlock (future extension)
 * reset (future extension)
 
+
+
+# ID
+
+Every parameter has an unique identifier, this is used to identify the parameter in the system
+The global id is determined by a waterfall system, based on the shifting of the parent groups
+
+

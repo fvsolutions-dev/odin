@@ -23,15 +23,15 @@ typedef struct
 {
     struct 
     {
-        ODIN_parameter_t test_variable_A;
-        ODIN_parameter_t test_variable_B;
-        ODIN_parameter_t test_variable_small;
+        ODIN_parameter_t test_variable_A;  /* Local index: 0x00000001 */
+        ODIN_parameter_t test_variable_B;  /* Local index: 0x00000002 */
+        ODIN_parameter_t test_variable_small;  /* Local index: 0x00000003 */
     }basic_group;
     struct 
     {
-        ODIN_parameter_t test_variable_A;
-        ODIN_parameter_t test_variable_B;
-        ODIN_parameter_t test_variable_small;
+        ODIN_parameter_t test_variable_A;  /* Local index: 0x00000001 */
+        ODIN_parameter_t test_variable_B;  /* Local index: 0x00000002 */
+        ODIN_parameter_t test_variable_small;  /* Local index: 0x00000003 */
     }another_group;
 } root_type_t;
 
@@ -65,7 +65,7 @@ const root_type_t root = {
             .odin_type = ODIN_TYPE_PARAMETER,
             .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
             .flags = (ODIN_ACCESS_CLI & (ODIN_ACCESS_LOG_WRITE | ODIN_ACCESS_READ)) | (ODIN_ACCESS_BLE & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)) | (ODIN_ACCESS_ADMIN & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)),
-            .index = 0x00000001,
+            .global_index = 0x01010000,
             .element_size = sizeof(float),
             .data = &root_ram.basic_group.test_variable_A,
             .name_and_description = "test_variable_A\0A test variable",
@@ -75,7 +75,7 @@ const root_type_t root = {
             .odin_type = ODIN_TYPE_PARAMETER,
             .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
             .flags = (ODIN_ACCESS_BLE & (ODIN_ACCESS_READ)) | (ODIN_ACCESS_CLI & (ODIN_ACCESS_LOG_WRITE | ODIN_ACCESS_READ)) | (ODIN_ACCESS_ADMIN & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)),
-            .index = 0x00000001,
+            .global_index = 0x01020000,
             .element_size = sizeof(float),
             .data = &root_ram.basic_group.test_variable_B,
             .name_and_description = "test_variable_B\0A test variable",
@@ -85,7 +85,7 @@ const root_type_t root = {
             .odin_type = ODIN_TYPE_PARAMETER,
             .element_type = ODIN_ELEMENT_TYPE_UINT8,
             .flags = (ODIN_ACCESS_CLI & (ODIN_ACCESS_LOG_WRITE | ODIN_ACCESS_READ)) | (ODIN_ACCESS_BLE & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)) | (ODIN_ACCESS_ADMIN & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)),
-            .index = 0x00000001,
+            .global_index = 0x01030000,
             .element_size = sizeof(uint8_t),
             .data = &root_ram.basic_group.test_variable_small,
             .name_and_description = "test_variable_small\0A small test variable",
@@ -98,7 +98,7 @@ const root_type_t root = {
             .odin_type = ODIN_TYPE_PARAMETER,
             .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
             .flags = (ODIN_ACCESS_DISK & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)) | (ODIN_ACCESS_CLI & (ODIN_ACCESS_LOG_WRITE | ODIN_ACCESS_READ)) | (ODIN_ACCESS_ADMIN & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)),
-            .index = 0x00000003,
+            .global_index = 0x02010000,
             .element_size = sizeof(float),
             .data = &root_ram.another_group.test_variable_A,
             .name_and_description = "test_variable_A\0A test variable",
@@ -108,7 +108,7 @@ const root_type_t root = {
             .odin_type = ODIN_TYPE_PARAMETER,
             .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
             .flags = (ODIN_ACCESS_DISK & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)) | (ODIN_ACCESS_CLI & (ODIN_ACCESS_LOG_WRITE | ODIN_ACCESS_READ)) | (ODIN_ACCESS_ADMIN & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)),
-            .index = 0x00000003,
+            .global_index = 0x02020000,
             .element_size = sizeof(float),
             .data = &root_ram.another_group.test_variable_B,
             .name_and_description = "test_variable_B\0A test variable",
@@ -118,7 +118,7 @@ const root_type_t root = {
             .odin_type = ODIN_TYPE_PARAMETER,
             .element_type = ODIN_ELEMENT_TYPE_UINT8,
             .flags = (ODIN_ACCESS_DISK & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)) | (ODIN_ACCESS_CLI & (ODIN_ACCESS_LOG_WRITE | ODIN_ACCESS_READ)) | (ODIN_ACCESS_ADMIN & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)),
-            .index = 0x00000003,
+            .global_index = 0x02030000,
             .element_size = sizeof(uint8_t),
             .data = &root_ram.another_group.test_variable_small,
             .name_and_description = "test_variable_small\0A small test variable",
@@ -131,8 +131,8 @@ const root_type_t root = {
 const ODIN_parameter_group_t odin_store_basic_group = {
     .name_and_description = "basic_group\0No description",
     .odin_type = ODIN_TYPE_GROUP,
-    .index = 0x00000001,
-    .shift = 4,
+    .global_index = 0x01000000,
+    .shift = 8,
     .count = 3,
     .parameters = {&root.basic_group.test_variable_A, &root.basic_group.test_variable_B, &root.basic_group.test_variable_small}
 };
@@ -140,8 +140,8 @@ const ODIN_parameter_group_t odin_store_basic_group = {
 const ODIN_parameter_group_t odin_store_another_group = {
     .name_and_description = "another_group\0No description",
     .odin_type = ODIN_TYPE_GROUP,
-    .index = 0x00000002,
-    .shift = 4,
+    .global_index = 0x02000000,
+    .shift = 8,
     .count = 3,
     .parameters = {&root.another_group.test_variable_A, &root.another_group.test_variable_B, &root.another_group.test_variable_small}
 };
@@ -149,8 +149,8 @@ const ODIN_parameter_group_t odin_store_another_group = {
 const ODIN_parameter_group_t odin_store = {
     .name_and_description = "root\0No description",
     .odin_type = ODIN_TYPE_GROUP,
-    .index = 0x00000000,
-    .shift = 4,
+    .global_index = 0x00000000,
+    .shift = 8,
     .count = 2,
     .parameters = {&odin_store_basic_group, &odin_store_another_group}
 };

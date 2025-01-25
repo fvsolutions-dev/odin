@@ -10,4 +10,5 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/../googletest ${CMAKE_BINARY_DIR}/googletes
 
 add_subdirectory(access_control)
 add_subdirectory(basic_config)
+add_subdirectory(identification)
 

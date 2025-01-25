@@ -23,15 +23,15 @@ typedef struct
 {
     struct 
     {
-        ODIN_parameter_t test_variable_A;
-        ODIN_parameter_t test_variable_B;
-        ODIN_parameter_t test_variable_small;
+        ODIN_parameter_t test_variable_A;  /* Local index: 0x00000001 */
+        ODIN_parameter_t test_variable_B;  /* Local index: 0x00000002 */
+        ODIN_parameter_t test_variable_small;  /* Local index: 0x00000003 */
     }basic_group;
     struct 
     {
-        ODIN_parameter_t test_variable_A;
-        ODIN_parameter_t test_variable_B;
-        ODIN_parameter_t test_variable_small;
+        ODIN_parameter_t test_variable_A;  /* Local index: 0x00000001 */
+        ODIN_parameter_t test_variable_B;  /* Local index: 0x00000002 */
+        ODIN_parameter_t test_variable_small;  /* Local index: 0x00000003 */
     }another_group;
 } root_type_t;
 

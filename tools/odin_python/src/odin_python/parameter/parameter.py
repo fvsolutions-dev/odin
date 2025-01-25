@@ -11,11 +11,14 @@ from ..data_types.type_registry import DataType, RegularCDataType, TypeRegistry
 from .odin_defs import ODIN_ElementTypeEnum, ODIN_TypeEnum
 
 ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
+MAX_ID_SIZE = 32
 
 
 class ODIN_ParameterModel(BaseModel):
     access_group: str = Field(description="Access group")
-    index: int = Field(description="Index of the parameter")
+    local_index: int = Field(description="Index of the parameter")
+    global_index: int = Field(description="Global index of the parameter")
+
     data: str = Field(description="Reference to the data")
     type: DataType = Field(description="Resolved type of the parameter")
     name: str = Field(description="Name of the parameter")
@@ -37,7 +40,7 @@ class ODIN_ParameterModel(BaseModel):
                     str(ODIN_ElementTypeEnum.from_c_type(self.type.c_typename).value)
                 ),
                 "flags": cc.TextModifier(str(self.access_group)),
-                "index": cc.TextModifier(f"0x{self.index:08X}"),
+                "global_index": cc.TextModifier(f"0x{self.global_index:08X}"),
                 "element_size": cc.TextModifier(f"sizeof({self.type.c_typename})"),
                 "data": cc.TextModifier(f"&{self.data}"),
                 "name_and_description": rf"{self.name}\0{escape_string(self.description)}",
@@ -45,47 +48,24 @@ class ODIN_ParameterModel(BaseModel):
                 if self.extension
                 else cc.TextModifier("NULL"),
             },  # type: ignore
+            comment=f"Local index: 0x{self.local_index:08X}",
         )
 
 
-class ODIN_ArrayModel(BaseModel):
-    access_group: str = Field(description="Access group")
-    index: int = Field(description="Index of the parameter")
-    data: str = Field(description="Reference to the data")
-    type: DataType = Field(description="Resolved type of the parameter")
-    name: str = Field(description="Name of the parameter")
-    description: str = Field(description="Description of the parameter")
-    extension: str | None = Field(description="Extension info", default=None)
+class ODIN_ArrayModel(ODIN_ParameterModel):
     num_elements: int = Field(description="Number of elements in the array")
     fixed_size: bool = Field(description="Fixed size of the array", default=True)
 
     @property
     def variable(self) -> cc.Variable:
-        assert isinstance(self.type, RegularCDataType)
-
-        return cc.Variable(
-            name=self.name,
-            primitive=ODIN_PARAMETER_TYPE,
-            value={
-                "odin_type": cc.TextModifier(
-                    str(ODIN_TypeEnum.ODIN_TYPE_ARRAY.value)
-                    if self.fixed_size
-                    else str(ODIN_TypeEnum.ODIN_TYPE_VECTOR.value)
-                ),
-                "element_type": cc.TextModifier(
-                    str(ODIN_ElementTypeEnum.from_c_type(self.type.c_typename).value)
-                ),
-                "flags": cc.TextModifier(str(self.access_group)),
-                "index": cc.TextModifier(f"0x{self.index:08X}"),
-                "element_size": cc.TextModifier(f"sizeof({self.type.c_typename})"),
-                "data": cc.TextModifier(f"&{self.data}"),
-                "name_and_description": rf"{self.name}\0{escape_string(self.description)}",
-                "extension": cc.TextModifier(self.extension)
-                if self.extension
-                else cc.TextModifier("NULL"),
-                "max_elements": cc.TextModifier(str(self.num_elements)),
-            },  # type: ignore
+        variable = super().variable
+        variable.value["odin_type"] = cc.TextModifier(  # type: ignore
+            str(ODIN_TypeEnum.ODIN_TYPE_ARRAY.value)
+            if self.fixed_size
+            else str(ODIN_TypeEnum.ODIN_TYPE_VECTOR.value)
         )
+        variable.value["max_elements"] = cc.TextModifier(str(self.num_elements))  # type: ignore
+        return variable
 
 
 class BaseParameterModel(BaseModel, ABC):
@@ -136,13 +116,33 @@ class BaseParameterModel(BaseModel, ABC):
     @property
     def global_id(self) -> int:
         """Calculates the global id of the parameter, by going up the tree"""
+
         if self._parent is None:
             return self.local_id
 
-        if isinstance(self._parent, ParameterGroupModel):
-            return self._parent.global_id << self._parent.id_shift | self.local_id
-        elif isinstance(self._parent, RootParameterModel):
-            return self.local_id
+        if isinstance(self._parent, RootParameterModel):
+            return self.local_id << (MAX_ID_SIZE - self.global_shift)
+
+        elif isinstance(self._parent, ParameterGroupModel):
+            return self._parent.global_id | (
+                self.local_id << (MAX_ID_SIZE - self.global_shift)
+            )
+        else:
+            raise ValueError("Parent is not a ParameterGroupModel")
+
+    @property
+    def global_shift(self) -> int:
+        """Adds the shift of all the parents to upstream"""
+
+        if self._parent is None:
+            return 0
+
+        if isinstance(self._parent, RootParameterModel):
+            return self._parent.id_space_shift
+
+        elif isinstance(self._parent, ParameterGroupModel):
+            return self._parent.global_shift + self._parent.id_space_shift
+
         else:
             raise ValueError("Parent is not a ParameterGroupModel")
 
@@ -225,7 +225,8 @@ class ParameterModel(BaseParameterModel):
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
-            index=self.global_id,
+            local_index=self.local_id,
+            global_index=self.global_id,
             data=self._data_storage_reference,
             name=self._name,
             description=self.resolved_description,
@@ -265,7 +266,8 @@ class ReferenceParameterModel(BaseParameterModel):
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
-            index=self.global_id,
+            local_index=self.local_id,
+            global_index=self.global_id,
             data=self.reference,
             name=self._name,
             description=self.resolved_description,
@@ -329,7 +331,8 @@ class ArrayParameterModel(BaseParameterModel):
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
-            index=self.global_id,
+            local_index=self.local_id,
+            global_index=self.global_id,
             data=self._data_storage_reference,
             name=self._name,
             description=self.resolved_description,
@@ -414,7 +417,8 @@ class VectorParameterModel(BaseParameterModel):
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
-            index=self.global_id,
+            local_index=self.local_id,
+            global_index=self.global_id,
             data=self._data_storage_reference,
             name=self._name,
             description=self.resolved_description,
@@ -442,6 +446,7 @@ class VectorParameterModel(BaseParameterModel):
 
 class BaseParameterGroupModel(BaseParameterModel):
     children: "Dict[str, ParameterGroupModel|ParameterModel|ReferenceParameterModel|ArrayParameterModel|VectorParameterModel]"
+    id_space_shift: int = Field(description="Number of bits to shift the children ids")
 
     # Reference to the odin parameter
     _parameter_storage_reference: str | None = PrivateAttr(default=None)
@@ -457,6 +462,11 @@ class BaseParameterGroupModel(BaseParameterModel):
         super().post_load_resolve(parent, name, type_registry)
         for child_name, child in self.children.items():
             child.post_load_resolve(self, child_name, type_registry)
+
+        self.validate_local_id()
+
+        # Validate ids
+        global_id_map = self.build_global_id_map()
 
     def to_c_odin_parameter_initialiser(
         self,
@@ -498,18 +508,6 @@ class BaseParameterGroupModel(BaseParameterModel):
         # self._group_storage_reference = self._name
         self._parameter_storage_reference = param_name
 
-        # const ODIN_parameter_group_t odin_group = {
-        #     .name_and_description = "zwift_trainer_configuration_1\0Trainer Configuration",
-        #     .index = 0x20,
-        #     .shift = 5,
-        #     .count = 12,
-        #     .parameters = {
-        #         &root.test_variable_i8,
-        #         &root.test_variable_i16,
-        #         &root.test_variable_i32,
-        #     },
-        # };
-
         parameters = []
         for parameter_name, parameter in self.children.items():
             assert (
@@ -526,8 +524,8 @@ class BaseParameterGroupModel(BaseParameterModel):
             value={  # type: ignore
                 "name_and_description": rf"{self._name}\0{escape_string(self.resolved_description)}",
                 "odin_type": cc.TextModifier(str(ODIN_TypeEnum.ODIN_TYPE_GROUP.value)),
-                "index": cc.TextModifier(f"0x{self.global_id:08X}"),
-                "shift": cc.TextModifier(str(4)),
+                "global_index": cc.TextModifier(f"0x{self.global_id:08X}"),
+                "shift": cc.TextModifier(str(self.id_space_shift)),
                 "count": cc.TextModifier(str(len(self.children))),
                 "parameters": parameters,
             },
@@ -625,9 +623,40 @@ class BaseParameterGroupModel(BaseParameterModel):
             value=values,  # type: ignore
         )
 
+    def validate_local_id(self):
+        local_id_map = {}
+        for child in self.children.values():
+            if child.local_id in local_id_map:
+                raise ValueError(f"Id conflict found: {child.local_id} in {self._name}")
+            else:
+                local_id_map[child.local_id] = child
+
+            # check if local id respects bit shift
+            if child.local_id >= (1 << self.id_space_shift):
+                raise ValueError(
+                    f"Local id {child.local_id} is larger than the id shift {self.id_space_shift} in {self._name}"
+                )
+
+            if isinstance(child, BaseParameterGroupModel):
+                child.validate_local_id()
+
+    def build_global_id_map(self) -> Dict[int, BaseParameterModel]:
+        """Builds a map of the global ids to the parameters"""
+
+        global_id_map: Dict[int, BaseParameterModel] = {self.global_id: self}
+
+        for child in self.children.values():
+            if isinstance(child, BaseParameterGroupModel):
+                global_id_map.update(child.build_global_id_map())
+
+            elif isinstance(child, BaseParameterModel):
+                global_id_map[child.global_id] = child
+
+        return global_id_map
+
 
 class ParameterGroupModel(BaseParameterGroupModel):
-    id_shift: int = Field(description="Number of bits to shift the local id", default=0)
+    pass
 
 
 class RootParameterModel(BaseParameterGroupModel):

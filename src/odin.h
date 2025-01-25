@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-
 #pragma once
 
 // Temp references
@@ -14,8 +13,6 @@ struct my_struct {
 
 extern struct my_struct my;
 #define LOG_ERR(tag, format, ...) printf(format "\n", ##__VA_ARGS__)
-
-
 
 typedef enum {
     ODIN_SUCCESS = 0,
@@ -29,7 +26,6 @@ typedef enum {
     ODIN_ERROR_NOT_SUPPORTED = -5,
     ODIN_ERR_FILE_NOT_FOUND = -7
 } odin_error_t;
-
 
 typedef enum {
     ODIN_TYPE_PARAMETER,  // Single value
@@ -89,6 +85,9 @@ typedef struct {
 
 #pragma pack(push, 1)
 typedef struct {
+    // Local ID of the parameter
+    uint32_t global_index;
+
     // Type of the parameter
     ODIN_type_t odin_type : 8;
 
@@ -97,9 +96,6 @@ typedef struct {
 
     // Extra flags
     uint16_t flags;
-
-    // Index (ID) of the parameter
-    uint16_t index;
 
     // Size of a single element
     uint16_t element_size;
@@ -125,8 +121,7 @@ typedef struct {
 // String serialisation extension type
 typedef struct {
     // Represents data as a string
-    int (*to_string)(const ODIN_parameter_t *parameter, const void *data, size_t size, char *buffer,
-                     size_t buffer_size);
+    int (*to_string)(const ODIN_parameter_t *parameter, const void *data, size_t size, char *buffer, size_t buffer_size);
 
     // Parses string into data
     int (*from_string)(const ODIN_parameter_t *parameter, const char *string, void *data, size_t size);
@@ -148,15 +143,16 @@ typedef struct {
 } ODIN_validate_extension_ops_t;
 
 typedef struct {
+    uint32_t global_index;  // Bits to shift to get the index
     ODIN_type_t odin_type : 4;
 } ODIN_parameter_generic_t;
 
 typedef struct {
+    uint32_t global_index;  // Bits to shift to get the index
     ODIN_type_t odin_type : 4;
-    uint16_t index;  // Bits to shift to get the index
-    uint16_t shift;  // Bits to shift to get the index
-    uint16_t type;   // Number of parameters in the group
-    uint16_t count;  // Number of parameters in the group
+    uint16_t shift;        // Bits to shift to get the index
+    uint16_t type;         // Number of parameters in the group
+    uint16_t count;        // Number of parameters in the group
 
     const char *name_and_description;
     const void *parameters[];
@@ -164,11 +160,9 @@ typedef struct {
 
 // A return eatly macro if not successful, which only executes the code once
 #define RETURN_ON_FAIL(x) \
-    do {                               \
-        int ret = (x);                 \
-        if (ret < 0) {                 \
-            return ret;                \
-        }                              \
+    do {                  \
+        int ret = (x);    \
+        if (ret < 0) {    \
+            return ret;   \
+        }                 \
     } while (0)
-
-

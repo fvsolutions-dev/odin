@@ -6,7 +6,7 @@ test_variable_A:
   reference: my.reference
 
 test_variable_testy:
-  local_id: 0x1
+  local_id: 0x2
   type: u64
   description: A test variable
   reference: current_time_in_microseconds

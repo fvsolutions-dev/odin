@@ -54,6 +54,7 @@ class AdvancedLoaderModel(BaseModel):
         | ArrayParameterModel
         | VectorParameterModel,
     ]
+    id_space_shift: int = Field(description="ID space shift for the parameters")
 
     @classmethod
     def from_yaml(cls, file_path: str):

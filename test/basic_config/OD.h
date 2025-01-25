@@ -16,9 +16,9 @@ typedef struct
 
 typedef struct
 {
-    ODIN_parameter_t test_variable_i32;
-    ODIN_parameter_t i32_array;
-    ODIN_parameter_t i32_variable_length_array;
+    ODIN_parameter_t test_variable_i32;  /* Local index: 0x00000001 */
+    ODIN_parameter_t i32_array;  /* Local index: 0x00000002 */
+    ODIN_parameter_t i32_variable_length_array;  /* Local index: 0x00000003 */
 } root_type_t;
 
 extern root_ram_t root_ram;

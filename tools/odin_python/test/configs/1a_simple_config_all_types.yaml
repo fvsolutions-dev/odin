@@ -67,13 +67,13 @@ test_variable_bool_false:
   default: false
 
 test_variable_bool_true:
-  local_id: 0xB
+  local_id: 0xC
   type: bool
   description: A test variable of type boolean
   default: true
 
 test_variable_char:
-  local_id: 0xC
+  local_id: 0xD
   type: char
   description: A test variable of type character
   default: 'a'

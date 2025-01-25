@@ -3,6 +3,7 @@ add_library(odin STATIC
     encoding/encode_string.c
     odin_utils.c
     odin_security.c
+    odin_lookup.c
 )
 
 # Expose the src directory as the include path for public headers

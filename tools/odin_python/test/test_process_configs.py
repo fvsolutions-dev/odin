@@ -23,7 +23,7 @@ def process_config(config: str):
 
     model = SimpleLoaderModel.from_yaml(config)
 
-    root_parameters = RootParameterModel(children=model.root)  # type: ignore
+    root_parameters = RootParameterModel(children=model.root, id_space_shift=8)  # type: ignore
     root_parameters.post_load_resolve(None, "root", registry)
 
     with open(f"{config}.c", "w") as f:
