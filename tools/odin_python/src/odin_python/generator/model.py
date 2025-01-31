@@ -1,15 +1,10 @@
-from abc import ABC, abstractmethod
-from ctypes import Union
-from typing import Annotated, Any, Dict, List
+from typing import List
 
 import csnake as cc
-from odin_python.parameter.access_control import AccessControlCollection
-from odin_python.utils.csnake_custom import StructVariable
 from odin_python.utils.string import escape_string
-from pydantic import BaseModel, ConfigDict, Discriminator, Field, PrivateAttr, Tag
+from pydantic import BaseModel, Field
 
-from ..data_types.type_registry import DataType, RegularCDataType, TypeRegistry
-from ..extensions import Extensions
+from ..data_types.type_registry import DataType, RegularCDataType
 from .odin_defs import ODIN_ElementTypeEnum, ODIN_TypeEnum
 
 ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
@@ -54,12 +49,6 @@ class ODIN_ParameterModel(BaseModel):
         )
 
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from ..parameter.parameter import ParameterModel
-
-
 class ODIN_ParameterGroupModel(BaseModel):
     param_name: str = Field(description="Name of the parameter group")
     name: str = Field(description="Name of the parameter group")
@@ -73,10 +62,7 @@ class ODIN_ParameterGroupModel(BaseModel):
     def variable(self) -> cc.Variable:
         parameters = []
         for parameter in self.parameters_references:
-
-            parameters.append(
-                cc.TextModifier(f"&{parameter}")
-            )
+            parameters.append(cc.TextModifier(f"&{parameter}"))
 
         variable = cc.Variable(
             name=self.param_name,

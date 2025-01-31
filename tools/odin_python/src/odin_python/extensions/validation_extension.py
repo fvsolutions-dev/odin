@@ -1,6 +1,5 @@
 from typing import Literal
 
-from csnake import FormattedLiteral
 from pydantic import BaseModel, Field
 
 

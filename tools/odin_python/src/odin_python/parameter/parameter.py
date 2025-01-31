@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from ctypes import Union
 from typing import Annotated, Any, Dict, List
 
 import csnake as cc
@@ -457,7 +456,7 @@ class BaseParameterGroupModel(BaseParameterModel):
         self.validate_local_id()
 
         # Validate ids
-        global_id_map = self.build_global_id_map()
+        self.build_global_id_map()
 
     def to_c_odin_parameter_initialiser(
         self,

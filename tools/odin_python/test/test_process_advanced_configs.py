@@ -24,7 +24,9 @@ def process_config(config: str):
     model = AdvancedLoaderModel.from_yaml(config)
 
     root_parameters = RootParameterModel(
-        children=model.parameters, access_control=model.access_control,id_space_shift=model.id_space_shift
+        children=model.parameters,
+        access_control=model.access_control,
+        id_space_shift=model.id_space_shift,
     )  # type: ignore
     root_parameters.post_load_resolve(None, "root", registry)
 
@@ -48,18 +50,25 @@ def test_advanced_parse(config: str):
     file = process_config(config)
     compile_file(file)
 
-@pytest.mark.parametrize("config", glob.glob("test/advanced_configs/acces_control_negative_configs/*.yaml"))
+
+@pytest.mark.parametrize(
+    "config", glob.glob("test/advanced_configs/acces_control_negative_configs/*.yaml")
+)
 def test_advanced_parse_negative(config: str):
     with pytest.raises(Exception):
         file = process_config(config)
         compile_file(file)
-        
-@pytest.mark.parametrize("config", glob.glob("test/advanced_configs/parameter_space_negative_configs/*.yaml"))
+
+
+@pytest.mark.parametrize(
+    "config", glob.glob("test/advanced_configs/parameter_space_negative_configs/*.yaml")
+)
 def test_parameter_space_parse_negative(config: str):
     with pytest.raises(Exception):
         file = process_config(config)
         compile_file(file)
-        
+
+
 if __name__ == "__main__":
     CONFIGS = [r"test\advanced_configs\2_parameter_space.yaml"]
 

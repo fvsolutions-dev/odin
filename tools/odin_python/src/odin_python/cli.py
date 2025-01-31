@@ -35,7 +35,9 @@ def gen_c(input_file: str, output_dir: str, name: str, advanced: bool):
     if advanced:
         model = AdvancedLoaderModel.from_yaml(input_file)
         root_parameters = RootParameterModel(
-            children=model.parameters, access_control=model.access_control, id_space_shift=model.id_space_shift
+            children=model.parameters,
+            access_control=model.access_control,
+            id_space_shift=model.id_space_shift,
         )
     else:
         model = SimpleLoaderModel.from_yaml(input_file)

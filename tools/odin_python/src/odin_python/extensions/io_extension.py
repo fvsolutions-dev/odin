@@ -1,11 +1,11 @@
 from typing import Literal
 
-from csnake import FormattedLiteral
 from pydantic import BaseModel, Field
 
 
 class IOExtension(BaseModel):
     pass
+
 
 class ReferenceIOExtension(IOExtension):
     type: Literal["io_reference"]
@@ -16,4 +16,3 @@ class ReferenceIOExtension(IOExtension):
     scale: float = Field(
         default=1.0, description="Scale to multiply the referenced value by"
     )
-
