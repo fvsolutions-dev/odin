@@ -1,0 +1,66 @@
+access_control:
+  disk:
+    override: [read, write] #Force disk to be read and write on all parameters
+
+id_space_shift: 8
+
+parameters:
+  base_variable_float:
+    local_id: 1
+    type: f32
+    description: A test variable
+    default: 0.2
+    extensions: 
+      - type: validation_limit_value
+        min: -30
+        max: 30
+
+  # base_variable_int:
+  #   local_id: 1
+  #   type: i32
+  #   description: A test variable
+  #   default: 0.2
+
+  # referenced_parameter:
+  #   local_id: 5
+  #   type: f32
+  #   description: A test variable
+  #   default: 0
+  #   extensions:
+  #     - type: reference #IO
+  #       reference: base_variable_float
+
+  # referenced_parameter_with_mapping:
+  #   local_id: 6
+  #   type: f32
+  #   description: A test variable
+  #   default: 0
+  #   extensions:
+  #     - type: scaled_reference #IO
+  #       reference: base_variable_float
+  #       scale: 10
+  #       offset: -5
+    
+  # trigger_parameter:
+  #   local_id: 6
+  #   type: f32
+  #   description: A test variable
+  #   default: 0
+  #   extensions:
+  #     - type: event_callback #Validation (called after action)
+  #       event: write # options: read, write, change
+  #       callback: trigger_callback
+    
+  # trigger_parameter_with_mapping:
+  #   local_id: 7
+  #   type: f32
+  #   description: A test variable
+  #   default: 0
+  #   extensions:
+  #     - type: event_callback #Validation (called after action)
+  #       event: write # options: read, write, change
+  #       callback: trigger_callback
+
+
+
+        

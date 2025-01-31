@@ -17,9 +17,6 @@ protoc --c_out=main/datastore/src/generated/ main/datastore/src/storage.proto
 ```
 
 
-# TODO
-Fix array support when printing
-fix device capacilites getter
 
 
 
@@ -40,3 +37,13 @@ llvm-cov show basic_test.exe -instr-profile=default.profdata -format=html -outpu
 llvm-cov export basic_test.exe -instr-profile=default.profdata  > coverage.json
 
 llvm-cov export basic_test.exe -instr-profile=default.profdata -format=lcwov > coverage.xml
+
+
+TODO
+
+
+# TODO
+- Extensions 
+- Support for custom types
+- Support for custom string codec
+- Create tracing module

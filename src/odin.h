@@ -59,8 +59,8 @@ typedef enum {
 } ODIN_element_type_t;
 
 typedef enum {
-    ODIN_EXTENSION_TYPE_STRING,
     ODIN_EXTENSION_TYPE_IO,
+    ODIN_EXTENSION_TYPE_STRING_CODEC,
     ODIN_EXTENSION_TYPE_VALIDATE,
 } ODIN_extension_type_t;
 

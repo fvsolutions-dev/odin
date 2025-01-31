@@ -1,71 +1,21 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from ctypes import Union
+from typing import Annotated, Any, Dict, List
 
 import csnake as cc
 from odin_python.parameter.access_control import AccessControlCollection
 from odin_python.utils.csnake_custom import StructVariable
-from odin_python.utils.string import escape_string
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import BaseModel, ConfigDict, Discriminator, Field, PrivateAttr, Tag
 
 from ..data_types.type_registry import DataType, RegularCDataType, TypeRegistry
-from .odin_defs import ODIN_ElementTypeEnum, ODIN_TypeEnum
+from ..extensions import Extensions
+from ..generator.model import (
+    ODIN_ArrayModel,
+    ODIN_ParameterGroupModel,
+    ODIN_ParameterModel,
+)
 
-ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
 MAX_ID_SIZE = 32
-
-
-class ODIN_ParameterModel(BaseModel):
-    access_group: str = Field(description="Access group")
-    local_index: int = Field(description="Index of the parameter")
-    global_index: int = Field(description="Global index of the parameter")
-
-    data: str = Field(description="Reference to the data")
-    type: DataType = Field(description="Resolved type of the parameter")
-    name: str = Field(description="Name of the parameter")
-    description: str = Field(description="Description of the parameter")
-    extension: str | None = Field(description="Extension info", default=None)
-
-    @property
-    def variable(self) -> cc.Variable:
-        assert isinstance(self.type, RegularCDataType)
-
-        return cc.Variable(
-            name=self.name,
-            primitive=ODIN_PARAMETER_TYPE,
-            value={
-                "odin_type": cc.TextModifier(
-                    str(ODIN_TypeEnum.ODIN_TYPE_PARAMETER.value)
-                ),
-                "element_type": cc.TextModifier(
-                    str(ODIN_ElementTypeEnum.from_c_type(self.type.c_typename).value)
-                ),
-                "flags": cc.TextModifier(str(self.access_group)),
-                "global_index": cc.TextModifier(f"0x{self.global_index:08X}"),
-                "element_size": cc.TextModifier(f"sizeof({self.type.c_typename})"),
-                "data": cc.TextModifier(f"&{self.data}"),
-                "name_and_description": rf"{self.name}\0{escape_string(self.description)}",
-                "extension": cc.TextModifier(self.extension)
-                if self.extension
-                else cc.TextModifier("NULL"),
-            },  # type: ignore
-            comment=f"Local index: 0x{self.local_index:08X}",
-        )
-
-
-class ODIN_ArrayModel(ODIN_ParameterModel):
-    num_elements: int = Field(description="Number of elements in the array")
-    fixed_size: bool = Field(description="Fixed size of the array", default=True)
-
-    @property
-    def variable(self) -> cc.Variable:
-        variable = super().variable
-        variable.value["odin_type"] = cc.TextModifier(  # type: ignore
-            str(ODIN_TypeEnum.ODIN_TYPE_ARRAY.value)
-            if self.fixed_size
-            else str(ODIN_TypeEnum.ODIN_TYPE_VECTOR.value)
-        )
-        variable.value["max_elements"] = cc.TextModifier(str(self.num_elements))  # type: ignore
-        return variable
 
 
 class BaseParameterModel(BaseModel, ABC):
@@ -94,6 +44,8 @@ class BaseParameterModel(BaseModel, ABC):
         description="Access control configuration for the parameter",
         default_factory=AccessControlCollection.empty,
     )
+
+    extensions: List[Extensions] | None = Field(description="Extensions", default=None)
 
     def post_load_resolve(
         self,
@@ -444,8 +396,47 @@ class VectorParameterModel(BaseParameterModel):
     #     )
 
 
+def get_discriminator_value(v: Any) -> str:
+    if isinstance(v, dict):
+        if "children" in v:
+            val = "group"
+        elif "reference" in v:
+            val = "reference"
+        elif "elements" in v:
+            val = "array"
+        elif "max_elements" in v:
+            val = "vector"
+        else:
+            val = "parameter"
+    else:
+        if isinstance(v, ParameterGroupModel):
+            val = "group"
+        elif isinstance(v, ReferenceParameterModel):
+            val = "reference"
+        elif isinstance(v, VectorParameterModel):
+            val = "vector"
+        elif isinstance(v, ArrayParameterModel):
+            val = "array"
+        elif isinstance(v, ParameterModel):
+            val = "parameter"
+        else:
+            raise ValueError(f"Unknown type {type(v)}")
+
+    return val
+
+
 class BaseParameterGroupModel(BaseParameterModel):
-    children: "Dict[str, ParameterGroupModel|ParameterModel|ReferenceParameterModel|ArrayParameterModel|VectorParameterModel]"
+    children: """Dict[
+        str,
+        Annotated[
+            Annotated[ParameterModel, Tag("parameter")]
+            | Annotated[ReferenceParameterModel, Tag("reference")]
+            | Annotated[ArrayParameterModel, Tag("array")]
+            | Annotated[VectorParameterModel, Tag("vector")]
+            | Annotated[ParameterGroupModel, Tag("group")],
+            Discriminator(get_discriminator_value)
+        ]
+    ]"""
     id_space_shift: int = Field(description="Number of bits to shift the children ids")
 
     # Reference to the odin parameter
@@ -507,30 +498,23 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         # self._group_storage_reference = self._name
         self._parameter_storage_reference = param_name
-
-        parameters = []
+        parameters_references = []
         for parameter_name, parameter in self.children.items():
             assert (
                 parameter._parameter_storage_reference is not None
             ), "Parameter storage reference is not set"
+            parameters_references.append(parameter._parameter_storage_reference)
 
-            parameters.append(
-                cc.TextModifier(f"&{parameter._parameter_storage_reference}")
-            )
-
-        variable = cc.Variable(
-            name=param_name,
-            primitive="ODIN_parameter_group_t",
-            value={  # type: ignore
-                "name_and_description": rf"{self._name}\0{escape_string(self.resolved_description)}",
-                "odin_type": cc.TextModifier(str(ODIN_TypeEnum.ODIN_TYPE_GROUP.value)),
-                "global_index": cc.TextModifier(f"0x{self.global_id:08X}"),
-                "shift": cc.TextModifier(str(self.id_space_shift)),
-                "count": cc.TextModifier(str(len(self.children))),
-                "parameters": parameters,
-            },
+        variables.append(
+            ODIN_ParameterGroupModel(
+                param_name=param_name,
+                name=self._name,
+                description=self.resolved_description,
+                global_id=self.global_id,
+                id_space_shift=self.id_space_shift,
+                parameters_references=parameters_references,
+            ).variable
         )
-        variables.append(variable)
 
         return variables
 
