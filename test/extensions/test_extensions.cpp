@@ -11,14 +11,14 @@ extern "C" {
 
 TEST(ODINExtensions, NominalValidation) {
     float data = 100000.0;
-    EXPECT_EQ(ODIN_parameter_write(&root.base_variable_float, &data, sizeof(data), ODIN_ACCESS_GROUP_INTERNAL),
+    EXPECT_EQ(ODIN_parameter_write(&odin_objects.base_variable_float, &data, sizeof(data), ODIN_ACCESS_GROUP_INTERNAL),
               ODIN_VALIDATION_ERROR);
     
     data = -100000.0;
-    EXPECT_EQ(ODIN_parameter_write(&root.base_variable_float, &data, sizeof(data), ODIN_ACCESS_GROUP_INTERNAL),
+    EXPECT_EQ(ODIN_parameter_write(&odin_objects.base_variable_float, &data, sizeof(data), ODIN_ACCESS_GROUP_INTERNAL),
               ODIN_VALIDATION_ERROR);
     
     data = 0.0;
-    EXPECT_GE(ODIN_parameter_write(&root.base_variable_float, &data, sizeof(data), ODIN_ACCESS_GROUP_INTERNAL), ODIN_SUCCESS);
+    EXPECT_GE(ODIN_parameter_write(&odin_objects.base_variable_float, &data, sizeof(data), ODIN_ACCESS_GROUP_INTERNAL), ODIN_SUCCESS);
 
 }

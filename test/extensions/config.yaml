@@ -46,6 +46,6 @@ parameters:
     default: 0
     extensions: 
       - type: io_reference
-        reference: group.base_variable_float
+        reference: group.base_variable_group
 
 

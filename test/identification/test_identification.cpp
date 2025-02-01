@@ -12,10 +12,10 @@ extern "C" {
 // Single parameter tests
 TEST(ODINParameterLookup, Nominal) {
     // Parameter lookup
-    EXPECT_EQ(ODIN_get_parameter_by_id(&odin_store, 0x0445FF00, 0), &root.group_2.group_3.test_variable_small);
-    EXPECT_EQ(ODIN_get_parameter_by_id(&odin_store, 0x04200000, 0), &root.group_2.test_variable_B);
-    EXPECT_EQ(ODIN_get_parameter_by_id(&odin_store, 0x03010000, 0), &root.group_1.test_variable_A);
-    EXPECT_EQ(ODIN_get_parameter_by_id(&odin_store, 0x03020000, 0), &root.group_1.test_variable_B);
+    EXPECT_EQ(ODIN_get_parameter_by_id(&odin_store, 0x0445FF00, 0), &odin_objects.group_2.group_3.test_variable_small);
+    EXPECT_EQ(ODIN_get_parameter_by_id(&odin_store, 0x04200000, 0), &odin_objects.group_2.test_variable_B);
+    EXPECT_EQ(ODIN_get_parameter_by_id(&odin_store, 0x03010000, 0), &odin_objects.group_1.test_variable_A);
+    EXPECT_EQ(ODIN_get_parameter_by_id(&odin_store, 0x03020000, 0), &odin_objects.group_1.test_variable_B);
 
     // Parameter lookup with group
     EXPECT_EQ(ODIN_get_parameter_group_by_id(&odin_store, 0x04200000, 0), (ODIN_parameter_group_t *)NULL);

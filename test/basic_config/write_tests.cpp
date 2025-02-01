@@ -11,9 +11,9 @@ extern "C" {
 #include "odin_core.h"
 }
 
-static const ODIN_parameter_t* base_test_param = &root.test_variable_i32;
-static const ODIN_parameter_t* base_array_param = &root.i32_array;
-static const ODIN_parameter_t* base_vector_param = &root.i32_variable_length_array;
+static const ODIN_parameter_t* base_test_param = &odin_objects.test_variable_i32;
+static const ODIN_parameter_t* base_array_param = &odin_objects.i32_array;
+static const ODIN_parameter_t* base_vector_param = &odin_objects.i32_variable_length_array;
 
 // Single parameter tests
 TEST(ODINParameterWriteTest, Nominal) {
@@ -25,7 +25,7 @@ TEST(ODINParameterWriteTest, Nominal) {
     EXPECT_EQ(sizeof(input_data), result);
 
     // Check if the value is correct
-    EXPECT_EQ(input_data, root_ram.test_variable_i32);
+    EXPECT_EQ(input_data, odin_variables.test_variable_i32);
 }
 
 TEST(ODINParameterWriteTest, Null) {
@@ -51,8 +51,8 @@ TEST(ODINParameterWriteTest, InvalidData) {
 
 // Array tests
 TEST(ODINArrayWriteTest, Nominal) {
-    const int element_size = sizeof(root_ram.i32_array[0]);
-    const int array_size_bytes = sizeof(root_ram.i32_array);
+    const int element_size = sizeof(odin_variables.i32_array[0]);
+    const int array_size_bytes = sizeof(odin_variables.i32_array);
     const int array_size_elements = array_size_bytes / element_size;
 
     // Create a oversized array, to check if the last element is untouched
@@ -69,7 +69,7 @@ TEST(ODINArrayWriteTest, Nominal) {
 
     // Check if the value is correct
     for (int i = 0; i < 10; i++) {
-        EXPECT_EQ(input_data[i], root_ram.i32_array[i]);
+        EXPECT_EQ(input_data[i], odin_variables.i32_array[i]);
     }
 
     // Check if the last element is untouched
@@ -102,7 +102,7 @@ TEST(ODINArrayWriteTest, InvalidSizeWrite) {
 
 // Vector tests
 TEST(ODINVectorWriteTest, Nominal) {
-    // const int element_size = sizeof(root_ram.i32_variable_length_array.data[0]);
+    // const int element_size = sizeof(odin_variables.i32_variable_length_array.data[0]);
     const int num_elements = 10;
     // const int vector_size_bytes = element_size * num_elements;
 
@@ -119,16 +119,16 @@ TEST(ODINVectorWriteTest, Nominal) {
 
     // Check if the value is correct
     for (int i = 0; i < num_elements; i++) {
-        EXPECT_EQ(input_data[i], root_ram.i32_variable_length_array.data[i]);
+        EXPECT_EQ(input_data[i], odin_variables.i32_variable_length_array.data[i]);
     }
 
     // Check if the rest of the vector is untouched
     for (int i = num_elements; i < 50; i++) {
-        EXPECT_EQ(root_ram.i32_variable_length_array.data[i], 0);
+        EXPECT_EQ(odin_variables.i32_variable_length_array.data[i], 0);
     }
 
     // Check if the number of elements is set correctly
-    EXPECT_EQ(num_elements, root_ram.i32_variable_length_array.num_elements);
+    EXPECT_EQ(num_elements, odin_variables.i32_variable_length_array.num_elements);
 
     // Swite zero size
     result = ODIN_parameter_write(base_vector_param, input_data, 0, ODIN_ACCESS_GROUP_INTERNAL);

@@ -12,13 +12,13 @@ extern "C" {
 #include "odin_core.h"
 }
 
-static const ODIN_parameter_t* base_array_param = &root.i32_array;
+static const ODIN_parameter_t* base_array_param = &odin_objects.i32_array;
 
 // Single parameter tests
 TEST(ODINParameterArrayTest, ReadWriteElement) {
     // Reset array
     for (int i = 0; i < base_array_param->max_elements; i++) {
-        root_ram.i32_array[i] = 0;
+        odin_variables.i32_array[i] = 0;
     }
 
     // Read/Write elements separately
@@ -31,7 +31,7 @@ TEST(ODINParameterArrayTest, ReadWriteElement) {
         EXPECT_EQ(sizeof(input_data), result);
 
         // Check if the value is correct
-        EXPECT_EQ(input_data, root_ram.i32_array[i]);
+        EXPECT_EQ(input_data, odin_variables.i32_array[i]);
     
     
         // Read back the element

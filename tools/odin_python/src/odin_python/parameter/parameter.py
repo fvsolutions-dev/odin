@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Annotated, Any, Dict, List
 
 import csnake as cc
+from pydantic import BaseModel, ConfigDict, Discriminator, Field, PrivateAttr, Tag
+
 from odin_python.parameter.access_control import AccessControlCollection
 from odin_python.utils.csnake_custom import StructVariable
-from pydantic import BaseModel, ConfigDict, Discriminator, Field, PrivateAttr, Tag
 
 from ..data_types.type_registry import DataType, RegularCDataType, TypeRegistry
 from ..extensions import Extensions
@@ -15,6 +17,15 @@ from ..generator.model import (
 )
 
 MAX_ID_SIZE = 32
+
+
+@dataclass
+class C_Names:
+    objects_type: str
+    objects_name: str
+    variables_type: str
+    variables_name: str
+    groups_name: str
 
 
 class BaseParameterModel(BaseModel, ABC):
@@ -44,6 +55,20 @@ class BaseParameterModel(BaseModel, ABC):
         default_factory=AccessControlCollection.empty,
     )
 
+    # Reference to the variable which stores the data
+    _absolute_variable_reference: str | None = PrivateAttr(default=None)
+
+    # Reference to the odin parameter, which represents the parameter in the odin runtime
+    _absolute_object_reference: str | None = PrivateAttr(default=None)
+
+    @abstractmethod
+    def to_object_initialiser(self) -> cc.Variable:
+        """Returns the C initialiser for the parameter"""
+
+    @abstractmethod
+    def to_variable_initialiser(self) -> cc.Variable | None:
+        """Returns the ram initialiser for the parameter"""
+
     def post_load_resolve(
         self,
         parent: "BaseParameterModel | None",
@@ -56,6 +81,39 @@ class BaseParameterModel(BaseModel, ABC):
         self._parent = parent
         self._name = name
         self.access_control._parent = self
+
+    def initialise_types(self):
+        assert self._parent is not None, "Parent is not set"
+
+        self._absolute_variable_reference = (
+            f"{self._parent._absolute_variable_reference}.{self._name}"
+        )
+        self._absolute_object_reference = (
+            f"{self._parent._absolute_object_reference}.{self._name}"
+        )
+
+        if isinstance(self, BaseParameterGroupModel):
+            self._absolute_group_reference = (
+                f"{self._parent._absolute_group_reference}_{self._name}"
+            )
+
+            # If the parent is a group, then the variable reference is the parent name
+            for child in self.children.values():
+                child.initialise_types()
+
+    @property
+    def absolute_variable_reference(self) -> str:
+        assert (
+            self._absolute_variable_reference is not None
+        ), "Variable reference is not set"
+        return self._absolute_variable_reference
+
+    @property
+    def absolute_object_reference(self) -> str:
+        assert (
+            self._absolute_object_reference is not None
+        ), "Object reference is not set"
+        return self._absolute_object_reference
 
     @property
     def resolved_description(self) -> str:
@@ -95,17 +153,18 @@ class BaseParameterModel(BaseModel, ABC):
         else:
             raise ValueError("Parent is not a ParameterGroupModel")
 
-    @abstractmethod
-    def to_c_odin_parameter_initialiser(
-        self, absolute_reference: str, **kwargs
-    ) -> cc.Variable:
-        """Returns the C initialiser for the parameter"""
+    @property
+    def root(self) -> "RootParameterModel":
+        """Returns the root of the tree"""
 
-    @abstractmethod
-    def to_ram_initialiser(
-        self, name: str, type_name: str, absolute_reference: str
-    ) -> cc.Variable | None:
-        """Returns the ram initialiser for the parameter"""
+        if self._parent is None:
+            assert isinstance(self, RootParameterModel), "Root is not set"
+            return self
+
+        if isinstance(self._parent, RootParameterModel):
+            return self._parent
+
+        return self._parent.root
 
 
 class ParameterModel(BaseParameterModel):
@@ -119,18 +178,9 @@ class ParameterModel(BaseParameterModel):
     # Default value of the parameter, it not set it will use the default value of the primitive type
     default: Any = Field(description="Default value of the parameter")
 
-    # Reference to the variable which stores the data
-    _data_storage_reference: str | None = PrivateAttr(default=None)
-
-    # Reference to the odin parameter
-    _parameter_storage_reference: str | None = PrivateAttr(default=None)
-
-    # format: CFormatEnum = Field(
-    #     default=CFormatEnum.AUTO,
-    #     description="The format of the data, represents the way the data has to be displayed. If set to 'auto', the format will be determined based on the primitive type.",
-    # )
-
-    extensions: List[Extensions] | None = Field(description="Extensions", default=None)
+    extensions: List[Extensions] | None = Field(
+        description="Extensions of the parameter", default=None
+    )
 
     def post_load_resolve(
         self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry
@@ -141,9 +191,7 @@ class ParameterModel(BaseParameterModel):
     def one_line_summary(self, level=0):
         return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
 
-    def to_ram_initialiser(
-        self, name: str, type_name: str, absolute_reference: str
-    ) -> cc.Variable:
+    def to_variable_initialiser(self) -> cc.Variable:
         """Returns the C initialiser for the parameter
 
         Example:
@@ -152,26 +200,15 @@ class ParameterModel(BaseParameterModel):
         ```
         """
 
-        self._data_storage_reference = f"{absolute_reference}.{self._name}"
-
         assert isinstance(self._resolved_type, RegularCDataType)
         return self._resolved_type.to_c_initialiser(self._name, self.default)
 
-    def to_c_odin_parameter_initialiser(
-        self, absolute_reference: str, **kwargs
-    ) -> cc.Variable:
+    def to_object_initialiser(self) -> cc.Variable:
         """Returns the odin C initialiser for the parameter"""
 
         # permission_flags = self._access_configuration.get_permission_flags()
 
         assert isinstance(self._resolved_type, RegularCDataType)
-
-        assert (
-            self._data_storage_reference is not None
-        ), "Data storage reference is not set, call to_c_initialiser first to set the reference"
-
-        # Store a reference to the parameter name
-        self._parameter_storage_reference = f"{absolute_reference}.{self._name}"
 
         formatted_extension = None
         if self.extensions:
@@ -185,7 +222,7 @@ class ParameterModel(BaseParameterModel):
             access_group=self.access_control.collapse().to_c_definition(),
             local_index=self.local_id,
             global_index=self.global_id,
-            data=self._data_storage_reference,
+            data=self.absolute_variable_reference,
             name=self._name,
             description=self.resolved_description,
             extensions=formatted_extension,
@@ -207,21 +244,14 @@ class ReferenceParameterModel(BaseParameterModel):
     def one_line_summary(self, level=0):
         return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
 
-    def to_ram_initialiser(
-        self, name: str, type_name: str, absolute_reference: str
-    ) -> None:
+    def to_variable_initialiser(self) -> None:
         """No need to initialise a ram storage entry because the parameter is referenced"""
         return None
 
-    def to_c_odin_parameter_initialiser(
-        self, absolute_reference: str, **kwargs
-    ) -> cc.Variable:
+    def to_object_initialiser(self) -> cc.Variable:
         """Returns the odin C initialiser for the parameter"""
 
         assert isinstance(self._resolved_type, RegularCDataType)
-
-        self._parameter_storage_reference = f"{absolute_reference}.{self._name}"
-
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
@@ -237,18 +267,11 @@ class ReferenceParameterModel(BaseParameterModel):
 
 class ArrayParameterModel(BaseParameterModel):
     type: str = Field(description="Primitive type of the element in the array")
+    _resolved_type: DataType = PrivateAttr()
     default: Any | None = Field(
         description="Default value of the parameter", default=None
     )
     elements: int = Field(description="Number of elements in the array")
-
-    _resolved_type: DataType = PrivateAttr()
-
-    # Reference to the variable which stores the data
-    _data_storage_reference: str | None = PrivateAttr(default=None)
-
-    # Reference to the odin parameter
-    _parameter_storage_reference: str | None = PrivateAttr(default=None)
 
     def post_load_resolve(
         self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry
@@ -259,9 +282,7 @@ class ArrayParameterModel(BaseParameterModel):
     def one_line_summary(self, level=0):
         return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
 
-    def to_ram_initialiser(
-        self, name: str, type_name: str, absolute_reference: str
-    ) -> cc.Variable:
+    def to_variable_initialiser(self) -> cc.Variable:
         """Returns the C initialiser for the parameter
 
         Example:
@@ -270,29 +291,20 @@ class ArrayParameterModel(BaseParameterModel):
         ```
         """
 
-        self._data_storage_reference = f"{absolute_reference}.{self._name}"
-
         assert isinstance(self._resolved_type, RegularCDataType)
         return self._resolved_type.to_c_array_initialiser(
             self._name, self.default if self.default else [], [self.elements]
         )
 
-    def to_c_odin_parameter_initialiser(
-        self, absolute_reference: str, **kwargs
-    ) -> cc.Variable:
+    def to_object_initialiser(self) -> cc.Variable:
         assert isinstance(self._resolved_type, RegularCDataType)
-        assert (
-            self._data_storage_reference is not None
-        ), "Data storage reference is not set"
-
-        self._parameter_storage_reference = f"{absolute_reference}.{self._name}"
 
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
             local_index=self.local_id,
             global_index=self.global_id,
-            data=self._data_storage_reference,
+            data=self.absolute_variable_reference,
             name=self._name,
             description=self.resolved_description,
             num_elements=self.elements,
@@ -302,18 +314,11 @@ class ArrayParameterModel(BaseParameterModel):
 
 class VectorParameterModel(BaseParameterModel):
     type: str = Field(description="Primitive type of the element in the array")
+    _resolved_type: DataType = PrivateAttr()
     default: List[Any] | None = Field(
         description="Default value of the parameter", default=None
     )
     max_elements: int = Field(description="Number of elements in the array")
-
-    _resolved_type: DataType = PrivateAttr()
-
-    # Reference to the variable which stores the data
-    _data_storage_reference: str | None = PrivateAttr(default=None)
-
-    # Reference to the odin parameter
-    _parameter_storage_reference: str | None = PrivateAttr(default=None)
 
     def post_load_resolve(
         self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry
@@ -324,7 +329,7 @@ class VectorParameterModel(BaseParameterModel):
     def one_line_summary(self, level=0):
         return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
 
-    def to_ram_struct(
+    def to_variable_type(
         self,
         type_name: str | None = None,
     ) -> cc.Struct:
@@ -348,10 +353,7 @@ class VectorParameterModel(BaseParameterModel):
         )
         return struct
 
-    def to_ram_initialiser(
-        self, name: str, type_name: str, absolute_reference: str
-    ) -> cc.Variable:
-        self._data_storage_reference = f"{absolute_reference}.{self._name}"
+    def to_variable_initialiser(self) -> cc.Variable:
         data = self._resolved_type.to_c_array_initialiser(
             self._name, self.default, [self.max_elements]
         )
@@ -362,45 +364,21 @@ class VectorParameterModel(BaseParameterModel):
             value={"data": data.value, "num_elements": len(self.default)},  # type: ignore
         )
 
-    def to_c_odin_parameter_initialiser(
-        self, absolute_reference: str, **kwargs
-    ) -> cc.Variable:
+    def to_object_initialiser(self) -> cc.Variable:
         assert isinstance(self._resolved_type, RegularCDataType)
-
-        assert (
-            self._data_storage_reference is not None
-        ), "Data storage reference is not set"
-
-        self._parameter_storage_reference = f"{absolute_reference}.{self._name}"
 
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
             local_index=self.local_id,
             global_index=self.global_id,
-            data=self._data_storage_reference,
+            data=self.absolute_variable_reference,
             name=self._name,
             description=self.resolved_description,
             num_elements=self.max_elements,
             fixed_size=False,
         )
         return parameter.variable
-
-    # def to_c_odin_parameter_initialiser(self, **kwargs) -> cc.Variable:
-    #     # permission_flags = self._access_configuration.get_permission_flags()
-    #     assert isinstance(self._resolved_type, RegularCDataType)parameters
-    #     return cc.Variable(
-    #         name=self._name,
-    #         primitive=ODIN_VECTOR_PARAMETER_TYPE,
-    #         value={
-    #             "index": cc.TextModifier(f"0x{self.global_id:08X}"),
-    #             "max_elements": cc.TextModifier(str(self.max_elements)),
-    #             "data": cc.TextModifier(f"&{self._data_storage_reference}"),
-    #             "size": cc.TextModifier(f"sizeof({self._resolved_type.c_typename})"),
-    #             "name": self._name,
-    #             "description": escape_string(self.resolved_description),
-    #         },  # type: ignore
-    #     )
 
 
 def get_discriminator_value(v: Any) -> str:
@@ -446,10 +424,13 @@ class BaseParameterGroupModel(BaseParameterModel):
     ]"""
     id_space_shift: int = Field(description="Number of bits to shift the children ids")
 
-    # Reference to the odin parameter
-    _parameter_storage_reference: str | None = PrivateAttr(default=None)
+    # Reference to the variable which stores the group
+    _absolute_group_reference: str | None = PrivateAttr(default=None)
 
-    # _group_storage_reference: str | None = PrivateAttr(default=None)
+    @property
+    def absolute_group_reference(self) -> str:
+        assert self._absolute_group_reference is not None, "Group reference is not set"
+        return self._absolute_group_reference
 
     def post_load_resolve(
         self,
@@ -466,84 +447,26 @@ class BaseParameterGroupModel(BaseParameterModel):
         # Validate ids
         self.build_global_id_map()
 
-    def to_c_odin_parameter_initialiser(
-        self,
-        *,
-        absolute_reference: str,
-        param_name: str | None = None,
-        type_name: str | None = None,
-        **kwargs,
-    ) -> cc.Variable:
-        if absolute_reference == "":
-            absolute_reference = self._name
-        else:
-            absolute_reference = f"{absolute_reference}.{self._name}"
-
-        return cc.Variable(
-            name=param_name if param_name else "UNKNOWN_NAME",
-            primitive=type_name if type_name else "UKNOWN_TYPE",
-            value={
-                parameter_name: parameter.to_c_odin_parameter_initialiser(
-                    absolute_reference=absolute_reference
-                ).value
-                for parameter_name, parameter in self.children.items()  # type: ignore
-            },
-        )
-
-    def to_c_odin_parameter_group_initialiser(
-        self, *, param_name: str, **kwargs
-    ) -> List[cc.Variable]:
-        variables = []
-
-        for parameter_name, parameter in self.children.items():
-            if isinstance(parameter, ParameterGroupModel):
-                variables.extend(
-                    parameter.to_c_odin_parameter_group_initialiser(
-                        param_name=f"{param_name}_{parameter_name}"
-                    )
-                )
-
-        # self._group_storage_reference = self._name
-        self._parameter_storage_reference = param_name
-        parameters_references = []
-        for parameter_name, parameter in self.children.items():
-            assert (
-                parameter._parameter_storage_reference is not None
-            ), "Parameter storage reference is not set"
-            parameters_references.append(parameter._parameter_storage_reference)
-
-        variables.append(
-            ODIN_ParameterGroupModel(
-                param_name=param_name,
-                name=self._name,
-                description=self.resolved_description,
-                global_id=self.global_id,
-                id_space_shift=self.id_space_shift,
-                parameters_references=parameters_references,
-            ).variable
-        )
-
-        return variables
-
     def one_line_summary(self, level=0):
         val = f"{level * '  '}{self._name} (0x{self.global_id:08X})"
         for child in self.children.values():
             val += f"\n{child.one_line_summary(level + 1)}"
         return val
 
-    def to_odin_parameter_typedef(
+    def to_object_type(
         self,
-        type_name: str | None = None,
     ) -> cc.Struct:
-        if type_name:
-            struct = StructVariable(name=type_name, typedef=True)
+        if isinstance(self, RootParameterModel):
+            assert self._c_types is not None, "C types are not set"
+            struct = StructVariable(name=self._c_types.objects_type, typedef=True)
+
         else:
             struct = StructVariable(var_name=self._name, typedef=False)
 
         # Create the data structures for groups
         for child in self.children.values():
             if isinstance(child, ParameterGroupModel):
-                struct.add_struct(child.to_odin_parameter_typedef())
+                struct.add_struct(child.to_object_type())
 
             elif (
                 isinstance(child, ParameterModel)
@@ -551,40 +474,34 @@ class BaseParameterGroupModel(BaseParameterModel):
                 or isinstance(child, VectorParameterModel)
                 or isinstance(child, ArrayParameterModel)
             ):
-                # Set the storqage reference to UNSET to not trigger an error when creating the initialiser
-                if not isinstance(child, ReferenceParameterModel):
-                    child._data_storage_reference = "UNSET"
-
-                struct.add_variable(
-                    child.to_c_odin_parameter_initialiser(absolute_reference="UNKNOWN")
-                )
+                struct.add_variable(child.to_object_initialiser())
 
             else:
                 raise ValueError("Unknown type")
 
         return struct
 
-    def to_ram_typedef(
+    def to_variable_type(
         self,
-        type_name: str | None = None,
     ) -> cc.Struct:
-        if type_name:
-            struct = StructVariable(name=type_name, typedef=True)
+        if isinstance(self, RootParameterModel):
+            assert self._c_types is not None, "C types are not set"
+            struct = StructVariable(name=self._c_types.variables_type, typedef=True)
         else:
             struct = StructVariable(var_name=self._name, typedef=False)
 
         for child in self.children.values():
             if isinstance(child, ParameterGroupModel):
-                struct.add_struct(child.to_ram_typedef())
+                struct.add_struct(child.to_variable_type())
 
             elif isinstance(child, VectorParameterModel):
-                child.to_ram_initialiser(child._name, child.type, "")
-                struct.add_struct(child.to_ram_struct())
+                child.to_variable_initialiser()
+                struct.add_struct(child.to_variable_type())
 
             elif isinstance(child, ParameterModel) or isinstance(
                 child, ArrayParameterModel
             ):
-                variable = child.to_ram_initialiser(child._name, child.type, "")
+                variable = child.to_variable_initialiser()
                 if variable:
                     struct.add_variable(variable)
 
@@ -596,23 +513,70 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         return struct
 
-    def to_ram_initialiser(
-        self, name: str, type_name: str, absolute_reference: str
-    ) -> cc.Variable:
-        absolute_reference = f"{absolute_reference}.{self._name}"
+    def to_variable_initialiser(self) -> cc.Variable:
+        if isinstance(self, RootParameterModel):
+            assert self._c_types is not None, "C types are not set"
+            name = self._c_types.variables_name
+            type = self._c_types.variables_type
+        else:
+            name = self._name
+            type = "UNKNOWN PRIMITIVE"
 
         values = {}
         for child in self.children.values():
-            initialiser = child.to_ram_initialiser(name, type_name, absolute_reference)
+            initialiser = child.to_variable_initialiser()
 
             if initialiser:
                 values[initialiser.name] = initialiser.value
 
+        return cc.Variable(name=name, primitive=type, value=values)  # type: ignore
+
+    def to_object_initialiser(self) -> cc.Variable:
+        if isinstance(self, RootParameterModel):
+            assert self._c_types is not None, "C types are not set"
+            name = self._c_types.objects_name
+            type = self._c_types.objects_type
+        else:
+            name = self._name
+            type = "UNKNOWN PRIMITIVE"
+
         return cc.Variable(
-            name=self._name,
-            primitive="UNKNOWN PRIMITIVE",
-            value=values,  # type: ignore
+            name=name,
+            primitive=type,
+            value={
+                parameter_name: parameter.to_object_initialiser().value
+                for parameter_name, parameter in self.children.items()  # type: ignore
+            },
         )
+
+    def to_group_initialiser(self) -> List[cc.Variable]:
+        variables = []
+
+        # Create the data structures for this group
+        parameters_references = []
+        for parameter in self.children.values():
+            if isinstance(parameter, BaseParameterGroupModel):
+                parameters_references.append(parameter.absolute_group_reference)
+            else:
+                parameters_references.append(parameter.absolute_object_reference)
+
+        variables.append(
+            ODIN_ParameterGroupModel(
+                param_name=self.absolute_group_reference,
+                name=self._name,
+                description=self.resolved_description,
+                global_id=self.global_id,
+                id_space_shift=self.id_space_shift,
+                parameters_references=parameters_references,
+            ).variable
+        )
+
+        # Create the data structures for the children
+        for parameter in self.children.values():
+            if isinstance(parameter, ParameterGroupModel):
+                variables.extend(parameter.to_group_initialiser())
+
+        return variables
 
     def validate_local_id(self):
         local_id_map = {}
@@ -645,6 +609,33 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         return global_id_map
 
+    @property
+    def child_map(self) -> Dict[str, BaseParameterModel]:
+        child_map = {}
+        for child in self.children.values():
+            child_map[child._name] = child
+
+        return child_map
+
+    def find_parameter_by_object_name(self, name: str) -> BaseParameterModel | None:
+        # Based name
+        split_name = name.split(".")
+        base_name = split_name[0]
+
+        child_map = self.child_map
+
+        if base_name not in child_map:
+            return None
+
+        parameter = child_map[base_name]
+        
+        if isinstance(parameter, BaseParameterGroupModel):
+            assert len(split_name) > 1, "Group name is not set"
+            return parameter.find_parameter_by_object_name(".".join(split_name[1:]))
+            
+        return parameter
+
+
 
 class ParameterGroupModel(BaseParameterGroupModel):
     pass
@@ -653,24 +644,10 @@ class ParameterGroupModel(BaseParameterGroupModel):
 class RootParameterModel(BaseParameterGroupModel):
     local_id: int = 0
 
+    _c_types: C_Names | None = PrivateAttr(default=None)
+
     def dump_json(self):
         return self.model_dump_json(indent=2)
-
-    def to_ram_initialiser(
-        self, name: str, type_name: str, absolute_reference: str = ""
-    ) -> cc.Variable:
-        values = {}
-        for child in self.children.values():
-            initialiser = child.to_ram_initialiser(name, type_name, name)
-
-            if initialiser:
-                values[initialiser.name] = initialiser.value
-
-        return cc.Variable(
-            name=name,
-            primitive=type_name,
-            value=values,  # type: ignore
-        )
 
     def to_access_control_header(self) -> List[str]:
         # todo possible move this into acces contol info?
@@ -682,3 +659,12 @@ class RootParameterModel(BaseParameterGroupModel):
             defines.append(f"#define ODIN_ACCESS_{name.upper()} ODIN_ACCESS_GROUP_{id}")
 
         return defines
+
+    def initialise_types(self, types: C_Names):  # type: ignore
+        self._c_types = types
+        self._absolute_variable_reference = types.variables_name
+        self._absolute_object_reference = types.objects_name
+        self._absolute_group_reference = types.groups_name
+
+        for child in self.children.values():
+            child.initialise_types()

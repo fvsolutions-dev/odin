@@ -19,12 +19,17 @@ class ReferenceIOExtension(IOExtension):
     type: Literal["io_reference"]
     reference: str = Field(description="Reference to another odin parameter")
 
-    def as_literal(self, parameter: "BaseParameterModel", next: str) -> str:
+    def as_literal(self, parameter: "BaseParameterModel", next: str | None) -> str:
+        # Get root paramtere
+        referenced_parameter = parameter.root.find_parameter_by_object_name(
+            self.reference
+        )
+        assert referenced_parameter, f"Could not find parameter {self.reference}"
 
         model = ODIN_ExtesionModel(
             type=ODIN_ExtensionEnum.ODIN_EXTENSION_TYPE_IO,
             ops="ODIN_extension_io_reference_ops",
-            parameters=f"(reference_parameters_t){{ .reference = &{self.reference}}}",
+            parameters=f"(reference_parameters_t){{ .reference = &{referenced_parameter.absolute_object_reference} }}",
             next=next if next else None,
         )
 

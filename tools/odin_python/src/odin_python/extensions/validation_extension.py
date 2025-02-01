@@ -25,14 +25,17 @@ class LimitValidationExtension(ValidationExtension):
         title="Maximum allowed value, if not set, no maximum value is enforced",
     )
 
-    def as_literal(self, parameter: "BaseParameterModel", next: str) -> str:
+    def as_literal(self, parameter: "BaseParameterModel", next: str|None) -> str:
+        
+        # TODO check if paramter is a regular parameter that can be cast to float
+        
         if self.min is None:
             self.min = -float("inf")
         if self.max is None:
             self.max = float("inf")
 
         model = ODIN_ExtesionModel(
-            type=ODIN_ExtensionEnum.ODIN_EXTENSION_TYPE_IO,
+            type=ODIN_ExtensionEnum.ODIN_EXTENSION_TYPE_VALIDATE,
             ops="ODIN_validate_extension_ops",
             parameters=f"(range_parameter_t){{ .max = {self.max}, .min = {self.min} }}",
             next=next if next else None,

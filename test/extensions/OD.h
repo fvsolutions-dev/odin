@@ -12,7 +12,7 @@ typedef struct
     }group;
     float base_variable_reference_extension;
     float base_variable_reference_group_extension;
-} root_ram_t;
+} odin_variables_t;
 
 typedef struct
 {
@@ -23,10 +23,10 @@ typedef struct
     }group;
     ODIN_parameter_t base_variable_reference_extension;  /* Local index: 0x00000003 */
     ODIN_parameter_t base_variable_reference_group_extension;  /* Local index: 0x00000004 */
-} root_type_t;
+} odin_objects_t;
 
 #define ODIN_ACCESS_DISK ODIN_ACCESS_GROUP_0
-extern root_ram_t root_ram;
-extern const root_type_t root;
-extern const ODIN_parameter_group_t odin_store_group;
+extern odin_variables_t odin_variables;
+extern const odin_objects_t odin_objects;
 extern const ODIN_parameter_group_t odin_store;
+extern const ODIN_parameter_group_t odin_store_group;

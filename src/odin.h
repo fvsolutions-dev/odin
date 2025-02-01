@@ -61,7 +61,7 @@ typedef enum {
     ODIN_ELEMENT_TYPE_CUSTOM  // Custom data type, custom to string and validator
                               // functions have to be provided
 } ODIN_element_type_t;
-
+ 
 struct ODIN_parameter;
 
 #define ODIN_INCLUDE_NAME

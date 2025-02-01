@@ -70,6 +70,7 @@ def test_parameter_space_parse_negative(config: str):
 
 
 if __name__ == "__main__":
+    # CONFIGS = [r"test\advanced_configs\1_access_control.yaml"]
     CONFIGS = [r"test\advanced_configs\3_extensions.yaml"]
 
     for config in CONFIGS:

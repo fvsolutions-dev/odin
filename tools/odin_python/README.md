@@ -5,3 +5,12 @@ Can be installed using pip
 # TODO
 LOCKING/UNLOCKING
 CHANGE_FLAG parameter / group
+
+
+# Types
+
+## Variable
+
+## Object
+
+## Group

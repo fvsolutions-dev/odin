@@ -1,6 +1,6 @@
 #include "OD.h"
 
-root_ram_t root_ram = {
+odin_variables_t odin_variables = {
     .test_variable_A = 12345,
     .basic_group = {
         .test_variable_A = 0.2,
@@ -14,14 +14,14 @@ root_ram_t root_ram = {
     }
 };
 
-const root_type_t root = {
+const odin_objects_t odin_objects = {
     .test_variable_A = {
         .odin_type = ODIN_TYPE_PARAMETER,
         .element_type = ODIN_ELEMENT_TYPE_INT32,
         .flags = 0,
         .global_index = 0xFE000000,
         .element_size = sizeof(int32_t),
-        .data = &root_ram.test_variable_A,
+        .data = &odin_variables.test_variable_A,
         .name_and_description = "test_variable_A\0A test variable",
         .extension = NULL
     },
@@ -32,7 +32,7 @@ const root_type_t root = {
             .flags = 0,
             .global_index = 0x01010000,
             .element_size = sizeof(float),
-            .data = &root_ram.basic_group.test_variable_A,
+            .data = &odin_variables.basic_group.test_variable_A,
             .name_and_description = "test_variable_A\0A test variable",
             .extension = NULL
         },
@@ -42,7 +42,7 @@ const root_type_t root = {
             .flags = 0,
             .global_index = 0x01020000,
             .element_size = sizeof(float),
-            .data = &root_ram.basic_group.test_variable_B,
+            .data = &odin_variables.basic_group.test_variable_B,
             .name_and_description = "test_variable_B\0A test variable",
             .extension = NULL
         },
@@ -52,7 +52,7 @@ const root_type_t root = {
             .flags = 0,
             .global_index = 0x01030000,
             .element_size = sizeof(uint8_t),
-            .data = &root_ram.basic_group.test_variable_small,
+            .data = &odin_variables.basic_group.test_variable_small,
             .name_and_description = "test_variable_small\0A small test variable",
             .extension = NULL
         }
@@ -65,7 +65,7 @@ const root_type_t root = {
             .flags = 0,
             .global_index = 0x02100000,
             .element_size = sizeof(float),
-            .data = &root_ram.another_group.test_variable_A,
+            .data = &odin_variables.another_group.test_variable_A,
             .name_and_description = "test_variable_A\0A test variable",
             .extension = NULL
         },
@@ -75,7 +75,7 @@ const root_type_t root = {
             .flags = 0,
             .global_index = 0x02200000,
             .element_size = sizeof(float),
-            .data = &root_ram.another_group.test_variable_B,
+            .data = &odin_variables.another_group.test_variable_B,
             .name_and_description = "test_variable_B\0A test variable",
             .extension = NULL
         },
@@ -85,30 +85,12 @@ const root_type_t root = {
             .flags = 0,
             .global_index = 0x02300000,
             .element_size = sizeof(uint8_t),
-            .data = &root_ram.another_group.test_variable_small,
+            .data = &odin_variables.another_group.test_variable_small,
             .name_and_description = "test_variable_small\0A small test variable",
             .extension = NULL
         }
     
     }
-};
-
-const ODIN_parameter_group_t odin_store_basic_group = {
-    .name_and_description = "basic_group\0No description",
-    .odin_type = ODIN_TYPE_GROUP,
-    .global_index = 0x01000000,
-    .shift = 8,
-    .count = 3,
-    .parameters = {&root.basic_group.test_variable_A, &root.basic_group.test_variable_B, &root.basic_group.test_variable_small}
-};
-
-const ODIN_parameter_group_t odin_store_another_group = {
-    .name_and_description = "another_group\0No description",
-    .odin_type = ODIN_TYPE_GROUP,
-    .global_index = 0x02000000,
-    .shift = 4,
-    .count = 3,
-    .parameters = {&root.another_group.test_variable_A, &root.another_group.test_variable_B, &root.another_group.test_variable_small}
 };
 
 const ODIN_parameter_group_t odin_store = {
@@ -117,5 +99,23 @@ const ODIN_parameter_group_t odin_store = {
     .global_index = 0x00000000,
     .shift = 8,
     .count = 3,
-    .parameters = {&root.test_variable_A, &odin_store_basic_group, &odin_store_another_group}
+    .parameters = {&odin_objects.test_variable_A, &odin_store_basic_group, &odin_store_another_group}
+};
+
+const ODIN_parameter_group_t odin_store_basic_group = {
+    .name_and_description = "basic_group\0No description",
+    .odin_type = ODIN_TYPE_GROUP,
+    .global_index = 0x01000000,
+    .shift = 8,
+    .count = 3,
+    .parameters = {&odin_objects.basic_group.test_variable_A, &odin_objects.basic_group.test_variable_B, &odin_objects.basic_group.test_variable_small}
+};
+
+const ODIN_parameter_group_t odin_store_another_group = {
+    .name_and_description = "another_group\0No description",
+    .odin_type = ODIN_TYPE_GROUP,
+    .global_index = 0x02000000,
+    .shift = 4,
+    .count = 3,
+    .parameters = {&odin_objects.another_group.test_variable_A, &odin_objects.another_group.test_variable_B, &odin_objects.another_group.test_variable_small}
 };

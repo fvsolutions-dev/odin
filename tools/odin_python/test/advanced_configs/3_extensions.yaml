@@ -35,9 +35,9 @@ parameters:
     type: f32
     description: A test variable
     default: 0
-    extensions: 
-      - type: io_reference
-        reference: base_variable_float
+    # extensions: 
+    #   - type: io_reference
+    #     reference: base_variable_float
 
   base_variable_reference_group_extension:
     local_id: 4
@@ -46,6 +46,6 @@ parameters:
     default: 0
     extensions: 
       - type: io_reference
-        reference: group.base_variable_float
+        reference: group.base_variable_group
 
 

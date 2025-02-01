@@ -68,10 +68,10 @@ TEST(ODINParameterBasicAccess, TestCases) {
     EXPECT_EQ(validate_recursively(&odin_store_another_group, ODIN_ACCESS_BLE, ODIN_ACCESS_WRITE,ODIN_ERROR_PERMISSION_DENIED), true);
     EXPECT_EQ(validate_recursively(&odin_store_basic_group, ODIN_ACCESS_BLE, ODIN_ACCESS_READ,ODIN_SUCCESS), true);
     EXPECT_EQ(validate_recursively(&odin_store_basic_group, ODIN_ACCESS_BLE, ODIN_ACCESS_WRITE,ODIN_SUCCESS), false);
-    EXPECT_EQ(ODIN_validate_access(&root.basic_group.test_variable_B, ODIN_ACCESS_BLE, ODIN_ACCESS_WRITE), ODIN_ERROR_PERMISSION_DENIED);
-    EXPECT_EQ(ODIN_validate_access(&root.basic_group.test_variable_B, ODIN_ACCESS_BLE, ODIN_ACCESS_READ), ODIN_SUCCESS);
-    EXPECT_EQ(ODIN_validate_access(&root.basic_group.test_variable_A, ODIN_ACCESS_BLE, ODIN_ACCESS_WRITE), ODIN_SUCCESS);
-    EXPECT_EQ(ODIN_validate_access(&root.basic_group.test_variable_A, ODIN_ACCESS_BLE, ODIN_ACCESS_READ), ODIN_SUCCESS);
+    EXPECT_EQ(ODIN_validate_access(&odin_objects.basic_group.test_variable_B, ODIN_ACCESS_BLE, ODIN_ACCESS_WRITE), ODIN_ERROR_PERMISSION_DENIED);
+    EXPECT_EQ(ODIN_validate_access(&odin_objects.basic_group.test_variable_B, ODIN_ACCESS_BLE, ODIN_ACCESS_READ), ODIN_SUCCESS);
+    EXPECT_EQ(ODIN_validate_access(&odin_objects.basic_group.test_variable_A, ODIN_ACCESS_BLE, ODIN_ACCESS_WRITE), ODIN_SUCCESS);
+    EXPECT_EQ(ODIN_validate_access(&odin_objects.basic_group.test_variable_A, ODIN_ACCESS_BLE, ODIN_ACCESS_READ), ODIN_SUCCESS);
 
     // CLI whould be able to log_write on all groups
     EXPECT_EQ(validate_recursively(&odin_store, ODIN_ACCESS_CLI, ODIN_ACCESS_LOG_WRITE,ODIN_SUCCESS), true);

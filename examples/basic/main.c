@@ -14,7 +14,7 @@ int print_vector_write() {
     for (int i = 0; i < 10; i++) {
         data[i] = i * 101;
 
-        int ret = ODIN_parameter_write(&root.i32_variable_length_array, data, i * 4, 0);
+        int ret = ODIN_parameter_write(&odin_objects.i32_variable_length_array, data, i * 4, 0);
 
         if (ret < 0) {
             printf("Error: %s\n", ODIN_error_to_string(ret));
@@ -22,7 +22,7 @@ int print_vector_write() {
         }
 
         char buffer[256] = {0};
-        int len = ODIN_encode_parameter_to_string(&root.i32_variable_length_array, buffer, sizeof(buffer), 0);
+        int len = ODIN_encode_parameter_to_string(&odin_objects.i32_variable_length_array, buffer, sizeof(buffer), 0);
         printf("%s\n", buffer);
     }
     return 0;
@@ -39,7 +39,7 @@ void id_lookup(uint32_t index) {
 
 void proto_export() {
     parameter_encode_operation_t operation;
-    ODIN_encode_parameter_to_protobuff_init(&root.test_variable_u8, &operation, ODIN_ACCESS_GROUP_INTERNAL);
+    ODIN_encode_parameter_to_protobuff_init(&odin_objects.test_variable_u8, &operation, ODIN_ACCESS_GROUP_INTERNAL);
 
     uint8_t buffer[256] = {0};
     int ret = ODIN_encode_parameter_to_protobuff_buffer(&operation, buffer, sizeof(buffer));
@@ -114,7 +114,7 @@ int main() {
     return 0;
     char buffer[256] = {0};
 
-    int len = ODIN_encode_parameter_to_string(&root.u32_array, buffer, sizeof(buffer), 0);
+    int len = ODIN_encode_parameter_to_string(&odin_objects.u32_array, buffer, sizeof(buffer), 0);
 
     printf("len: %d\n", len);
     printf("buffer: %s\n", buffer);
