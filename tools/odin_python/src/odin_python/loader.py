@@ -3,15 +3,14 @@ from typing import Dict
 from pydantic import BaseModel, Field, RootModel, ValidationError
 from pydantic_yaml import parse_yaml_file_as
 
-from odin_python.parameter.access_control import (
-    AccessControlCollection,
-)
-from odin_python.parameter.parameter import (
+
+from odin_python.parameter import (
     ArrayParameterModel,
     ParameterGroupModel,
     ParameterModel,
     ReferenceParameterModel,
     VectorParameterModel,
+    AccessControlCollection
 )
 
 

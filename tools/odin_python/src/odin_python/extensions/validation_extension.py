@@ -1,9 +1,18 @@
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
+from csnake import TextModifier
 from pydantic import BaseModel, Field
 
+from odin_python.generator.odin_defs import ODIN_ExtensionEnum
 
-class ValidationExtension(BaseModel): ...
+from ..generator.model import ODIN_ExtesionModel
+from .common import BaseExtension
+
+if TYPE_CHECKING:
+    from ..parameter.parameter import BaseParameterModel
+
+
+class ValidationExtension(BaseExtension): ...
 
 
 class LimitValidationExtension(ValidationExtension):
@@ -16,18 +25,20 @@ class LimitValidationExtension(ValidationExtension):
         title="Maximum allowed value, if not set, no maximum value is enforced",
     )
 
-    # def as_literal(self) -> FormattedLiteral:
-    #     if self.min is None:
-    #         self.min = -float("inf")
-    #     if self.max is None:
-    #         self.max = float("inf")
+    def as_literal(self, parameter: "BaseParameterModel", next: str) -> str:
+        if self.min is None:
+            self.min = -float("inf")
+        if self.max is None:
+            self.max = float("inf")
 
-    #     value = f"(ODIN_extension_t[]){{ {{ .ops = &range_validator_extension, .data = &(range_parameter_t){{ .max = {self.max}, .min = {self.min} }} }} }}"
+        model = ODIN_ExtesionModel(
+            type=ODIN_ExtensionEnum.ODIN_EXTENSION_TYPE_IO,
+            ops="ODIN_validate_extension_ops",
+            parameters=f"(range_parameter_t){{ .max = {self.max}, .min = {self.min} }}",
+            next=next if next else None,
+        )
 
-    #     return FormattedLiteral(
-    #         value,  # type: ignore
-    #         string_formatter=str,
-    #     )
+        # value = f"(ODIN_extension_t[]){{ {{.type=ODIN_EXTENSION_TYPE_IO, .ops =  &ODIN_validate_extension_ops, .data = &(range_parameter_t){{ .max = {self.max}, .min = {self.min} }} }} }}"
+        return model.variable
 
-    # def required_references(self) -> None:
-    #     return None
+    # next

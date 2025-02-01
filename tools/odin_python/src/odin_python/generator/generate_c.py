@@ -1,6 +1,6 @@
 import csnake as cc
 
-from odin_python.parameter.parameter import (
+from odin_python.parameter import (
     RootParameterModel,
 )
 

@@ -2,8 +2,11 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "extensions/extensions.h"
+#ifndef ODIN_H
+#define ODIN_H
 
-#pragma once
+struct ODIN_extension;
 
 // Temp references
 extern uint64_t current_time_in_microseconds;
@@ -24,7 +27,8 @@ typedef enum {
     ODIN_ERROR_PERMISSION_DENIED = -3,
     ODIN_ERROR_UNSUPPORTED_FORMAT = -4,
     ODIN_ERROR_NOT_SUPPORTED = -5,
-    ODIN_ERR_FILE_NOT_FOUND = -7
+    ODIN_ERR_FILE_NOT_FOUND = -7,
+    ODIN_VALIDATION_ERROR = -8
 } odin_error_t;
 
 typedef enum {
@@ -58,22 +62,7 @@ typedef enum {
                               // functions have to be provided
 } ODIN_element_type_t;
 
-typedef enum {
-    ODIN_EXTENSION_TYPE_IO,
-    ODIN_EXTENSION_TYPE_STRING_CODEC,
-    ODIN_EXTENSION_TYPE_VALIDATE,
-} ODIN_extension_type_t;
-
-// Extension definition
-struct ODIN_extension;
-
-typedef struct ODIN_extension {
-    ODIN_extension_type_t type;   // Type of the extension
-    void *ops;                    // Operations for the extension, check the type to cast to the
-                                  // correct type
-    void *data;                   // Metadata for the extension, can be NULL
-    struct ODIN_extension *next;  // Next extension in the list, can be NULL
-} ODIN_extension_t;
+struct ODIN_parameter;
 
 #define ODIN_INCLUDE_NAME
 #define ODIN_INCLUDE_DESCRIPTION
@@ -84,7 +73,7 @@ typedef struct {
 } ODIN_vector_structure_t;
 
 #pragma pack(push, 1)
-typedef struct {
+typedef struct ODIN_parameter {
     // Local ID of the parameter
     uint32_t global_index;
 
@@ -113,34 +102,10 @@ typedef struct {
 #endif
 
     // Extension info
-    const ODIN_extension_t *extension;  // Linked list of extensions, can be NULL
+    const struct ODIN_extension *extension;  // Linked list of extensions, can be NULL
 
 } ODIN_parameter_t;
 #pragma pack(pop)
-
-// String serialisation extension type
-typedef struct {
-    // Represents data as a string
-    int (*to_string)(const ODIN_parameter_t *parameter, const void *data, size_t size, char *buffer, size_t buffer_size);
-
-    // Parses string into data
-    int (*from_string)(const ODIN_parameter_t *parameter, const char *string, void *data, size_t size);
-} ODIN_string_serialisation_extension_ops_t;
-
-// IO extension type
-typedef struct {
-    // Write data to the parameter
-    int (*write)(const ODIN_parameter_t *parameter, const void *data, size_t size, uint16_t access_group);
-
-    // Read data from the parameter
-    int (*read)(const ODIN_parameter_t *parameter, void *data, size_t size, uint16_t access_group);
-} ODIN_io_extension_ops_t;
-
-typedef struct {
-    // Validates the data
-    int (*validate)(const ODIN_parameter_t *parameter, const void *data, size_t size, uint16_t access_group);
-
-} ODIN_validate_extension_ops_t;
 
 typedef struct {
     uint32_t global_index;  // Bits to shift to get the index
@@ -150,9 +115,9 @@ typedef struct {
 typedef struct {
     uint32_t global_index;  // Bits to shift to get the index
     ODIN_type_t odin_type : 4;
-    uint16_t shift;        // Bits to shift to get the index
-    uint16_t type;         // Number of parameters in the group
-    uint16_t count;        // Number of parameters in the group
+    uint16_t shift;  // Bits to shift to get the index
+    uint16_t type;   // Number of parameters in the group
+    uint16_t count;  // Number of parameters in the group
 
     const char *name_and_description;
     const void *parameters[];
@@ -166,3 +131,5 @@ typedef struct {
             return ret;   \
         }                 \
     } while (0)
+
+#endif  // ODIN_H

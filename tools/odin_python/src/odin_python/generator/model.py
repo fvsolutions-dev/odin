@@ -5,7 +5,7 @@ from odin_python.utils.string import escape_string
 from pydantic import BaseModel, Field
 
 from ..data_types.type_registry import DataType, RegularCDataType
-from .odin_defs import ODIN_ElementTypeEnum, ODIN_TypeEnum
+from .odin_defs import ODIN_ElementTypeEnum, ODIN_ExtensionEnum, ODIN_TypeEnum
 
 ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
 MAX_ID_SIZE = 32
@@ -20,11 +20,16 @@ class ODIN_ParameterModel(BaseModel):
     type: DataType = Field(description="Resolved type of the parameter")
     name: str = Field(description="Name of the parameter")
     description: str = Field(description="Description of the parameter")
-    extensions: None = Field(description="Extensions", default=None)
+    extensions: str | None = Field(description="Extensions", default=None)
 
     @property
     def variable(self) -> cc.Variable:
         assert isinstance(self.type, RegularCDataType)
+
+        if self.extensions:
+            extension = cc.TextModifier(self.extensions)
+        else:
+            extension = cc.TextModifier("NULL")
 
         return cc.Variable(
             name=self.name,
@@ -41,9 +46,7 @@ class ODIN_ParameterModel(BaseModel):
                 "element_size": cc.TextModifier(f"sizeof({self.type.c_typename})"),
                 "data": cc.TextModifier(f"&{self.data}"),
                 "name_and_description": rf"{self.name}\0{escape_string(self.description)}",
-                "extension": cc.TextModifier(self.extensions)
-                if self.extensions
-                else cc.TextModifier("NULL"),
+                "extension": extension,
             },  # type: ignore
             comment=f"Local index: 0x{self.local_index:08X}",
         )
@@ -93,3 +96,41 @@ class ODIN_ArrayModel(ODIN_ParameterModel):
         )
         variable.value["max_elements"] = cc.TextModifier(str(self.num_elements))  # type: ignore
         return variable
+
+
+# class LimitValidationExtension(ValidationExtension):
+#     type: Literal["validation_limit_value"]
+#     min: float | None = Field(
+#         default=None, title="Minimum value, if not set, no minimum value is enforced"
+#     )
+#     max: float | None = Field(
+#         default=None,
+#         title="Maximum allowed value, if not set, no maximum value is enforced",
+#     )
+
+#     def as_literal(self) -> TextModifier:
+#         if self.min is None:
+#             self.min = -float("inf")
+#         if self.max is None:
+#             self.max = float("inf")
+
+#         value = f"(ODIN_extension_t[]){{ {{.type=ODIN_EXTENSION_TYPE_IO, .ops =  &ODIN_validate_extension_ops, .data = &(range_parameter_t){{ .max = {self.max}, .min = {self.min} }} }} }}"
+
+#         return TextModifier(value)
+# next
+
+
+class ODIN_ExtesionModel(BaseModel):
+    type: ODIN_ExtensionEnum = Field(description="Access group")
+    ops: str = Field(description="Opsset used for the extension")
+    parameters: str = Field(description="parameters associated with the extension")
+    next: str|None = Field(description="Next extension in the list")
+
+    
+    @property
+    def variable(self):
+        next = "NULL"
+        if self.next:
+            next = f"{self.next}"
+            
+        return f"(ODIN_extension_t[]){{ {{\n\t\t\t.type={self.type.name},\n\t\t\t.ops =  &{self.ops},\n\t\t\t.data = &{self.parameters},\n\t\t\t.next = {next} }} }}"

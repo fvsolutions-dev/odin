@@ -5,7 +5,7 @@ import click
 from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.generator.generate_c import CGenerator
 from .loader import AdvancedLoaderModel, SimpleLoaderModel
-from odin_python.parameter.parameter import RootParameterModel
+from odin_python.parameter import RootParameterModel
 
 DEFAULT_NAME = "OD"
 

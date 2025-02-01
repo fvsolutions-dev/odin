@@ -15,52 +15,37 @@ parameters:
         min: -30
         max: 30
 
-  # base_variable_int:
-  #   local_id: 1
-  #   type: i32
-  #   description: A test variable
-  #   default: 0.2
+  group:
+    local_id: 2 #0x04000000
+    id_space_shift: 4 
 
-  # referenced_parameter:
-  #   local_id: 5
-  #   type: f32
-  #   description: A test variable
-  #   default: 0
-  #   extensions:
-  #     - type: reference #IO
-  #       reference: base_variable_float
+    children:
+      base_variable_group:
+        local_id: 1
+        type: f32
+        description: A test variable
+        default: 0.2
+        extensions: 
+          - type: validation_limit_value
+            min: -30
+            max: 30
 
-  # referenced_parameter_with_mapping:
-  #   local_id: 6
-  #   type: f32
-  #   description: A test variable
-  #   default: 0
-  #   extensions:
-  #     - type: scaled_reference #IO
-  #       reference: base_variable_float
-  #       scale: 10
-  #       offset: -5
-    
-  # trigger_parameter:
-  #   local_id: 6
-  #   type: f32
-  #   description: A test variable
-  #   default: 0
-  #   extensions:
-  #     - type: event_callback #Validation (called after action)
-  #       event: write # options: read, write, change
-  #       callback: trigger_callback
-    
-  # trigger_parameter_with_mapping:
-  #   local_id: 7
-  #   type: f32
-  #   description: A test variable
-  #   default: 0
-  #   extensions:
-  #     - type: event_callback #Validation (called after action)
-  #       event: write # options: read, write, change
-  #       callback: trigger_callback
+  base_variable_reference_extension:
+    local_id: 3
+    type: f32
+    description: A test variable
+    default: 0
+    extensions: 
+      - type: io_reference
+        reference: base_variable_float
+
+  base_variable_reference_group_extension:
+    local_id: 4
+    type: f32
+    description: A test variable
+    default: 0
+    extensions: 
+      - type: io_reference
+        reference: group.base_variable_float
 
 
-
-        

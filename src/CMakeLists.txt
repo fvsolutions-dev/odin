@@ -3,6 +3,9 @@ add_library(odin STATIC
     codec/TLV_codec.c
     codec/protobuff_codec.c
     codec/string_codec.c
+    codec/number_codec.c
+    extensions/validate_extension.c
+    extensions/io_extension.c
     odin_utils.c
     odin_security.c
     odin_lookup.c

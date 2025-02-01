@@ -44,8 +44,6 @@ class BaseParameterModel(BaseModel, ABC):
         default_factory=AccessControlCollection.empty,
     )
 
-    extensions: List[Extensions] | None = Field(description="Extensions", default=None)
-
     def post_load_resolve(
         self,
         parent: "BaseParameterModel | None",
@@ -132,6 +130,8 @@ class ParameterModel(BaseParameterModel):
     #     description="The format of the data, represents the way the data has to be displayed. If set to 'auto', the format will be determined based on the primitive type.",
     # )
 
+    extensions: List[Extensions] | None = Field(description="Extensions", default=None)
+
     def post_load_resolve(
         self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry
     ):
@@ -173,6 +173,13 @@ class ParameterModel(BaseParameterModel):
         # Store a reference to the parameter name
         self._parameter_storage_reference = f"{absolute_reference}.{self._name}"
 
+        formatted_extension = None
+        if self.extensions:
+            next = None
+            for extension in self.extensions:
+                formatted_extension = extension.as_literal(self, next)
+                next = formatted_extension
+
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
@@ -181,6 +188,7 @@ class ParameterModel(BaseParameterModel):
             data=self._data_storage_reference,
             name=self._name,
             description=self.resolved_description,
+            extensions=formatted_extension,
         )
         return parameter.variable
 

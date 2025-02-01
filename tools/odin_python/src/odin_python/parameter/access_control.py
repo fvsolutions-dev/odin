@@ -15,7 +15,7 @@ GROUP_ACCESS_PREFIX = "ODIN_ACCESS_"
 ACTION_PREFIX = "ODIN_ACCESS_"
 
 if TYPE_CHECKING:
-    from odin_python.parameter.parameter import BaseParameterModel  # pragma: no cover
+    from .parameter import BaseParameterModel  # pragma: no cover
 
 
 class AccessControlEnum(Enum):
@@ -226,7 +226,7 @@ class AccessControlCollection(
         # There probably are better ways to do this, but i did not bother to implement them
         # its only imported once anyway
 
-        from odin_python.parameter.parameter import RootParameterModel
+        from odin_python.parameter import RootParameterModel
 
         self_parameter = self._parent
 

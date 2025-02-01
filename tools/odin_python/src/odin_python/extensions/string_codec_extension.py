@@ -1,9 +1,14 @@
 from typing import Literal
 
 from pydantic import BaseModel, Field
+from .common import BaseExtension
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..parameter.parameter import BaseParameterModel
 
 
-class StringCodecExtension(BaseModel): ...
+class StringCodecExtension(BaseExtension): ...
 
 
 class ReferenceStringCodecExtension(StringCodecExtension):

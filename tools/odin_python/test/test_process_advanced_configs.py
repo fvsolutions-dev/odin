@@ -3,7 +3,7 @@ from odin_python.generator.generate_c import (
     CGenerator,
 )
 from odin_python.loader import AdvancedLoaderModel
-from odin_python.parameter.parameter import (
+from odin_python.parameter import (
     RootParameterModel,
 )
 
@@ -70,7 +70,7 @@ def test_parameter_space_parse_negative(config: str):
 
 
 if __name__ == "__main__":
-    CONFIGS = [r"test\advanced_configs\2_parameter_space.yaml"]
+    CONFIGS = [r"test\advanced_configs\3_extensions.yaml"]
 
     for config in CONFIGS:
         print(f"processing {config}")

@@ -3,7 +3,7 @@ from odin_python.generator.generate_c import (
     CGenerator,
 )
 from odin_python.loader import SimpleLoaderModel
-from odin_python.parameter.parameter import (
+from odin_python.parameter import (
     RootParameterModel,
 )
 

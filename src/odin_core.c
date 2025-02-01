@@ -1,5 +1,6 @@
 #include "odin_core.h"
 
+#include "extensions/extensions.h"
 #include "string.h"
 
 #define TAG "ODIN"
@@ -127,18 +128,17 @@ int ODIN_parameter_write(const ODIN_parameter_t *parameter, const void *data, si
     // Check if the permission is allowed
     RETURN_ON_FAIL(ODIN_validate_access(parameter, access_group, ODIN_ACCESS_WRITE));
 
-    // Handle the extension (TODO)
-    // if (parameter->extension != NULL && parameter->extension->ops->write !=
-    // NULL)
-    // {
-    //     int ret = parameter->extension->ops->write(parameter, data, size,
-    //     access_group); if (ret)
-    //     {
-    //         LOG_ERR(TAG, "Extension write failed, error %d ,parameter %s", ret,
-    //         parameter->name);
-    //     }
-    //     return ret;
-    // }
+    // Handle validation
+    if (parameter->extension != NULL) {
+        if (parameter->extension->type == ODIN_EXTENSION_TYPE_VALIDATE) {
+            ODIN_validate_extension_ops_t *ops = (ODIN_validate_extension_ops_t *)parameter->extension->ops;
+            int ret = ops->validate(parameter, data, size, access_group);
+            if (ret < ODIN_SUCCESS) {
+                LOG_ERR(TAG, "Extension validate failed, error %d ,parameter %s", ret, parameter->name_and_description);
+                return ret;
+            }
+        }
+    }
 
     // Otherwise, copy the data to the buffer
     int max_write_size = ODIN_get_max_data_size(parameter);

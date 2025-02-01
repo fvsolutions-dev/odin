@@ -11,7 +11,7 @@
 #define DERIVE_ACCESS(bit) (1 << (bit))
 
 // We support 6 access groups
-typedef enum {
+typedef enum odin_acces_group{
     ODIN_ACCESS_GROUP_INTERNAL = 0,  // Internal access group
     ODIN_ACCESS_GROUP_0 = GROUP_MASK(0),
     ODIN_ACCESS_GROUP_1 = GROUP_MASK(1),
@@ -33,7 +33,6 @@ typedef enum {
     ODIN_ACCESS_READ = ADD_GROUPS(0x1),   // Ability to read the parameter
     ODIN_ACCESS_WRITE = ADD_GROUPS(0x2),  // Ability to write the parameter
     // ODIN_ACCESS_RESET = 0x10, //Ability to reset the parameter to its default value
-
     // ODIN_ACCESS_LOG_READ = 0x4,   // If set read access will be logged if the group is also set to log the access
     ODIN_ACCESS_LOG_WRITE = ADD_GROUPS(0x4),  // If set write access will be logged if the group is also set to log the access
 } odin_acces_operation_t;
