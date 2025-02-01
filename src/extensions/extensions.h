@@ -13,7 +13,10 @@ typedef struct {
 
 typedef struct {
     const struct ODIN_parameter *reference;
-} reference_parameters_t;
+    float scale;
+    float offset;
+} mapped_number_parameters_t;
+
 
 // String serialisation extension type
 typedef struct {
@@ -27,15 +30,15 @@ typedef struct {
 // IO extension type
 typedef struct {
     // Write data to the parameter
-    int (*write)(const struct ODIN_parameter *parameter, const void *data, size_t size,enum odin_acces_group access_group);
+    int (*write)(const struct ODIN_parameter *parameter, const void *data, size_t size, enum odin_acces_group access_group);
 
     // Read data from the parameter
-    int (*read)(const struct ODIN_parameter *parameter, void *data, size_t size,enum odin_acces_group access_group);
+    int (*read)(const struct ODIN_parameter *parameter, void *data, size_t size, enum odin_acces_group access_group);
 } ODIN_io_extension_ops_t;
 
 typedef struct {
     // Validates the data
-    int (*validate)(const struct ODIN_parameter *parameter, const void *data, size_t size,enum odin_acces_group access_group);
+    int (*validate)(const struct ODIN_parameter *parameter, const void *data, size_t size, enum odin_acces_group access_group);
 
 } ODIN_validate_extension_ops_t;
 
@@ -57,6 +60,6 @@ typedef struct ODIN_extension {
 } ODIN_extension_t;
 
 extern ODIN_validate_extension_ops_t ODIN_validate_extension_ops;
-extern ODIN_io_extension_ops_t ODIN_extension_io_reference_ops;
+extern ODIN_io_extension_ops_t ODIN_extension_io_mapped_number_ops;
 
 #endif

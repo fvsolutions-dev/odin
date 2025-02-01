@@ -5,7 +5,7 @@ access_control:
 id_space_shift: 8
 
 parameters:
-  base_variable_float:
+  validate_variable:
     local_id: 1
     type: f32
     description: A test variable
@@ -20,7 +20,7 @@ parameters:
     id_space_shift: 4 
 
     children:
-      base_variable_group:
+      validate_variable:
         local_id: 1
         type: f32
         description: A test variable
@@ -30,22 +30,24 @@ parameters:
             min: -30
             max: 30
 
-  base_variable_reference_extension:
+  referenced_variable:
     local_id: 3
     type: f32
     description: A test variable
     default: 0
     extensions: 
-      - type: io_reference
-        reference: base_variable_float
+      - type: io_mapped_numner
+        reference: validate_variable
+        offset: 1
+        scale: 5
 
-  base_variable_reference_group_extension:
+  referenced_variable_in_group:
     local_id: 4
     type: f32
     description: A test variable
     default: 0
     extensions: 
-      - type: io_reference
-        reference: group.base_variable_group
+      - type: io_mapped_numner
+        reference: group.validate_variable
 
 

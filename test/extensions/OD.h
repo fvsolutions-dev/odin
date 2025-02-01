@@ -5,24 +5,24 @@
 
 typedef struct
 {
-    float base_variable_float;
+    float validate_variable;
     struct 
     {
-        float base_variable_group;
+        float validate_variable;
     }group;
-    float base_variable_reference_extension;
-    float base_variable_reference_group_extension;
+    float referenced_variable;
+    float referenced_variable_in_group;
 } odin_variables_t;
 
 typedef struct
 {
-    ODIN_parameter_t base_variable_float;  /* Local index: 0x00000001 */
+    ODIN_parameter_t validate_variable;  /* Local index: 0x00000001 */
     struct 
     {
-        ODIN_parameter_t base_variable_group;  /* Local index: 0x00000001 */
+        ODIN_parameter_t validate_variable;  /* Local index: 0x00000001 */
     }group;
-    ODIN_parameter_t base_variable_reference_extension;  /* Local index: 0x00000003 */
-    ODIN_parameter_t base_variable_reference_group_extension;  /* Local index: 0x00000004 */
+    ODIN_parameter_t referenced_variable;  /* Local index: 0x00000003 */
+    ODIN_parameter_t referenced_variable_in_group;  /* Local index: 0x00000004 */
 } odin_objects_t;
 
 #define ODIN_ACCESS_DISK ODIN_ACCESS_GROUP_0

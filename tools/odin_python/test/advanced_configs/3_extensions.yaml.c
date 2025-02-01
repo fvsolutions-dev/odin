@@ -11,7 +11,7 @@ typedef struct
         float base_variable_group;
     }group;
     float base_variable_reference_extension;
-    float base_variable_reference_group_extension;
+    int32_t base_variable_reference_group_extension;
 } odin_variables_t;
 
 typedef struct
@@ -44,7 +44,7 @@ const odin_objects_t odin_objects = {
     .base_variable_float = {
         .odin_type = ODIN_TYPE_PARAMETER,
         .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
-        .flags = (ODIN_ACCESS_DISK & (ODIN_ACCESS_WRITE | ODIN_ACCESS_READ)),
+        .flags = (ODIN_ACCESS_DISK & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)),
         .global_index = 0x01000000,
         .element_size = sizeof(float),
         .data = &odin_variables.base_variable_float,
@@ -59,7 +59,7 @@ const odin_objects_t odin_objects = {
         .base_variable_group = {
             .odin_type = ODIN_TYPE_PARAMETER,
             .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
-            .flags = (ODIN_ACCESS_DISK & (ODIN_ACCESS_WRITE | ODIN_ACCESS_READ)),
+            .flags = (ODIN_ACCESS_DISK & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)),
             .global_index = 0x02100000,
             .element_size = sizeof(float),
             .data = &odin_variables.group.base_variable_group,
@@ -75,25 +75,29 @@ const odin_objects_t odin_objects = {
     .base_variable_reference_extension = {
         .odin_type = ODIN_TYPE_PARAMETER,
         .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
-        .flags = (ODIN_ACCESS_DISK & (ODIN_ACCESS_WRITE | ODIN_ACCESS_READ)),
+        .flags = (ODIN_ACCESS_DISK & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)),
         .global_index = 0x03000000,
         .element_size = sizeof(float),
         .data = &odin_variables.base_variable_reference_extension,
         .name_and_description = "base_variable_reference_extension\0A test variable",
-        .extension = NULL
+        .extension = (ODIN_extension_t[]){ {
+			.type=ODIN_EXTENSION_TYPE_IO,
+			.ops =  &ODIN_extension_io_mapped_number_ops,
+			.data = &(mapped_number_parameters_t){ .reference = &odin_objects.base_variable_float, .scale = 1.0, .offset = 0.0 },
+			.next = NULL } }
     },
     .base_variable_reference_group_extension = {
         .odin_type = ODIN_TYPE_PARAMETER,
-        .element_type = ODIN_ELEMENT_TYPE_FLOAT32,
-        .flags = (ODIN_ACCESS_DISK & (ODIN_ACCESS_WRITE | ODIN_ACCESS_READ)),
+        .element_type = ODIN_ELEMENT_TYPE_INT32,
+        .flags = (ODIN_ACCESS_DISK & (ODIN_ACCESS_READ | ODIN_ACCESS_WRITE)),
         .global_index = 0x04000000,
-        .element_size = sizeof(float),
+        .element_size = sizeof(int32_t),
         .data = &odin_variables.base_variable_reference_group_extension,
         .name_and_description = "base_variable_reference_group_extension\0A test variable",
         .extension = (ODIN_extension_t[]){ {
 			.type=ODIN_EXTENSION_TYPE_IO,
-			.ops =  &ODIN_extension_io_reference_ops,
-			.data = &(reference_parameters_t){ .reference = &odin_objects.group.base_variable_group },
+			.ops =  &ODIN_extension_io_mapped_number_ops,
+			.data = &(mapped_number_parameters_t){ .reference = &odin_objects.group.base_variable_group, .scale = 1.0, .offset = 0.0 },
 			.next = NULL } }
     }
 };

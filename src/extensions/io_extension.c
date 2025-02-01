@@ -5,28 +5,45 @@
 #include "odin.h"
 #include "odin_security.h"
 
-static int reference_io_read(const ODIN_parameter_t *parameter, void *data, size_t size, odin_access_group_t access_group) {
+static int read_operation(const ODIN_parameter_t *parameter, void *data, size_t size, odin_access_group_t access_group) {
     if (parameter == NULL || data == NULL) {
         return ODIN_ERROR_INVALID_ARGUMENT;
     }
 
-    range_parameter_t *range = (range_parameter_t *)parameter->extension->data;
+    mapped_number_parameters_t *config = (mapped_number_parameters_t *)parameter->extension->data;
 
-    if (range == NULL) {
-        return ODIN_ERROR;
-    }
+    // Get number from refernce parameter
+    float value;
+    RETURN_ON_FAIL(ODIN_encode_data_to_float(config->reference->element_type, config->reference->data,
+                                             config->reference->element_size, &value));
 
-    float target_value;
-    RETURN_ON_FAIL(ODIN_encode_data_to_float(parameter->element_type, data, size, &target_value));
+    // Scale and offset
+    value = value * config->scale + config->offset;
 
-    if (target_value < range->min || target_value > range->max) {
-        return ODIN_VALIDATION_ERROR;
-    }
-
-    return ODIN_SUCCESS;
+    // Write to the current parameter
+    return ODIN_decode_float_do_data(parameter->element_type, data, size, value);
 }
 
-ODIN_io_extension_ops_t ODIN_extension_io_reference_ops = {
-    // .write = reference_io_write,
-    .read = reference_io_read,
+static int write_operation(const ODIN_parameter_t *parameter, const void *data, size_t size, odin_access_group_t access_group) {
+    if (parameter == NULL || data == NULL) {
+        return ODIN_ERROR_INVALID_ARGUMENT;
+    }
+
+    mapped_number_parameters_t *config = (mapped_number_parameters_t *)parameter->extension->data;
+
+    // Get number from refernce parameter
+    float value;
+    RETURN_ON_FAIL(ODIN_encode_data_to_float(parameter->element_type, data, size, &value));
+
+    // Scale and offset
+    value = (value - config->offset) / config->scale;
+
+    // Write to the current parameter
+    return ODIN_decode_float_do_data(config->reference->element_type, config->reference->data, config->reference->element_size,
+                                     value);
+}
+
+ODIN_io_extension_ops_t ODIN_extension_io_mapped_number_ops = {
+    .write = write_operation,
+    .read = read_operation,
 };
