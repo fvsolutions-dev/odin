@@ -55,3 +55,43 @@ TEST(ODINParameterLookup, NULLLookup) {
 
     // clang-format on
 }
+
+
+TEST(ODINParameterStrLookup, Nominal) {
+    // clang-format off
+
+    // Parameter lookup
+    EXPECT_EQ(ODIN_get_parameter_by_name(&odin_store, "group_1.test_variable_A", '.'), &odin_objects.group_1.test_variable_A);
+    EXPECT_EQ(ODIN_get_parameter_by_name(&odin_store, "group_1.test_variable_B", '.'), &odin_objects.group_1.test_variable_B);
+    EXPECT_EQ(ODIN_get_parameter_by_name(&odin_store, "group_1.test_variable_small", '.'), &odin_objects.group_1.test_variable_small);
+    EXPECT_EQ(ODIN_get_parameter_by_name(&odin_store, "group_2.group_3.test_variable_small", '.'), &odin_objects.group_2.group_3.test_variable_small);
+    // user other separator
+    EXPECT_EQ(ODIN_get_parameter_by_name(&odin_store, "group_1 test_variable_A", ' '), &odin_objects.group_1.test_variable_A);
+    EXPECT_EQ(ODIN_get_parameter_by_name(&odin_store, "group_1 test_variable_B", ' '), &odin_objects.group_1.test_variable_B);
+    EXPECT_EQ(ODIN_get_parameter_by_name(&odin_store, "group_1 test_variable_small", ' '), &odin_objects.group_1.test_variable_small);
+
+    // Group Lookup
+    EXPECT_EQ(ODIN_get_group_by_name(&odin_store, "group_1", ' '), &odin_store_group_1);
+    EXPECT_EQ(ODIN_get_group_by_name(&odin_store, "group_2 group_3", ' '), &odin_store_group_2_group_3);
+    EXPECT_EQ(ODIN_get_group_by_name(&odin_store, "group_2", ' '), &odin_store_group_2);
+
+    // clang-format on
+}
+
+// Negative tests
+TEST(ODINParameterStrLookup, InvalidLookup) {
+    // clang-format off
+
+    // Parameter lookup
+    EXPECT_EQ(ODIN_get_group_by_name(&odin_store, "group_1.test_variable_A", '.'), (ODIN_parameter_group_t *)NULL);
+    EXPECT_EQ(ODIN_get_group_by_name(&odin_store, "group_2.group_3.test_variable_small", '.'), (ODIN_parameter_group_t *)NULL);
+
+    // Group Lookup
+    EXPECT_EQ(ODIN_get_parameter_by_name(&odin_store, "group_1", '.'), (ODIN_parameter_t *)NULL);
+    EXPECT_EQ(ODIN_get_parameter_by_name(&odin_store, "group_2.group_3", '.'), (ODIN_parameter_t *)NULL);
+
+    EXPECT_EQ(ODIN_get_parameter_by_name(&odin_store, "group_1.test_variable_A", ' '), (ODIN_parameter_t *)NULL);
+    EXPECT_EQ(ODIN_get_parameter_by_name(&odin_store, "group_2.group_3.test_variable_small", ' '), (ODIN_parameter_t *)NULL);
+
+    // clang-format on
+}
