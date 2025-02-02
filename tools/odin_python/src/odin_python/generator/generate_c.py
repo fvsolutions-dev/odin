@@ -45,12 +45,18 @@ class CGenerator:
         return str(cw)
 
     @staticmethod
-    def generate_header(model: RootParameterModel) -> str:
+    def generate_header(
+        model: RootParameterModel, extra_includes: list[str] | None = None
+    ) -> str:
         cw = cc.CodeWriter()
         cw.add_line("#include <stdint.h>")
         cw.add_line("#include <stdbool.h>")
         cw.add_line("#include <odin.h>")
         cw.add_line("#include <odin_security.h>")
+        if extra_includes:
+            for include in extra_includes:
+                cw.add_line(f'#include "{include}"')
+
         cw.add_line("")
 
         model.initialise_types(CGenerator.TYPES)
@@ -89,9 +95,11 @@ class CGenerator:
         return str(cw)
 
     @staticmethod
-    def generate_single_source(model: RootParameterModel) -> str:
+    def generate_single_source(
+        model: RootParameterModel, extra_includes: list[str] | None = None
+    ) -> str:
         return (
-            CGenerator.generate_header(model)
+            CGenerator.generate_header(model, extra_includes=extra_includes)
             + "\n"
             + CGenerator.generate_source(model, None)
         )

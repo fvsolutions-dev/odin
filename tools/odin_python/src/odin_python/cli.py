@@ -31,14 +31,18 @@ def gen_c(input_file: str, output_dir: str, name: str, advanced: bool):
 
     registry = TypeRegistry()
     registry.register(BASE_DATA_TYPES)
+    c_includes = None
 
     if advanced:
         model = AdvancedLoaderModel.from_yaml(input_file)
+        model.types.register_types(registry)
         root_parameters = RootParameterModel(
             children=model.parameters,
             access_control=model.access_control,
             id_space_shift=model.id_space_shift,
         )
+        c_includes = model.c_include
+
     else:
         model = SimpleLoaderModel.from_yaml(input_file)
         root_parameters = RootParameterModel(children=model.root, id_space_shift=8)
@@ -49,7 +53,7 @@ def gen_c(input_file: str, output_dir: str, name: str, advanced: bool):
         f.write(CGenerator.generate_source(root_parameters, f"{name}.h"))
 
     with open(os.path.join(output_dir, f"{name}.h"), "w") as f:
-        f.write(CGenerator.generate_header(root_parameters))
+        f.write(CGenerator.generate_header(root_parameters, extra_includes=c_includes))
 
     print("Conversion complete")
 

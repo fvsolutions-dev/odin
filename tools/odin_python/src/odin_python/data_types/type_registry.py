@@ -18,7 +18,9 @@ class DataType(BaseModel, ABC):
         self, name: str, defaults: Any, dimensions: List[int]
     ) -> cc.Variable: ...
 
-
+    def extra_extension(self) -> str|None:
+        return None
+    
 class RegularCDataType(DataType):
     c_typename: str = Field(
         description="The C typename that corresponds to the data type"
@@ -42,6 +44,37 @@ class RegularCDataType(DataType):
         )
 
 
+class CustomDataType(RegularCDataType):
+    c_typename: str = Field(
+        description="The C typename that corresponds to the data type"
+    )
+    string_serialiser: str = Field(
+        description="The string serialiser for the data type"
+    )
+    
+    def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+        return cc.Variable(
+            name=name,
+            primitive=self.c_typename,
+            value=default,  # type: ignore
+        )
+        
+    def to_c_array_initialiser(
+        self, name: str, defaults: List[Any], dimensions: List[int]
+    ) -> cc.Variable:
+        
+        assert isinstance(defaults, list), "Defaults must be a list"
+        
+        return cc.Variable(
+            name=name,
+            primitive=self.c_typename,
+            array=dimensions,
+            value=defaults  # type: ignore
+        )
+
+    def extra_extension(self) -> str|None:
+        return None
+    
 class BooleanCDataType(RegularCDataType):
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
         if default:

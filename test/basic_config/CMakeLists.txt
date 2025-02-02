@@ -9,7 +9,7 @@ target_link_libraries(basic_config_tests PRIVATE gtest gtest_main odin)
 target_include_directories(basic_config_tests PRIVATE ${CMAKE_SOURCE_DIR})
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/OD.c
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/OD.c  ${CMAKE_CURRENT_SOURCE_DIR}/OD.h
     COMMAND odin gen-c ${CMAKE_CURRENT_SOURCE_DIR}/config.yaml ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/config.yaml
 )

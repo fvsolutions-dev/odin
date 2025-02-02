@@ -123,14 +123,19 @@ class ODIN_ArrayModel(ODIN_ParameterModel):
 class ODIN_ExtesionModel(BaseModel):
     type: ODIN_ExtensionEnum = Field(description="Access group")
     ops: str = Field(description="Opsset used for the extension")
-    parameters: str = Field(description="parameters associated with the extension")
-    next: str|None = Field(description="Next extension in the list")
+    parameters: str | None = Field(
+        description="parameters associated with the extension"
+    )
+    next: str | None = Field(description="Next extension in the list")
 
-    
     @property
     def variable(self):
         next = "NULL"
         if self.next:
             next = f"{self.next}"
+
+        param = "NULL"
+        if self.parameters:
+            param = f"&{self.parameters}"
             
-        return f"(ODIN_extension_t[]){{ {{\n\t\t\t.type={self.type.name},\n\t\t\t.ops =  &{self.ops},\n\t\t\t.data = &{self.parameters},\n\t\t\t.next = {next} }} }}"
+        return f"(ODIN_extension_t[]){{ {{\n\t\t\t.type={self.type.name},\n\t\t\t.ops =  &{self.ops},\n\t\t\t.data = {param},\n\t\t\t.next = {next} }} }}"

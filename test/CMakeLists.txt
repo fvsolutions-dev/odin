@@ -13,4 +13,4 @@ add_subdirectory(basic_config)
 add_subdirectory(codec)
 add_subdirectory(identification)
 add_subdirectory(extensions)
-
+add_subdirectory(custom_type)

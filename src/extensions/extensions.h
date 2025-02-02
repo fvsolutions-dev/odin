@@ -1,3 +1,4 @@
+
 #ifndef EXTENSIONS_H
 #define EXTENSIONS_H
 // #include "odin_security.h"
@@ -5,18 +6,6 @@
 enum odin_acces_group;
 
 struct ODIN_parameter;
-
-typedef struct {
-    float min;
-    float max;
-} range_parameter_t;
-
-typedef struct {
-    const struct ODIN_parameter *reference;
-    float scale;
-    float offset;
-} mapped_number_parameters_t;
-
 
 // String serialisation extension type
 typedef struct {
@@ -61,5 +50,19 @@ typedef struct ODIN_extension {
 
 extern ODIN_validate_extension_ops_t ODIN_validate_extension_ops;
 extern ODIN_io_extension_ops_t ODIN_extension_io_mapped_number_ops;
+const ODIN_extension_t *find_extension(const struct ODIN_parameter *parameter, ODIN_extension_type_t type);
+
+typedef struct {
+    float min;
+    float max;
+} range_parameter_t;
+
+typedef struct {
+    const struct ODIN_parameter *reference;
+    float scale;
+    float offset;
+} mapped_number_parameters_t;
+
+
 
 #endif

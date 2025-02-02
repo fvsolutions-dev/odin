@@ -6,6 +6,8 @@ add_library(odin STATIC
     codec/number_codec.c
     extensions/validate_extension.c
     extensions/io_extension.c
+    extensions/extensions.c
+    
     odin_utils.c
     odin_security.c
     odin_lookup.c

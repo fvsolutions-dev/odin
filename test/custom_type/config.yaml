@@ -1,0 +1,36 @@
+c_include:
+  - custom_type.h
+
+access_control: {}
+id_space_shift: 8
+
+types:
+  rgb_color:
+    typename: rgb_color_t
+    string_serialiser: rgb_color_serialiser
+
+    format:
+      r:
+        type: u8
+      g:
+        type: u8
+      b:
+        type: u8
+        
+
+parameters:
+  rgb_color:
+    local_id: 1
+    type: rgb_color
+    description: An RGB color variable
+    default: { r: 10, g: 22, b: 60 }
+
+  rgb_color_array:
+    local_id: 2
+    type: rgb_color
+    description: An RGB color variable
+    default:
+      - { r: 10, g: 22, b: 60 }
+      - { r: 20, g: 44, b: 120 }
+      - { r: 10, g: 22, b: 60 }
+    elements: 4

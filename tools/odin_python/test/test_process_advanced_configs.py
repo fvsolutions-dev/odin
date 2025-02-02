@@ -18,30 +18,34 @@ CONFIGS = glob.glob("test/advanced_configs/*.yaml")
 
 
 def process_config(config: str):
+    model = AdvancedLoaderModel.from_yaml(config)
     registry = TypeRegistry()
     registry.register(BASE_DATA_TYPES)
-
-    model = AdvancedLoaderModel.from_yaml(config)
+    model.types.register_types(registry)
 
     root_parameters = RootParameterModel(
-        children=model.parameters,
+      children=model.parameters,
         access_control=model.access_control,
         id_space_shift=model.id_space_shift,
     )  # type: ignore
     root_parameters.post_load_resolve(None, "root", registry)
 
     with open(f"{config}.c", "w") as f:
-        f.write(CGenerator.generate_single_source(root_parameters))
+        f.write(
+            CGenerator.generate_single_source(
+                root_parameters, extra_includes=model.c_include
+            )
+        )
 
     return f"{config}.c"
 
 
 def compile_file(file: str):
-    command = f"clang -o {file}.o -c {file} -I ../../src"
+    command = f"clang -o {file}.o -c {file} -I ../../src -I test/advanced_configs"
     print(command)
     e = subprocess.run(command, shell=True)
     if e.returncode != 0:
-        raise Exception(f"Failed to compile {file}")
+        raise Exception(f"`Failed to compile {file}")
 
 
 # Parameterize with all the configs
@@ -71,7 +75,7 @@ def test_parameter_space_parse_negative(config: str):
 
 if __name__ == "__main__":
     # CONFIGS = [r"test\advanced_configs\1_access_control.yaml"]
-    CONFIGS = [r"test\advanced_configs\3_extensions.yaml"]
+    CONFIGS = [r"test\advanced_configs\4_custom_data_types.yaml"]
 
     for config in CONFIGS:
         print(f"processing {config}")

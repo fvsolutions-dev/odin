@@ -5,10 +5,16 @@ from typing import Annotated, Any, Dict, List
 import csnake as cc
 from pydantic import BaseModel, ConfigDict, Discriminator, Field, PrivateAttr, Tag
 
+from odin_python.extensions.string_codec_extension import ReferenceStringCodecExtension
 from odin_python.parameter.access_control import AccessControlCollection
 from odin_python.utils.csnake_custom import StructVariable
 
-from ..data_types.type_registry import DataType, RegularCDataType, TypeRegistry
+from ..data_types.type_registry import (
+    CustomDataType,
+    DataType,
+    RegularCDataType,
+    TypeRegistry,
+)
 from ..extensions import Extensions
 from ..generator.model import (
     ODIN_ArrayModel,
@@ -187,6 +193,15 @@ class ParameterModel(BaseParameterModel):
     ):
         super().post_load_resolve(parent, name, type_registry)
         self._resolved_type = type_registry.get_type(self.type)
+
+        if isinstance(self._resolved_type, CustomDataType):
+            self.extensions = self.extensions or []
+            self.extensions.append(
+                ReferenceStringCodecExtension(
+                    type="string_codec_reference",
+                    reference=self._resolved_type.string_serialiser,
+                )
+            )
 
     def one_line_summary(self, level=0):
         return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
@@ -628,13 +643,12 @@ class BaseParameterGroupModel(BaseParameterModel):
             return None
 
         parameter = child_map[base_name]
-        
+
         if isinstance(parameter, BaseParameterGroupModel):
             assert len(split_name) > 1, "Group name is not set"
             return parameter.find_parameter_by_object_name(".".join(split_name[1:]))
-            
-        return parameter
 
+        return parameter
 
 
 class ParameterGroupModel(BaseParameterGroupModel):
