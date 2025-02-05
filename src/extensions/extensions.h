@@ -1,3 +1,4 @@
+#include <stddef.h>
 
 #ifndef EXTENSIONS_H
 #define EXTENSIONS_H

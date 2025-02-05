@@ -1,5 +1,5 @@
 
-#include "odin.pb.h"
+#include "codec/odin.pb.h"
 #include "odin_core.h"
 
 #ifndef ODIN_CODEC_PROTOBUFF_CODEC_H

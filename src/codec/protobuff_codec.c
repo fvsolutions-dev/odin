@@ -226,9 +226,9 @@ odin_error_t ODIN_encode_parameter_group_to_protobuff_stream(parameter_group_enc
 
 odin_error_t ODIN_encode_parameter_group_to_protobuff_file(const ODIN_parameter_group_t *parameter_group, const char *filename,
                                                               odin_access_group_t access_group) {
-    FILE *file;
-    if (fopen_s(&file, filename, "wb")) {
-        LOG_ERR(TAG, "Failed to open file %s", filename);
+    FILE *file = fopen( filename, "wb");
+    if (file == NULL) {
+        printf( "Failed to open file %s", filename);
         return ODIN_ERR_FILE_NOT_FOUND;
     }
 
@@ -247,7 +247,7 @@ odin_error_t ODIN_encode_parameter_group_to_protobuff_file(const ODIN_parameter_
     // Encode the collection
     int ret = ODIN_encode_parameter_group_to_protobuff_stream(&operation, &stream);
     if (ret != ODIN_SUCCESS) {
-        LOG_ERR(TAG, "Failed to encode parameter collection");
+        printf( "Failed to encode parameter collection");
         return ret;
     }
 
@@ -308,7 +308,7 @@ odin_error_t ODIN_decode_protobuff_stream_to_parameter_group(const ODIN_paramete
     bool ret = pb_decode(stream, odin_proto_parameter_collection_fields, &decoded);
 
     if (!ret) {
-        LOG_ERR(TAG, "Failed to decode parameter collection");
+        printf( "Failed to decode parameter collection");
         return ODIN_ERROR;
     }
 
@@ -317,12 +317,12 @@ odin_error_t ODIN_decode_protobuff_stream_to_parameter_group(const ODIN_paramete
 
 int ODIN_decode_protobuff_file_to_parameter_group(const ODIN_parameter_group_t *parameter_group, const char *filename,
                                                     odin_access_group_t access_group) {
-    FILE *file;
-    if (fopen_s(&file, filename, "rb")) {
-        LOG_ERR(TAG, "Failed to open file %s", filename);
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        printf( "Failed to open file %s", filename);
         return ODIN_ERR_FILE_NOT_FOUND;
     }
-
+    
     // Determine the file size
     fseek(file, 0, SEEK_END);
     long size = ftell(file);
@@ -339,7 +339,7 @@ int ODIN_decode_protobuff_file_to_parameter_group(const ODIN_parameter_group_t *
     fclose(file);
 
     if (ret != ODIN_SUCCESS) {
-        LOG_ERR(TAG, "Failed to import parameters from file");
+        printf( "Failed to import parameters from file");
         return ODIN_ERROR;
     }
 
@@ -406,20 +406,20 @@ static bool decode_parameter_callback(pb_istream_t *stream, const pb_field_t *fi
     size_t size = stream->bytes_left;
 
     if (!pb_read(stream, buffer, size)) {
-        LOG_ERR(TAG, "decode: Failed to read parameter data");
+        printf( "decode: Failed to read parameter data");
         return false;
     }
 
     // Find the parameter
     const ODIN_parameter_t *parameter = ODIN_get_parameter_by_id(operation->parameter_group, operation->proto->id, 0);
     if (parameter == NULL) {
-        LOG_ERR(TAG, "decode: Failed to find parameter with id %d", operation->proto->id);
+        printf( "decode: Failed to find parameter with id %ld", operation->proto->id);
         return false;
     }
 
     // Set the data
     if (ODIN_parameter_write(parameter, buffer, size, operation->access_group) < ODIN_SUCCESS) {
-        LOG_ERR(TAG, "decode: Failed to set parameter");
+        printf( "decode: Failed to set parameter");
         return false;
     }
 
@@ -435,7 +435,7 @@ static bool decode_parameter_callback(pb_istream_t *stream, const pb_field_t *fi
 // int ODIN_protobuff_import_from_file(const ODIN_parameter_group_t *store, const char *filename, uint16_t access_group) {
 //     FILE *file = fopen(filename, "rb");
 //     if (file == NULL) {
-//         LOG_ERR(TAG, "Failed to open file %s", filename);
+//         printf( "Failed to open file %s", filename);
 //         return ODIN_ERR_FILE_NOT_FOUND;
 //     }
 
@@ -455,7 +455,7 @@ static bool decode_parameter_callback(pb_istream_t *stream, const pb_field_t *fi
 //     fclose(file);
 
 //     if (ret != ODIN_SUCCESS) {
-//         LOG_ERR(TAG, "Failed to import parameters from file");
+//         printf( "Failed to import parameters from file");
 //         return ODIN_ERROR;
 //     }
 
@@ -471,7 +471,7 @@ static bool decode_parameter_callback(pb_istream_t *stream, const pb_field_t *fi
 // int ODIN_protobuff_export_group_to_file(const ODIN_parameter_group_t *group, const char *filename, uint16_t access_group) {
 //     FILE *file = fopen(filename, "wb");
 //     if (file == NULL) {
-//         LOG_ERR(TAG, "Failed to open file %s", filename);
+//         printf( "Failed to open file %s", filename);
 //         return ODIN_ERROR;
 //     }
 
@@ -490,7 +490,7 @@ static bool decode_parameter_callback(pb_istream_t *stream, const pb_field_t *fi
 //     // Encode the collection
 //     int ret = ODIN_protobuff_export_collection_to_stream(&operation, &stream);
 //     if (ret != ODIN_SUCCESS) {
-//         LOG_ERR(TAG, "Failed to encode parameter collection");
+//         printf( "Failed to encode parameter collection");
 //         return ret;
 //     }
 
@@ -520,7 +520,7 @@ static bool decode_parameter_callback(pb_istream_t *stream, const pb_field_t *fi
 // int ODIN_protobuff_export_store_to_file(const ODIN_parameter_group_t *store, const char *filename, uint16_t access_group) {
 //     FILE *file = fopen(filename, "wb");
 //     if (file == NULL) {
-//         LOG_ERR(TAG, "Failed to open file %s", filename);
+//         printf( "Failed to open file %s", filename);
 //         return ODIN_ERROR;
 //     }
 
@@ -539,7 +539,7 @@ static bool decode_parameter_callback(pb_istream_t *stream, const pb_field_t *fi
 //     // Encode the collection
 //     int ret = ODIN_protobuff_export_collection_to_stream(&operation, &stream);
 //     if (ret != ODIN_SUCCESS) {
-//         LOG_ERR(TAG, "Failed to encode parameter collection");
+//         printf( "Failed to encode parameter collection");
 //         return ret;
 //     }
 

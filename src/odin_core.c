@@ -32,7 +32,7 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t si
         ODIN_io_extension_ops_t *ops = (ODIN_io_extension_ops_t *)extension->ops;
         int ret = ops->read(parameter, data, size, access_group);
         if (ret < ODIN_SUCCESS) {
-            LOG_ERR(TAG, "Extension read failed, error %d ,parameter %s", ret, parameter->name_and_description);
+            printf( "Extension read failed, error %d ,parameter %s", ret, parameter->name_and_description);
             return ret;
         }
     }
@@ -51,7 +51,7 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t si
     // Check if the size matches the read size
     if (parameter->odin_type == ODIN_TYPE_VECTOR) {
         if (size < read_size) {
-            LOG_ERR(TAG, "Read size to small (%zu < %u) when reading %s", size, read_size, parameter->name_and_description);
+            printf( "Read size to small (%zu < %u) when reading %s", size, read_size, parameter->name_and_description);
             return ODIN_ERROR_SIZE_MISMATCH;
         }
 
@@ -62,7 +62,7 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t si
 
     } else {
         if (size != read_size) {
-            LOG_ERR(TAG, "Read size mismatch (%zu != %u) when reading %s", size, parameter->element_size,
+            printf( "Read size mismatch (%zu != %u) when reading %s", size, parameter->element_size,
                     parameter->name_and_description);
             return ODIN_ERROR_SIZE_MISMATCH;
         }
@@ -82,7 +82,7 @@ int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter, void *out
 
     // Check if the buffer is large enough
     if (output_buffer_size < total_size) {
-        LOG_ERR(TAG, "Buffer too small (%zu < %u) when reading %s", output_buffer_size, total_size,
+        printf( "Buffer too small (%zu < %u) when reading %s", output_buffer_size, total_size,
                 parameter->name_and_description);
         return ODIN_ERROR_SIZE_MISMATCH;
     }
@@ -124,6 +124,7 @@ int ODIN_get_max_data_size(const ODIN_parameter_t *parameter) {
         case ODIN_TYPE_GROUP:
             return 0;
     }
+    return 0;
 }
 
 /**
@@ -153,7 +154,7 @@ int ODIN_parameter_write(const ODIN_parameter_t *parameter, const void *data, si
         ODIN_validate_extension_ops_t *ops = (ODIN_validate_extension_ops_t *)extension->ops;
         int ret = ops->validate(parameter, data, size, access_group);
         if (ret < ODIN_SUCCESS) {
-            LOG_ERR(TAG, "Extension validate failed, error %d ,parameter %s", ret, parameter->name_and_description);
+            printf( "Extension validate failed, error %d ,parameter %s", ret, parameter->name_and_description);
             return ret;
         }
     }
@@ -171,13 +172,13 @@ int ODIN_parameter_write(const ODIN_parameter_t *parameter, const void *data, si
     // Check if the size matches the write size
     if (parameter->odin_type == ODIN_TYPE_VECTOR) {
         if (size > max_write_size) {
-            LOG_ERR(TAG, "Write size to large (%zu > %u) when writing %s", size, max_write_size, parameter->name_and_description);
+            printf( "Write size to large (%zu > %u) when writing %s", size, max_write_size, parameter->name_and_description);
             return ODIN_ERROR_SIZE_MISMATCH;
         }
 
         // Check if a non fractional number of elements is written
         if (size % parameter->element_size != 0) {
-            LOG_ERR(TAG, "Write size not a multiple of element size (%zu %% %u != 0) when writing %s", size,
+            printf( "Write size not a multiple of element size (%zu %% %u != 0) when writing %s", size,
                     parameter->element_size, parameter->name_and_description);
             return ODIN_ERROR_SIZE_MISMATCH;
         }
@@ -192,7 +193,7 @@ int ODIN_parameter_write(const ODIN_parameter_t *parameter, const void *data, si
 
     } else {
         if (size != max_write_size) {
-            LOG_ERR(TAG, "Write size mismatch (%zu != %u) when writing %s", size, max_write_size,
+            printf( "Write size mismatch (%zu != %u) when writing %s", size, max_write_size,
                     parameter->name_and_description);
             return ODIN_ERROR_SIZE_MISMATCH;
         }
@@ -228,7 +229,7 @@ int ODIN_array_write_element(const ODIN_parameter_t *parameter, int index, const
 
     // Check if type is array
     if (parameter->odin_type != ODIN_TYPE_ARRAY) {
-        LOG_ERR(TAG, "Invalid type for array write %d", parameter->odin_type);
+        printf( "Invalid type for array write %d", parameter->odin_type);
         return ODIN_ERROR_INVALID_ARGUMENT;
     }
 
@@ -242,7 +243,7 @@ int ODIN_array_write_element(const ODIN_parameter_t *parameter, int index, const
     //     int ret = parameter->extension->ops->write(parameter, data, size,
     //     access_group); if (ret)
     //     {
-    //         LOG_ERR(TAG, "Extension write failed, error %d ,parameter %s", ret,
+    //         printf( "Extension write failed, error %d ,parameter %s", ret,
     //         parameter->name);
     //     }
     //     return ret;
@@ -253,14 +254,14 @@ int ODIN_array_write_element(const ODIN_parameter_t *parameter, int index, const
 
     // Check if the size matches the write size
     if (index >= parameter->max_elements) {
-        LOG_ERR(TAG, "Write index out of bounds (%d >= %u) when writing %s", index, parameter->max_elements,
+        printf( "Write index out of bounds (%d >= %u) when writing %s", index, parameter->max_elements,
                 parameter->name_and_description);
         return ODIN_ERROR_SIZE_MISMATCH;
     }
 
     // Check if the size matches the write size
     if (size != parameter->element_size) {
-        LOG_ERR(TAG, "Write size mismatch (%zu != %u) when writing %s", size, parameter->element_size,
+        printf( "Write size mismatch (%zu != %u) when writing %s", size, parameter->element_size,
                 parameter->name_and_description);
         return ODIN_ERROR_SIZE_MISMATCH;
     }
@@ -298,7 +299,7 @@ int ODIN_array_read_element(const ODIN_parameter_t *parameter, int index, void *
 
     // Check if type is array
     if (parameter->odin_type != ODIN_TYPE_ARRAY) {
-        LOG_ERR(TAG, "Invalid type for array read %d", parameter->odin_type);
+        printf( "Invalid type for array read %d", parameter->odin_type);
         return ODIN_ERROR_INVALID_ARGUMENT;
     }
 
@@ -312,7 +313,7 @@ int ODIN_array_read_element(const ODIN_parameter_t *parameter, int index, void *
     //     int ret = parameter->extension->ops->read(parameter, data, size,
     //     access_group); if (ret)
     //     {
-    //         LOG_ERR(TAG, "Extension read failed, error %d ,parameter %s", ret,
+    //         printf( "Extension read failed, error %d ,parameter %s", ret,
     //         parameter->name);
     //     }
     //     return ret;
@@ -323,14 +324,14 @@ int ODIN_array_read_element(const ODIN_parameter_t *parameter, int index, void *
 
     // Check if the size matches the read size
     if (index >= parameter->max_elements) {
-        LOG_ERR(TAG, "Read index out of bounds (%d >= %u) when reading %s", index, parameter->max_elements,
+        printf( "Read index out of bounds (%d >= %u) when reading %s", index, parameter->max_elements,
                 parameter->name_and_description);
         return ODIN_ERROR_SIZE_MISMATCH;
     }
 
     // Check if the size matches the read size
     if (size != parameter->element_size) {
-        LOG_ERR(TAG, "Read size mismatch (%zu != %u) when reading %s", size, parameter->element_size,
+        printf( "Read size mismatch (%zu != %u) when reading %s", size, parameter->element_size,
                 parameter->name_and_description);
         return ODIN_ERROR_SIZE_MISMATCH;
     }

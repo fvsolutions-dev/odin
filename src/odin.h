@@ -15,7 +15,7 @@ struct my_struct {
 };
 
 extern struct my_struct my;
-#define LOG_ERR(tag, format, ...) printf(format "\n", ##__VA_ARGS__)
+
 
 typedef enum {
     ODIN_SUCCESS = 0,
