@@ -26,19 +26,19 @@ int ODIN_parameter_read(const ODIN_parameter_t *parameter, void *data, size_t si
     // Check if the permission is allowed
     RETURN_ON_FAIL(ODIN_validate_access(parameter, access_group, ODIN_ACCESS_READ));
 
-    // Handle validation
-    const ODIN_extension_t *extension = find_extension(parameter, ODIN_EXTENSION_TYPE_VALIDATE);
-    if (extension != NULL) {
-        ODIN_io_extension_ops_t *ops = (ODIN_io_extension_ops_t *)extension->ops;
-        int ret = ops->read(parameter, data, size, access_group);
-        if (ret < ODIN_SUCCESS) {
-            printf( "Extension read failed, error %d ,parameter %s", ret, parameter->name_and_description);
-            return ret;
-        }
-    }
+    // // Handle validation
+    // const ODIN_extension_t *extension = find_extension(parameter, ODIN_EXTENSION_TYPE_STRING_CODEC);
+    // if (extension != NULL) {
+    //     ODIN_io_extension_ops_t *ops = (ODIN_io_extension_ops_t *)extension->ops;
+    //     int ret = ops->read(parameter, data, size, access_group);
+    //     if (ret < ODIN_SUCCESS) {
+    //         printf( "Extension read failed, error %d ,parameter %s", ret, parameter->name_and_description);
+    //         return ret;
+    //     }
+    // }
 
     // Handle the io extension
-    extension = find_extension(parameter, ODIN_EXTENSION_TYPE_IO);
+    const ODIN_extension_t *extension = find_extension(parameter, ODIN_EXTENSION_TYPE_IO);
     if (extension != NULL) {
         ODIN_io_extension_ops_t *ops = (ODIN_io_extension_ops_t *)extension->ops;
         return ops->read(parameter, data, size, access_group);

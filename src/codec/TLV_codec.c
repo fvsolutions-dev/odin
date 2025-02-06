@@ -74,8 +74,8 @@ int ODIN_encode_parameter_to_bytes(const ODIN_parameter_t *parameter, uint8_t *o
  *
  * @return int An error code
  */
-int ODIN_decode_bytes_to_parameter(const ODIN_parameter_group_t *group, const uint8_t *input_buffer, size_t input_buffer_data_length,
-                                   odin_access_group_t access_group) {
+int ODIN_decode_bytes_to_parameter(const ODIN_parameter_group_t *group, const uint8_t *input_buffer,
+                                   size_t input_buffer_data_length, odin_access_group_t access_group) {
     // Check if the group and buffer are valid
     if (group == NULL || input_buffer == NULL) {
         return ODIN_ERROR_INVALID_ARGUMENT;
@@ -159,8 +159,8 @@ int ODIN_encode_parameter_group_to_bytes(const ODIN_parameter_group_t *group, ui
  *
  * @return int The size of the decoded group or an error code
  */
-int ODIN_decode_bytes_to_parameter_group(const ODIN_parameter_group_t *group, const uint8_t *input_buffer, size_t input_buffer_data_length,
-                                         odin_access_group_t access_group) {
+int ODIN_decode_bytes_to_parameter_group(const ODIN_parameter_group_t *group, const uint8_t *input_buffer,
+                                         size_t input_buffer_data_length, odin_access_group_t access_group) {
     // Check if the group and buffer are valid
     if (group == NULL || input_buffer == NULL) {
         return ODIN_ERROR_INVALID_ARGUMENT;
@@ -168,7 +168,6 @@ int ODIN_decode_bytes_to_parameter_group(const ODIN_parameter_group_t *group, co
 
     const uint8_t *input_buffer_start = input_buffer;
     while (input_buffer - input_buffer_start < input_buffer_data_length) {
-
         // Check if we have enough data for the header
         if (input_buffer - input_buffer_start + sizeof(byte_package_format_t) > input_buffer_data_length) {
             return ODIN_ERROR_SIZE_MISMATCH;
