@@ -82,9 +82,7 @@ int ODIN_parameter_read_into_buffer(const ODIN_parameter_t *parameter, void *out
 
     // Check if the buffer is large enough
     if (output_buffer_size < total_size) {
-        printf( "Buffer too small (%zu < %u) when reading %s", output_buffer_size, total_size,
-                parameter->name_and_description);
-        return ODIN_ERROR_SIZE_MISMATCH;
+        return ODIN_ERROR_BUFFER_TOO_SMALL;
     }
 
     int e = ODIN_parameter_read(parameter, output_buffer, total_size, access_group);
