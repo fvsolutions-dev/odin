@@ -18,7 +18,7 @@ int range_validator_float(const ODIN_parameter_t *parameter, const void *data, s
     RETURN_ON_FAIL(ODIN_encode_data_to_float(parameter->element_type, data, size, &target_value));
 
     if (target_value < range->min || target_value > range->max) {
-        return ODIN_VALIDATION_ERROR;
+        return ODIN_ERROR_VALIDATION;
     }
 
     return ODIN_SUCCESS;

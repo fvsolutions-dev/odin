@@ -229,7 +229,7 @@ odin_error_t ODIN_encode_parameter_group_to_protobuff_file(const ODIN_parameter_
     FILE *file = fopen( filename, "wb");
     if (file == NULL) {
         printf( "Failed to open file %s", filename);
-        return ODIN_ERR_FILE_NOT_FOUND;
+        return ODIN_ERROR_FILE_NOT_FOUND;
     }
 
     // Determine the file size
@@ -320,7 +320,7 @@ int ODIN_decode_protobuff_file_to_parameter_group(const ODIN_parameter_group_t *
     FILE *file = fopen(filename, "rb");
     if (file == NULL) {
         printf( "Failed to open file %s", filename);
-        return ODIN_ERR_FILE_NOT_FOUND;
+        return ODIN_ERROR_FILE_NOT_FOUND;
     }
     
     // Determine the file size
