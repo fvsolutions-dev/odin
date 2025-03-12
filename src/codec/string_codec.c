@@ -24,7 +24,6 @@
  * @return int Length of the string
  */
 int ODIN_element_to_string(const ODIN_parameter_t *parameter, void *data, char *output_buffer, size_t output_buffer_size) {
-
     switch (parameter->element_type) {
         case ODIN_ELEMENT_TYPE_UINT8:
             return snprintf(output_buffer, output_buffer_size, "%" PRIu8, *(uint8_t *)data);
@@ -77,6 +76,68 @@ int ODIN_element_to_string(const ODIN_parameter_t *parameter, void *data, char *
     }
 }
 
+// TODO: Add tests for this function
+int ODIN_string_to_element(const ODIN_parameter_t *parameter, const char *input_buffer, void *data, size_t data_size) {
+    switch (parameter->element_type) {
+        case ODIN_ELEMENT_TYPE_UINT8:
+            return sscanf(input_buffer, "%" SCNu8, (uint8_t *)data);
+
+        case ODIN_ELEMENT_TYPE_INT8:
+            return sscanf(input_buffer, "%" SCNd8, (int8_t *)data);
+
+        case ODIN_ELEMENT_TYPE_UINT16:
+            return sscanf(input_buffer, "%" SCNu16, (uint16_t *)data);
+
+        case ODIN_ELEMENT_TYPE_INT16:
+            return sscanf(input_buffer, "%" SCNd16, (int16_t *)data);
+
+        case ODIN_ELEMENT_TYPE_UINT32:
+            return sscanf(input_buffer, "%" SCNu32, (uint32_t *)data);
+
+        case ODIN_ELEMENT_TYPE_INT32:
+            return sscanf(input_buffer, "%" SCNd32, (int32_t *)data);
+
+        case ODIN_ELEMENT_TYPE_UINT64:
+            return sscanf(input_buffer, "%" SCNu64, (uint64_t *)data);
+
+        case ODIN_ELEMENT_TYPE_INT64:
+            return sscanf(input_buffer, "%" SCNd64, (int64_t *)data);
+        case ODIN_ELEMENT_TYPE_FLOAT32:
+            return sscanf(input_buffer, "%f", (float *)data);
+
+        case ODIN_ELEMENT_TYPE_FLOAT64:
+            return sscanf(input_buffer, "%lf", (double *)data);
+
+            // TODO: add support to the other types
+            //  case ODIN_ELEMENT_TYPE_BOOL: {
+            //      bool value;
+            //      int ret = sscanf(input_buffer, "%d", &value);
+            //      if (ret == 1) {
+            //          *(bool *)data = value;
+            //          return 1;
+            //      }
+            //      return ret;
+            //  }
+
+            // case ODIN_ELEMENT_TYPE_HEX:
+            //     return sscanf(input_buffer, "0x%02x", (uint8_t *)data);
+
+            // case ODIN_ELEMENT_TYPE_CUSTOM: {
+            //     // Check if the parameter has a custom string serialisation extension
+            //     const ODIN_extension_t *extension = find_extension(parameter, ODIN_EXTENSION_TYPE_STRING_CODEC);
+            //     if (extension == NULL) {
+            //         return ODIN_ERROR_NOT_SUPPORTED;
+            //     }
+
+            //     ODIN_string_serialisation_extension_ops_t *ops = (ODIN_string_serialisation_extension_ops_t *)extension->ops;
+            //     return ops->from_string(parameter, input_buffer, data, data_size);
+            // }
+
+        default:
+            return ODIN_ERROR_NOT_SUPPORTED;
+    }
+}
+
 /**
  * @brief Serialise a parameter to a human readable string
  *
@@ -110,8 +171,7 @@ int ODIN_encode_parameter_to_string(const ODIN_parameter_t *parameter, char *out
             uint8_t *data_buffer_ptr = data_buffer;
 
             for (; data_buffer_ptr < data_buffer + ret_size; data_buffer_ptr += parameter->element_size) {
-                len += ODIN_element_to_string(parameter, data_buffer_ptr, output_buffer + len,
-                                              output_buffer_size - len);
+                len += ODIN_element_to_string(parameter, data_buffer_ptr, output_buffer + len, output_buffer_size - len);
                 // cast fo rdouble
                 // double *data = (double *)data_buffer_ptr;
 
@@ -136,4 +196,22 @@ int ODIN_encode_parameter_to_string(const ODIN_parameter_t *parameter, char *out
         default:
             return ODIN_ERROR_NOT_SUPPORTED;
     }
+}
+int ODIN_decode_string_to_parameter(const ODIN_parameter_t *parameter, const char *input_buffer,
+                                    odin_access_group_t access_group) {
+    // Only support writing to parameters for now, not vectors and arrays
+    if (parameter->odin_type != ODIN_TYPE_PARAMETER) {
+        return ODIN_ERROR_NOT_SUPPORTED;
+    }
+
+    // Decode the string to the parameter
+    uint8_t data_buffer[ODIN_PRINT_BUFFER_SIZE];
+    int ret = ODIN_string_to_element(parameter, input_buffer, data_buffer, sizeof(data_buffer));
+
+    if (ret < 0) {
+        return ret;
+    }
+
+    // Write the data to the parameter
+    return ODIN_parameter_write(parameter, data_buffer, parameter->element_size, access_group);
 }
