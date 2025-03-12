@@ -248,7 +248,7 @@ int ODIN_array_write_element(const ODIN_parameter_t *parameter, int index, const
     // }
 
     // Otherwise, copy the data to the buffer
-    int max_write_size = ODIN_get_max_data_size(parameter);
+    // int max_write_size = ODIN_get_max_data_size(parameter);
 
     // Check if the size matches the write size
     if (index >= parameter->max_elements) {
@@ -268,7 +268,7 @@ int ODIN_array_write_element(const ODIN_parameter_t *parameter, int index, const
     int offset = index * parameter->element_size;
 
     // Copy the data
-    memcpy(parameter->data + offset, data, size);
+    memcpy((uint8_t*)parameter->data + offset, data, size);
 
     // Log the access
     // ODIN_conditionally_log_access(parameter, access_group, ODIN_WRITE_ACCESS);
@@ -318,7 +318,7 @@ int ODIN_array_read_element(const ODIN_parameter_t *parameter, int index, void *
     // }
 
     // Otherwise, copy the data to the buffer
-    int max_read_size = ODIN_get_max_data_size(parameter);
+    // int max_read_size = ODIN_get_max_data_size(parameter);
 
     // Check if the size matches the read size
     if (index >= parameter->max_elements) {
@@ -338,7 +338,7 @@ int ODIN_array_read_element(const ODIN_parameter_t *parameter, int index, void *
     int offset = index * parameter->element_size;
 
     // Copy the data
-    memcpy(data, parameter->data + offset, size);
+    memcpy(data, (uint8_t*)parameter->data + offset, size);
 
     // Log the access
     // ODIN_conditionally_log_access

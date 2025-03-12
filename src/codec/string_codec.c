@@ -8,7 +8,7 @@
 #include "odin_codec.h"
 #include "odin_core.h"
 
-static const char *TAG = "ODIN_STR";
+// static const char *TAG = "ODIN_STR";
 
 #define ODIN_PRINT_BUFFER_SIZE 128
 
@@ -24,7 +24,7 @@ static const char *TAG = "ODIN_STR";
  * @return int Length of the string
  */
 int ODIN_element_to_string(const ODIN_parameter_t *parameter, void *data, char *output_buffer, size_t output_buffer_size) {
-    int len = 0;
+
     switch (parameter->element_type) {
         case ODIN_ELEMENT_TYPE_UINT8:
             return snprintf(output_buffer, output_buffer_size, "%" PRIu8, *(uint8_t *)data);
@@ -54,7 +54,7 @@ int ODIN_element_to_string(const ODIN_parameter_t *parameter, void *data, char *
             return snprintf(output_buffer, output_buffer_size, "%s", (*(bool *)data) ? "true" : "false");
 
         case ODIN_ELEMENT_TYPE_FLOAT32:
-            return snprintf(output_buffer, output_buffer_size, "%f", *(float *)data);
+            return snprintf(output_buffer, output_buffer_size, "%f", (double)*(float *)data);
 
         case ODIN_ELEMENT_TYPE_FLOAT64:
             return snprintf(output_buffer, output_buffer_size, "%f", *(double *)data);
@@ -113,7 +113,8 @@ int ODIN_encode_parameter_to_string(const ODIN_parameter_t *parameter, char *out
                 len += ODIN_element_to_string(parameter, data_buffer_ptr, output_buffer + len,
                                               output_buffer_size - len);
                 // cast fo rdouble
-                double *data = (double *)data_buffer_ptr;
+                // double *data = (double *)data_buffer_ptr;
+
                 // if not last
                 if (data_buffer_ptr < data_buffer + ret_size - parameter->element_size) {
                     output_buffer[len++] = ',';

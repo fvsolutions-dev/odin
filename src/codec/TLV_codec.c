@@ -9,7 +9,7 @@
 #include "odin_core.h"
 #include "odin_lookup.h"
 
-static const char *TAG = "ODIN_STR";
+// static const char *TAG = "ODIN_STR";
 
 #define ODIN_EXPORT_BUFFER_SIZE 128
 
