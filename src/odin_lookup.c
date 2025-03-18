@@ -73,8 +73,8 @@ const ODIN_parameter_generic_t *ODIN_get_generic_parameter_by_name(const ODIN_pa
             ODIN_parameter_generic_t *generic_parameter = (ODIN_parameter_generic_t *)group->parameters[parameter_idx];
             // if group
             if (generic_parameter->odin_type == ODIN_TYPE_GROUP) {
-                ODIN_parameter_group_t *group = (ODIN_parameter_group_t *)generic_parameter;
-                if (strcmp(group->name_and_description, name) == 0) {
+                ODIN_parameter_group_t *subgroup = (ODIN_parameter_group_t *)generic_parameter;
+                if (strcmp(subgroup->name_and_description, name) == 0) {
                     return generic_parameter;
                 }
             } else {

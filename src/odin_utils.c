@@ -46,14 +46,14 @@ void ODIN_dump_recursive_tree(const ODIN_parameter_group_t *group, int depth, od
             case ODIN_TYPE_PARAMETER:
             case ODIN_TYPE_ARRAY:
             case ODIN_TYPE_VECTOR: {
-                const ODIN_parameter_t *parameter = (ODIN_parameter_t *)group->parameters[i];
-                ODIN_dump_parameter(parameter, depth, access_group);
+                const ODIN_parameter_t *subparameter = (ODIN_parameter_t *)group->parameters[i];
+                ODIN_dump_parameter(subparameter, depth, access_group);
             } break;
 
             case ODIN_TYPE_GROUP: {
-                const ODIN_parameter_group_t *parameter = (ODIN_parameter_group_t *)group->parameters[i];
-                printf("%*s" ANSI_GRN "[%s]" ANSI_RESET "\n", depth, "", parameter->name_and_description);
-                ODIN_dump_recursive_tree(parameter, depth + 2, access_group);
+                const ODIN_parameter_group_t *sub_group = (ODIN_parameter_group_t *)group->parameters[i];
+                printf("%*s" ANSI_GRN "[%s]" ANSI_RESET "\n", depth, "", sub_group->name_and_description);
+                ODIN_dump_recursive_tree(sub_group, depth + 2, access_group);
 
             } break;
         }
