@@ -5,11 +5,13 @@ class RootModel(BaseRootModel):
         self.test_float = ODINEntry[OdinF32.BASE_TYPE](0x01000000, cls=OdinF32)
         self.test_int = ODINEntry[OdinI32.BASE_TYPE](0x02000000, cls=OdinI32)
         self.test_bool = ODINEntry[OdinBool.BASE_TYPE](0x03000000, cls=OdinBool)
+
         class TestGroup(BaseRootModel):
             def __init__(self, interface):
                 self.test_float = ODINEntry[OdinF32.BASE_TYPE](0x0A010000, cls=OdinF32)
                 self.test_int = ODINEntry[OdinI32.BASE_TYPE](0x0A020000, cls=OdinI32)
                 self.test_bool = ODINEntry[OdinBool.BASE_TYPE](0x0A030000, cls=OdinBool)
+
                 class TestSubgroup(BaseRootModel):
                     def __init__(self, interface):
                         self.test_float = ODINEntry[OdinF32.BASE_TYPE](0x0A040100, cls=OdinF32)

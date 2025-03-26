@@ -20,7 +20,7 @@ class DataType(BaseModel, ABC):
         return None
 
 
-class RegularCDataType(DataType):
+class StardardDataType(DataType):
     c_typename: str = Field(description="The C typename that corresponds to the data type")
     py_typename: str = Field(description="The python typename that corresponds to the data type")
 
@@ -40,7 +40,7 @@ class RegularCDataType(DataType):
         )
 
 
-class CustomDataType(RegularCDataType):
+class CustomDataType(StardardDataType):
     c_typename: str = Field(description="The C typename that corresponds to the data type")
     string_serialiser: str = Field(description="The string serialiser for the data type")
 
@@ -65,7 +65,7 @@ class CustomDataType(RegularCDataType):
         return None
 
 
-class BooleanCDataType(RegularCDataType):
+class BooleanCDataType(StardardDataType):
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
         if default:
             value = "true"
@@ -80,7 +80,7 @@ class BooleanCDataType(RegularCDataType):
         return super().to_c_array_initialiser(name, value, dimensions)
 
 
-class CharCDataType(RegularCDataType):
+class CharCDataType(StardardDataType):
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
         return cc.Variable(
             name=name,
@@ -98,16 +98,16 @@ class CharCDataType(RegularCDataType):
 
 
 BASE_DATA_TYPES: List[DataType] = [
-    RegularCDataType(typename="u64", size=8, c_typename="uint64_t", py_typename="OdinU64"),
-    RegularCDataType(typename="u32", size=4, c_typename="uint32_t", py_typename="OdinU32"),
-    RegularCDataType(typename="u16", size=2, c_typename="uint16_t", py_typename="OdinU16"),
-    RegularCDataType(typename="u8", size=1, c_typename="uint8_t", py_typename="OdinU8"),
-    RegularCDataType(typename="i64", size=8, c_typename="int64_t", py_typename="OdinI64"),
-    RegularCDataType(typename="i32", size=4, c_typename="int32_t", py_typename="OdinI32"),
-    RegularCDataType(typename="i16", size=2, c_typename="int16_t", py_typename="OdinI16"),
-    RegularCDataType(typename="i8", size=1, c_typename="int8_t", py_typename="OdinI8"),
-    RegularCDataType(typename="f32", size=4, c_typename="float", py_typename="OdinF32"),
-    RegularCDataType(typename="f64", size=8, c_typename="double", py_typename="OdinF64"),
+    StardardDataType(typename="u64", size=8, c_typename="uint64_t", py_typename="OdinU64"),
+    StardardDataType(typename="u32", size=4, c_typename="uint32_t", py_typename="OdinU32"),
+    StardardDataType(typename="u16", size=2, c_typename="uint16_t", py_typename="OdinU16"),
+    StardardDataType(typename="u8", size=1, c_typename="uint8_t", py_typename="OdinU8"),
+    StardardDataType(typename="i64", size=8, c_typename="int64_t", py_typename="OdinI64"),
+    StardardDataType(typename="i32", size=4, c_typename="int32_t", py_typename="OdinI32"),
+    StardardDataType(typename="i16", size=2, c_typename="int16_t", py_typename="OdinI16"),
+    StardardDataType(typename="i8", size=1, c_typename="int8_t", py_typename="OdinI8"),
+    StardardDataType(typename="f32", size=4, c_typename="float", py_typename="OdinF32"),
+    StardardDataType(typename="f64", size=8, c_typename="double", py_typename="OdinF64"),
     BooleanCDataType(typename="bool", size=1, c_typename="bool", py_typename="OdinBool"),
     CharCDataType(typename="char", size=1, c_typename="char", py_typename="OdinChar"),
 ]

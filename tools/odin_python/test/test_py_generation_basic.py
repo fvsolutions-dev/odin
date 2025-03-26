@@ -1,4 +1,3 @@
-from pydantic.type_adapter import P
 from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.py_generator.generate_py import (
     PYGenerator,

@@ -5,7 +5,7 @@ from odin_python.parameter import (
 )
 from odin_python.parameter.parameter import BaseParameterGroupModel, ParameterModel
 
-from odin_python.data_types.type_registry import RegularCDataType
+from odin_python.data_types.type_registry import StardardDataType
 
 
 class PYGenerator:
@@ -22,17 +22,19 @@ class PYGenerator:
         for child_name, child in model.children.items():
             if isinstance(child, ParameterModel):
                 resolved_type = child._resolved_type
-                assert isinstance(resolved_type, RegularCDataType)
+                assert isinstance(resolved_type, StardardDataType)
 
                 type = resolved_type.py_typename
 
                 data += f"{indent}        self.{child_name} = ODINEntry[{type}.BASE_TYPE](0x{child.global_id:08X}, cls={type})\n"
                 childds[child_name] = f"self.{child_name}"
+           
             elif isinstance(child, ParameterGroupModel):
                 # Camelcase
                 class_child_name = child_name.title().replace("_", "")
 
                 # Generate the class
+                data += "\n"
                 data += PYGenerator.generate_class(class_child_name, child, tab_indent + 2)
                 data += f"{indent}        self.{child_name} = {class_child_name}(interface)\n"
                 childds[child_name] = f"self.{child_name}"

@@ -12,7 +12,7 @@ from odin_python.utils.csnake_custom import StructVariable
 from ..data_types.type_registry import (
     CustomDataType,
     DataType,
-    RegularCDataType,
+    StardardDataType,
     TypeRegistry,
 )
 from ..extensions import Extensions
@@ -215,7 +215,7 @@ class ParameterModel(BaseParameterModel):
         ```
         """
 
-        assert isinstance(self._resolved_type, RegularCDataType)
+        assert isinstance(self._resolved_type, StardardDataType)
         return self._resolved_type.to_c_initialiser(self._name, self.default)
 
     def to_object_initialiser(self) -> cc.Variable:
@@ -223,7 +223,7 @@ class ParameterModel(BaseParameterModel):
 
         # permission_flags = self._access_configuration.get_permission_flags()
 
-        assert isinstance(self._resolved_type, RegularCDataType)
+        assert isinstance(self._resolved_type, StardardDataType)
 
         formatted_extension = None
         if self.extensions:
@@ -266,7 +266,7 @@ class ReferenceParameterModel(BaseParameterModel):
     def to_object_initialiser(self) -> cc.Variable:
         """Returns the odin C initialiser for the parameter"""
 
-        assert isinstance(self._resolved_type, RegularCDataType)
+        assert isinstance(self._resolved_type, StardardDataType)
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
@@ -306,13 +306,13 @@ class ArrayParameterModel(BaseParameterModel):
         ```
         """
 
-        assert isinstance(self._resolved_type, RegularCDataType)
+        assert isinstance(self._resolved_type, StardardDataType)
         return self._resolved_type.to_c_array_initialiser(
             self._name, self.default if self.default else [], [self.elements]
         )
 
     def to_object_initialiser(self) -> cc.Variable:
-        assert isinstance(self._resolved_type, RegularCDataType)
+        assert isinstance(self._resolved_type, StardardDataType)
 
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
@@ -380,7 +380,7 @@ class VectorParameterModel(BaseParameterModel):
         )
 
     def to_object_initialiser(self) -> cc.Variable:
-        assert isinstance(self._resolved_type, RegularCDataType)
+        assert isinstance(self._resolved_type, StardardDataType)
 
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,

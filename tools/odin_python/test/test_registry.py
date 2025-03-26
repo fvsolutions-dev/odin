@@ -1,7 +1,7 @@
 import pytest
 from odin_python.data_types.type_registry import (
     TypeRegistry,
-    RegularCDataType,
+    StardardDataType,
     BASE_DATA_TYPES,
 )
 
@@ -13,7 +13,7 @@ def test_type_registry_init():
 
 def test_register_single_type():
     registry = TypeRegistry()
-    data_type = RegularCDataType(typename="test_type", size=4, c_typename="int")
+    data_type = StardardDataType(typename="test_type", size=4, c_typename="int")
     registry.register(data_type)
     assert "test_type" in registry.types
     assert registry.types["test_type"] == data_type
@@ -29,7 +29,7 @@ def test_register_multiple_types():
 
 def test_register_duplicate_type():
     registry = TypeRegistry()
-    data_type = RegularCDataType(typename="test_type", size=4, c_typename="int")
+    data_type = StardardDataType(typename="test_type", size=4, c_typename="int")
     registry.register(data_type)
     with pytest.raises(ValueError, match="Type .* already registered"):
         registry.register(data_type)
@@ -37,7 +37,7 @@ def test_register_duplicate_type():
 
 def test_get_type():
     registry = TypeRegistry()
-    data_type = RegularCDataType(typename="test_type", size=4, c_typename="int")
+    data_type = StardardDataType(typename="test_type", size=4, c_typename="int")
     registry.register(data_type)
     retrieved_type = registry.get_type("test_type")
     assert retrieved_type == data_type
