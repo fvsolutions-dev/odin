@@ -144,6 +144,15 @@ class BaseParameterModel(BaseModel, ABC):
             raise ValueError("Parent is not a ParameterGroupModel")
 
     @property
+    def global_name(self) -> str:
+        """Calculates the global name of the parameter, by going up the tree"""
+
+        if self._parent is None:
+            return self._name
+
+        return f"{self._parent.global_name}.{self._name}"
+    
+    @property
     def global_shift(self) -> int:
         """Adds the shift of all the parents to upstream"""
 

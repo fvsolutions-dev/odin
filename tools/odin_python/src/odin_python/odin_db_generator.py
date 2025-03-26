@@ -16,6 +16,7 @@ def parameter_to_db(parameter: ParameterModel) -> OdinDBParameterModel:
         name=parameter._name,
         description=parameter.resolved_description,
         global_id=parameter.global_id,
+        global_name=parameter.global_name,
         size=parameter._resolved_type.size,
         element_type=parameter._resolved_type.typename,
     )
@@ -31,6 +32,7 @@ def parameter_group_to_db(group: BaseParameterGroupModel) -> OdinDBParameterGrou
 
     return OdinDBParameterGroupModel(
         name=group._name,
+        global_name=group.global_name,
         description=group.resolved_description,
         parameters=parameters,
     )
