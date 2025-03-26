@@ -32,7 +32,8 @@ include = ["src/**.py", "test/**.py"]
 ignore = ["**.pyi", "**/.venv/**"]
 
 [project.scripts]
-fbs-build-utils = "fbs_build_utils:cli"
+odin = "odin_python:cli"
+
 
 [build-system]
 # requires = ["hatchling", "hatch-vcs"]
@@ -41,3 +42,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 source = "vcs"
+
+
+

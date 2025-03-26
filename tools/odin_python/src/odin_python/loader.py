@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict,Any
 
 from pydantic import BaseModel, Field, RootModel, ValidationError
 from pydantic_yaml import parse_yaml_file_as
@@ -42,8 +42,9 @@ class SimpleLoaderModel(
 
 class TypeModel(BaseModel):
     typename: str
-    string_serialiser: str
-
+    string_serialiser: str|None = Field(description="The string serialiser for the data type", default=None)
+    default: Any|None = Field(description="The default value for the data type", default=None)
+    
 
 class TypeDefinitions(RootModel[Dict[str, TypeModel]]):
     @classmethod
@@ -56,6 +57,8 @@ class TypeDefinitions(RootModel[Dict[str, TypeModel]]):
                 CustomDataType(
                     typename=type_name,
                     c_typename=type_model.typename,
+                    py_typename=type_model.typename,
+                    default=type_model.default,
                     size=0,
                     string_serialiser=type_model.string_serialiser,
                 )

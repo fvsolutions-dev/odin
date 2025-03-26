@@ -12,10 +12,8 @@ class PYGenerator:
     @staticmethod
     def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int = 0) -> str:
         data = ""
-        # 
         indent = "    " * tab_indent
         data += f"{indent}class {name}(BaseRootModel):\n"
-
         data += f"{indent}    def __init__(self, interface):\n"
 
         childds = {}

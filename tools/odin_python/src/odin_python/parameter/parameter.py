@@ -182,7 +182,7 @@ class ParameterModel(BaseParameterModel):
     _resolved_type: DataType = PrivateAttr()
 
     # Default value of the parameter, it not set it will use the default value of the primitive type
-    default: Any = Field(description="Default value of the parameter")
+    default: Any|None = Field(description="Default value of the parameter",default=None)
 
     extensions: List[Extensions] | None = Field(
         description="Extensions of the parameter", default=None
@@ -196,12 +196,13 @@ class ParameterModel(BaseParameterModel):
 
         if isinstance(self._resolved_type, CustomDataType):
             self.extensions = self.extensions or []
-            self.extensions.append(
-                ReferenceStringCodecExtension(
-                    type="string_codec_reference",
-                    reference=self._resolved_type.string_serialiser,
+            if self._resolved_type.string_serialiser:
+                self.extensions.append(
+                    ReferenceStringCodecExtension(
+                        type="string_codec_reference",
+                        reference=self._resolved_type.string_serialiser,
+                    )
                 )
-            )
 
     def one_line_summary(self, level=0):
         return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"

@@ -25,6 +25,7 @@ class StardardDataType(DataType):
     py_typename: str = Field(description="The python typename that corresponds to the data type")
 
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+        assert default is not None, "Default value must be provided"
         return cc.Variable(
             name=name,
             primitive=self.c_typename,
@@ -42,9 +43,18 @@ class StardardDataType(DataType):
 
 class CustomDataType(StardardDataType):
     c_typename: str = Field(description="The C typename that corresponds to the data type")
-    string_serialiser: str = Field(description="The string serialiser for the data type")
+    string_serialiser: str|None = Field(description="The string serialiser for the data type")
+    default: Any | None = Field(description="The default value for the data type")
 
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+   
+        if default is None:
+            default = self.default
+            
+        assert default is not None, (
+            "Default value must be provided, either in the parameter or in the type definition"
+        )
+        
         return cc.Variable(
             name=name,
             primitive=self.c_typename,
@@ -67,6 +77,8 @@ class CustomDataType(StardardDataType):
 
 class BooleanCDataType(StardardDataType):
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+        assert default is not None, "Default value must be provided"
+
         if default:
             value = "true"
         else:
@@ -82,6 +94,8 @@ class BooleanCDataType(StardardDataType):
 
 class CharCDataType(StardardDataType):
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+        assert default is not None, "Default value must be provided"
+
         return cc.Variable(
             name=name,
             primitive=self.c_typename,

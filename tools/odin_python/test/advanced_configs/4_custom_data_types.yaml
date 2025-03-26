@@ -22,7 +22,7 @@ types:
 parameters:
   rgb_color:
     local_id: 1
-    type: rgb_color
+    type: rgb_color 
     description: An RGB color variable
     default: { r: 10, g: 22, b: 60 }
 
