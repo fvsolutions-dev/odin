@@ -44,7 +44,7 @@ class TypeModel(BaseModel):
     typename: str
     string_serialiser: str|None = Field(description="The string serialiser for the data type", default=None)
     default: Any|None = Field(description="The default value for the data type", default=None)
-    
+    size: int = Field(description="Size of the data type in bytes")
 
 class TypeDefinitions(RootModel[Dict[str, TypeModel]]):
     @classmethod
@@ -59,7 +59,7 @@ class TypeDefinitions(RootModel[Dict[str, TypeModel]]):
                     c_typename=type_model.typename,
                     py_typename=type_model.typename,
                     default=type_model.default,
-                    size=0,
+                    size=type_model.size,
                     string_serialiser=type_model.string_serialiser,
                 )
             )

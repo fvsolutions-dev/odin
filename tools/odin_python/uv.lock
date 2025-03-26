@@ -210,6 +210,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b1/ec/6240f147530a2c8d362ed3f2f7985aca92cda68c25ffc2fc216504b17148/mdutils-1.6.0.tar.gz", hash = "sha256:647f3cf00df39fee6c57fa6738dc1160fce1788276b5530c87d43a70cdefdaf1", size = 22881 }
 
 [[package]]
+name = "odin-db"
+source = { editable = "../../../odin-db" }
+dependencies = [
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic", specifier = ">=2.10.6" }]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ruff", specifier = ">=0.9.9" }]
+
+[[package]]
 name = "odin-python"
 version = "0.1.0"
 source = { editable = "." }
@@ -218,6 +231,7 @@ dependencies = [
     { name = "csnake" },
     { name = "jinja2" },
     { name = "mdutils" },
+    { name = "odin-db" },
     { name = "pydantic" },
     { name = "pydantic-yaml" },
     { name = "reportlab" },
@@ -237,6 +251,7 @@ requires-dist = [
     { name = "csnake", specifier = ">=0.4.0" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "mdutils", specifier = ">=1.6.0" },
+    { name = "odin-db", editable = "../../../odin-db" },
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "pydantic-yaml", specifier = ">=1.4.0" },
     { name = "reportlab", specifier = ">=4.3.1" },

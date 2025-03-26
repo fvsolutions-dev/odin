@@ -6,7 +6,7 @@ from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.c_generator.generate_c import CGenerator
 from .loader import AdvancedLoaderModel, SimpleLoaderModel
 from odin_python.parameter import RootParameterModel
-
+from .odin_db_generator import ODIN_DB_generator
 DEFAULT_NAME = "OD"
 
 
@@ -54,6 +54,11 @@ def gen_c(input_file: str, output_dir: str, name: str, advanced: bool):
 
     with open(os.path.join(output_dir, f"{name}.h"), "w") as f:
         f.write(CGenerator.generate_header(root_parameters, extra_includes=c_includes))
+
+    with open(os.path.join(output_dir, f"{name}.odin"), "w") as f:
+        data = ODIN_DB_generator.generate_single_source(root_parameters)
+        print(data)
+        f.write(data)
 
     print("Conversion complete")
 
