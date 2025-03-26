@@ -211,16 +211,15 @@ sdist = { url = "https://files.pythonhosted.org/packages/b1/ec/6240f147530a2c8d3
 
 [[package]]
 name = "odin-db"
-source = { editable = "../../../odin-db" }
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
-
-[package.metadata]
-requires-dist = [{ name = "pydantic", specifier = ">=2.10.6" }]
-
-[package.metadata.requires-dev]
-dev = [{ name = "ruff", specifier = ">=0.9.9" }]
+sdist = { url = "https://files.pythonhosted.org/packages/5a/60/05423e6e6089658b01b138d17a7283a8bac83da003d6d6400e45eb8cbdf1/odin_db-1.0.0.tar.gz", hash = "sha256:020f6abe2f5700e403cec1852fe3b4c617af46e88356dac96763167b2c68d657", size = 10926 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/87/b0/8e29835ca24cb5905bf37f50a360261eea013c753ad07bbc09da1a1c8ab2/odin_db-1.0.0-py3-none-any.whl", hash = "sha256:28caaff22b62230264a28c3ef415e4d607d3bd8fffcc7ad15143e4ddfa356e6e", size = 1907 },
+]
 
 [[package]]
 name = "odin-python"
@@ -251,7 +250,7 @@ requires-dist = [
     { name = "csnake", specifier = ">=0.4.0" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "mdutils", specifier = ">=1.6.0" },
-    { name = "odin-db", editable = "../../../odin-db" },
+    { name = "odin-db", specifier = ">=1.0.0" },
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "pydantic-yaml", specifier = ">=1.4.0" },
     { name = "reportlab", specifier = ">=4.3.1" },

@@ -10,7 +10,7 @@ dependencies = [
     "csnake>=0.4.0",
     "jinja2>=3.1.6",
     "mdutils>=1.6.0",
-    "odin-db",
+    "odin-db>=1.0.0",
     "pydantic>=2.10.6",
     "pydantic-yaml>=1.4.0",
     "reportlab>=4.3.1",
@@ -43,9 +43,4 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 source = "vcs"
-
-[tool.uv.sources]
-odin-db = { path = "../../../odin-db", editable = true }
-
-
 
