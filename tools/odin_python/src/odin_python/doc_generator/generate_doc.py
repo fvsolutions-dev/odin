@@ -100,7 +100,7 @@ class DocGenerator:
         content.append(Paragraph("ODIN Object Dictionary", styles["Title"]))
         content.append(Spacer(1, 0.25 * inch))
         models = [model]
-        models.extend(model.to_flat_list())
+        models.extend(model.to_flat_list()) # type: ignore
 
         for parmeter in models:
             print(parmeter._name)
