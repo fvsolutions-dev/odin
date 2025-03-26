@@ -22,7 +22,7 @@
             "name": "Python Debugger: TEST Advanced",
             "type": "debugpy",
             "request": "launch",
-            "program": "test/test_py_generation_basic.py",
+            "program": "test/test_doc_generation_basic.py",
             "console": "integratedTerminal",
             "justMyCode": true,
         }

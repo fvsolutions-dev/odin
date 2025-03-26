@@ -8,7 +8,6 @@ from odin_python.parameter import (
 )
 
 
-# from
 def test():
     model = AdvancedLoaderModel.from_yaml(r"test\advanced_configs\5_bunch_of_params.yaml")
 

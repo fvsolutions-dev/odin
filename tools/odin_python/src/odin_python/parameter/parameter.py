@@ -650,6 +650,15 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         return parameter
 
+    def to_flat_list(self) -> List[BaseParameterModel]:
+        flat_list = []
+        for child in self.children.values():
+            flat_list.append(child)
+
+            if isinstance(child, BaseParameterGroupModel):
+                flat_list.extend(child.to_flat_list())
+
+        return flat_list
 
 class ParameterGroupModel(BaseParameterGroupModel):
     pass

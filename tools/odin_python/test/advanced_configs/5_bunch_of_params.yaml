@@ -4,25 +4,25 @@ id_space_shift: 8
 
 parameters:
   test_float:
-        local_id: 1
-        type: f32
-        description: Temperature of the chip in degrees Celsius
-        default: 3.1415
+    local_id: 31
+    type: f32
+    description: Temperature of the chip in degrees Celsius
+    default: 3.1415
 
   test_int:
-    local_id: 2
+    local_id: 32
     type: i32
     description: The number of times the chip has been reset
     default: 0
 
   test_bool:
-    local_id: 3
+    local_id: 33
     type: bool
     description: If the chip is in a good state
     default: true
 
   test_group:
-    local_id: 0xA
+    local_id: 0x1A
     id_space_shift: 8
     description: This group contains the measurements of different sensors
 
@@ -68,3 +68,81 @@ parameters:
             type: bool
             description: If the chip is in a good state
             default: true
+            
+  test_variable_i8:
+    local_id: 0x1
+    type: i8
+    description: A test variable of type signed 8 bit integer
+    default: 0
+
+  test_variable_i16:
+    local_id: 0x2
+    type: i16
+    description: A test variable of type signed 16 bit integer
+    default: 0
+
+  test_variable_i32:
+    local_id: 0x3
+    type: i32
+    description: A test variable of type signed 32 bit integer
+    default: 0
+
+  test_variable_i64:
+    local_id: 0x4
+    type: i64
+    description: A test variable of type signed 64 bit integer
+    default: 0
+
+  test_variable_u8:
+    local_id: 0x5
+    type: u8
+    description: A test variable of type unsigned 8 bit integer
+    default: 12
+
+  test_variable_u16:
+    local_id: 0x6
+    type: u16
+    description: A test variable of type unsigned 16 bit integer
+    default: 576
+
+  test_variable_u32:
+    local_id: 0x7
+    type: u32
+    description: A test variable of type unsigned 32 bit integer
+    default: 0
+
+  test_variable_u64:
+    local_id: 0x8
+    type: u64
+    description: A test variable of type unsigned 64 bit integer
+    default: 0530530
+
+  test_variable_float32:
+    local_id: 0x9
+    type: f32
+    description: A test variable of type 32 bit floating point
+    default: 3.14156
+
+  test_variable_float64:
+    local_id: 0xA
+    type: f64
+    description: A test variable of type 64 bit floating point
+    default: 0.0
+
+  test_variable_bool_false:
+    local_id: 0xB
+    type: bool
+    description: A test variable of type boolean
+    default: false
+
+  test_variable_bool_true:
+    local_id: 0xC
+    type: bool
+    description: A test variable of type boolean
+    default: true
+
+  test_variable_char:
+    local_id: 0xD
+    type: char
+    description: A test variable of type character
+    default: 'a'
