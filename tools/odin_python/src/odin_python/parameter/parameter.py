@@ -259,13 +259,27 @@ class ReferenceParameterModel(BaseParameterModel):
     type: str = Field(description="Primitive type of the parameter")
     _resolved_type: DataType = PrivateAttr()
     reference: str = Field(description="Reference to the point in memory")
-
+    
+    extensions: List[Extensions] | None = Field(
+        description="Extensions of the parameter", default=None
+    )
+    
     def post_load_resolve(
         self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry
     ):
         super().post_load_resolve(parent, name, type_registry)
         self._resolved_type = type_registry.get_type(self.type)
-
+        
+        if isinstance(self._resolved_type, CustomDataType):
+            self.extensions = self.extensions or []
+            if self._resolved_type.string_serialiser:
+                self.extensions.append(
+                    ReferenceStringCodecExtension(
+                        type="string_codec_reference",
+                        reference=self._resolved_type.string_serialiser,
+                    )
+                )
+                
     def one_line_summary(self, level=0):
         return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
 
@@ -277,6 +291,14 @@ class ReferenceParameterModel(BaseParameterModel):
         """Returns the odin C initialiser for the parameter"""
 
         assert isinstance(self._resolved_type, StardardDataType)
+        
+        formatted_extension = None
+        if self.extensions:
+            next = None
+            for extension in self.extensions:
+                formatted_extension = extension.as_literal(self, next)
+                next = formatted_extension
+                
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
@@ -285,6 +307,7 @@ class ReferenceParameterModel(BaseParameterModel):
             data=self.reference,
             name=self._name,
             description=self.resolved_description,
+            extensions=formatted_extension,
         )
 
         return parameter.variable
