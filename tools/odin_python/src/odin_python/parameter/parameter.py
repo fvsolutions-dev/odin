@@ -16,7 +16,7 @@ from ..data_types.type_registry import (
     TypeRegistry,
 )
 from ..extensions import Extensions
-from ..generator.model import (
+from ..c_generator.model import (
     ODIN_ArrayModel,
     ODIN_ParameterGroupModel,
     ODIN_ParameterModel,

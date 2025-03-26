@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING, Literal
 from csnake import TextModifier
 from pydantic import BaseModel, Field
 
-from odin_python.generator.odin_defs import ODIN_ExtensionEnum
+from odin_python.c_generator.odin_defs import ODIN_ExtensionEnum
 
-from ..generator.model import ODIN_ExtesionModel
+from ..c_generator.model import ODIN_ExtesionModel
 from .common import BaseExtension
 
 if TYPE_CHECKING:
