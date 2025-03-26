@@ -22,8 +22,9 @@
             "name": "Python Debugger: TEST Advanced",
             "type": "debugpy",
             "request": "launch",
-            "program": "test/test_process_advanced_configs.py",
-            "console": "integratedTerminal"
+            "program": "test/test_py_generation_basic.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
         }
     ]
 }

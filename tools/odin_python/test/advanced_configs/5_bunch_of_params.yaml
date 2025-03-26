@@ -1,0 +1,70 @@
+access_control: {}
+
+id_space_shift: 8
+
+parameters:
+  test_float:
+        local_id: 1
+        type: f32
+        description: Temperature of the chip in degrees Celsius
+        default: 3.1415
+
+  test_int:
+    local_id: 2
+    type: i32
+    description: The number of times the chip has been reset
+    default: 0
+
+  test_bool:
+    local_id: 3
+    type: bool
+    description: If the chip is in a good state
+    default: true
+
+  test_group:
+    local_id: 0xA
+    id_space_shift: 8
+    description: This group contains the measurements of different sensors
+
+    children:
+      test_float:
+        local_id: 1
+        type: f32
+        description: Temperature of the chip in degrees Celsius
+        default: 3.1415
+
+      test_int:
+        local_id: 2
+        type: i32
+        description: The number of times the chip has been reset
+        default: 0
+
+      test_bool:
+        local_id: 3
+        type: bool
+        description: If the chip is in a good state
+        default: true
+
+      test_subgroup:
+        local_id: 4
+        id_space_shift: 8
+        description: This subgroup contains the measurements of different sensors
+
+        children:
+          test_float:
+            local_id: 1
+            type: f32
+            description: Temperature of the chip in degrees Celsius
+            default: 3.1415
+
+          test_int:
+            local_id: 2
+            type: i32
+            description: The number of times the chip has been reset
+            default: 0
+
+          test_bool:
+            local_id: 3
+            type: bool
+            description: If the chip is in a good state
+            default: true
