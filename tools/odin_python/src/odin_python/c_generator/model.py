@@ -16,7 +16,7 @@ class ODIN_ParameterModel(BaseModel):
     local_index: int = Field(description="Index of the parameter")
     global_index: int = Field(description="Global index of the parameter")
 
-    data: str = Field(description="Reference to the data")
+    data: str|None = Field(description="Reference to the data")
     type: DataType = Field(description="Resolved type of the parameter")
     name: str = Field(description="Name of the parameter")
     description: str = Field(description="Description of the parameter")
@@ -44,7 +44,7 @@ class ODIN_ParameterModel(BaseModel):
                 "flags": cc.TextModifier(str(self.access_group)),
                 "global_index": cc.TextModifier(f"0x{self.global_index:08X}"),
                 "element_size": cc.TextModifier(f"sizeof({self.type.c_typename})"),
-                "data": cc.TextModifier(f"&{self.data}"),
+                "data": cc.TextModifier(f"&{self.data}") if self.data else cc.TextModifier("NULL"),
                 "name_and_description": rf"{self.name}\0{escape_string(self.description)}",
                 "extension": extension,
             },  # type: ignore

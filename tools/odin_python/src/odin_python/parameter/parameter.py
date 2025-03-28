@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Annotated, Any, Dict, List
+from typing import Annotated, Any, Dict, List, Literal
 
 import csnake as cc
 from pydantic import BaseModel, ConfigDict, Discriminator, Field, PrivateAttr, Tag
@@ -48,13 +48,9 @@ class BaseParameterModel(BaseModel, ABC):
     # Reference to the parent of the parameter, set by the post_load_resolve method
     _parent: "BaseParameterModel|None" = PrivateAttr(default=None)
 
-    local_id: int = Field(
-        description="Local id of the parameter, unique within the parent"
-    )
+    local_id: int = Field(description="Local id of the parameter, unique within the parent")
 
-    description: str | None = Field(
-        description="Description of the parameter, optional", default=None
-    )
+    description: str | None = Field(description="Description of the parameter, optional", default=None)
 
     access_control: AccessControlCollection = Field(
         description="Access control configuration for the parameter",
@@ -91,17 +87,11 @@ class BaseParameterModel(BaseModel, ABC):
     def initialise_types(self):
         assert self._parent is not None, "Parent is not set"
 
-        self._absolute_variable_reference = (
-            f"{self._parent._absolute_variable_reference}.{self._name}"
-        )
-        self._absolute_object_reference = (
-            f"{self._parent._absolute_object_reference}.{self._name}"
-        )
+        self._absolute_variable_reference = f"{self._parent._absolute_variable_reference}.{self._name}"
+        self._absolute_object_reference = f"{self._parent._absolute_object_reference}.{self._name}"
 
         if isinstance(self, BaseParameterGroupModel):
-            self._absolute_group_reference = (
-                f"{self._parent._absolute_group_reference}_{self._name}"
-            )
+            self._absolute_group_reference = f"{self._parent._absolute_group_reference}_{self._name}"
 
             # If the parent is a group, then the variable reference is the parent name
             for child in self.children.values():
@@ -109,16 +99,12 @@ class BaseParameterModel(BaseModel, ABC):
 
     @property
     def absolute_variable_reference(self) -> str:
-        assert (
-            self._absolute_variable_reference is not None
-        ), "Variable reference is not set"
+        assert self._absolute_variable_reference is not None, "Variable reference is not set"
         return self._absolute_variable_reference
 
     @property
     def absolute_object_reference(self) -> str:
-        assert (
-            self._absolute_object_reference is not None
-        ), "Object reference is not set"
+        assert self._absolute_object_reference is not None, "Object reference is not set"
         return self._absolute_object_reference
 
     @property
@@ -137,9 +123,7 @@ class BaseParameterModel(BaseModel, ABC):
             return self.local_id << (MAX_ID_SIZE - self.global_shift)
 
         elif isinstance(self._parent, ParameterGroupModel):
-            return self._parent.global_id | (
-                self.local_id << (MAX_ID_SIZE - self.global_shift)
-            )
+            return self._parent.global_id | (self.local_id << (MAX_ID_SIZE - self.global_shift))
         else:
             raise ValueError("Parent is not a ParameterGroupModel")
 
@@ -151,7 +135,7 @@ class BaseParameterModel(BaseModel, ABC):
             return self._name
 
         return f"{self._parent.global_name}.{self._name}"
-    
+
     @property
     def global_shift(self) -> int:
         """Adds the shift of all the parents to upstream"""
@@ -182,26 +166,25 @@ class BaseParameterModel(BaseModel, ABC):
         return self._parent.root
 
 
-class ParameterModel(BaseParameterModel):
-    """Parameter model, represents a single parameter"""
-
-    type: str = Field(description="Primitive type of the parameter")
+class BaseBaseParameterModel(BaseParameterModel):
+    primitive: str = Field(description="Primitive type of the parameter")
 
     # The type this parameter resolves to, set by the post_load_resolve method
     _resolved_type: DataType = PrivateAttr()
 
+    extensions: List[Extensions] | None = Field(description="Extensions of the parameter", default=None)
+
+
+class ParameterModel(BaseBaseParameterModel):
+    """Parameter model, represents a single parameter"""
+
+    type: Literal["parameter"]
     # Default value of the parameter, it not set it will use the default value of the primitive type
-    default: Any|None = Field(description="Default value of the parameter",default=None)
+    default: Any | None = Field(description="Default value of the parameter", default=None)
 
-    extensions: List[Extensions] | None = Field(
-        description="Extensions of the parameter", default=None
-    )
-
-    def post_load_resolve(
-        self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry
-    ):
+    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
         super().post_load_resolve(parent, name, type_registry)
-        self._resolved_type = type_registry.get_type(self.type)
+        self._resolved_type = type_registry.get_type(self.primitive)
 
         if isinstance(self._resolved_type, CustomDataType):
             self.extensions = self.extensions or []
@@ -214,7 +197,9 @@ class ParameterModel(BaseParameterModel):
                 )
 
     def one_line_summary(self, level=0):
-        return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
+        return (
+            f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
+        )
 
     def to_variable_initialiser(self) -> cc.Variable:
         """Returns the C initialiser for the parameter
@@ -255,21 +240,15 @@ class ParameterModel(BaseParameterModel):
         return parameter.variable
 
 
-class ReferenceParameterModel(BaseParameterModel):
-    type: str = Field(description="Primitive type of the parameter")
-    _resolved_type: DataType = PrivateAttr()
-    reference: str = Field(description="Reference to the point in memory")
-    
-    extensions: List[Extensions] | None = Field(
-        description="Extensions of the parameter", default=None
-    )
-    
-    def post_load_resolve(
-        self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry
-    ):
+class VoidParameterModel(BaseBaseParameterModel):
+    """Parameter model, represents a single parameter"""
+
+    type: Literal["void"]
+
+    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
         super().post_load_resolve(parent, name, type_registry)
-        self._resolved_type = type_registry.get_type(self.type)
-        
+        self._resolved_type = type_registry.get_type(self.primitive)
+
         if isinstance(self._resolved_type, CustomDataType):
             self.extensions = self.extensions or []
             if self._resolved_type.string_serialiser:
@@ -279,9 +258,65 @@ class ReferenceParameterModel(BaseParameterModel):
                         reference=self._resolved_type.string_serialiser,
                     )
                 )
-                
+
     def one_line_summary(self, level=0):
-        return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
+        return (
+            f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
+        )
+
+    def to_variable_initialiser(self) -> None:
+        """No need to initialise a ram storage entry because the parameter is referenced"""
+        return None
+
+    def to_object_initialiser(self) -> cc.Variable:
+        """Returns the odin C initialiser for the parameter"""
+
+        # permission_flags = self._access_configuration.get_permission_flags()
+
+        assert isinstance(self._resolved_type, StardardDataType)
+
+        formatted_extension = None
+        if self.extensions:
+            next = None
+            for extension in self.extensions:
+                formatted_extension = extension.as_literal(self, next)
+                next = formatted_extension
+
+        parameter = ODIN_ParameterModel(
+            type=self._resolved_type,
+            access_group=self.access_control.collapse().to_c_definition(),
+            local_index=self.local_id,
+            global_index=self.global_id,
+            data=None,
+            name=self._name,
+            description=self.resolved_description,
+            extensions=formatted_extension,
+        )
+        return parameter.variable
+
+
+class ReferenceParameterModel(BaseBaseParameterModel):
+    type: Literal["reference"]
+    reference: str = Field(description="Reference to the point in memory")
+
+    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
+        super().post_load_resolve(parent, name, type_registry)
+        self._resolved_type = type_registry.get_type(self.primitive)
+
+        if isinstance(self._resolved_type, CustomDataType):
+            self.extensions = self.extensions or []
+            if self._resolved_type.string_serialiser:
+                self.extensions.append(
+                    ReferenceStringCodecExtension(
+                        type="string_codec_reference",
+                        reference=self._resolved_type.string_serialiser,
+                    )
+                )
+
+    def one_line_summary(self, level=0):
+        return (
+            f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
+        )
 
     def to_variable_initialiser(self) -> None:
         """No need to initialise a ram storage entry because the parameter is referenced"""
@@ -291,14 +326,14 @@ class ReferenceParameterModel(BaseParameterModel):
         """Returns the odin C initialiser for the parameter"""
 
         assert isinstance(self._resolved_type, StardardDataType)
-        
+
         formatted_extension = None
         if self.extensions:
             next = None
             for extension in self.extensions:
                 formatted_extension = extension.as_literal(self, next)
                 next = formatted_extension
-                
+
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
@@ -313,22 +348,19 @@ class ReferenceParameterModel(BaseParameterModel):
         return parameter.variable
 
 
-class ArrayParameterModel(BaseParameterModel):
-    type: str = Field(description="Primitive type of the element in the array")
-    _resolved_type: DataType = PrivateAttr()
-    default: Any | None = Field(
-        description="Default value of the parameter", default=None
-    )
+class ArrayParameterModel(BaseBaseParameterModel):
+    type: Literal["array"]
+    default: List[Any] | str | None = Field(description="Default value of the parameter", default=None)
     elements: int = Field(description="Number of elements in the array")
 
-    def post_load_resolve(
-        self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry
-    ):
+    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
         super().post_load_resolve(parent, name, type_registry)
-        self._resolved_type = type_registry.get_type(self.type)
+        self._resolved_type = type_registry.get_type(self.primitive)
 
     def one_line_summary(self, level=0):
-        return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
+        return (
+            f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
+        )
 
     def to_variable_initialiser(self) -> cc.Variable:
         """Returns the C initialiser for the parameter
@@ -360,22 +392,19 @@ class ArrayParameterModel(BaseParameterModel):
         return parameter.variable
 
 
-class VectorParameterModel(BaseParameterModel):
-    type: str = Field(description="Primitive type of the element in the array")
-    _resolved_type: DataType = PrivateAttr()
-    default: List[Any] | None = Field(
-        description="Default value of the parameter", default=None
-    )
+class VectorParameterModel(BaseBaseParameterModel):
+    type: Literal["vector"]
+    default: List[Any] | str | None = Field(description="Default value of the parameter", default=None)
     max_elements: int = Field(description="Number of elements in the array")
 
-    def post_load_resolve(
-        self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry
-    ):
+    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
         super().post_load_resolve(parent, name, type_registry)
-        self._resolved_type = type_registry.get_type(self.type)
+        self._resolved_type = type_registry.get_type(self.primitive)
 
     def one_line_summary(self, level=0):
-        return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.type} - {self._resolved_type.size} bytes"
+        return (
+            f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
+        )
 
     def to_variable_type(
         self,
@@ -394,22 +423,17 @@ class VectorParameterModel(BaseParameterModel):
             ),
         )
 
-        struct.add_variable(
-            self._resolved_type.to_c_array_initialiser(
-                "data", self.default, [self.max_elements]
-            )
-        )
+        struct.add_variable(self._resolved_type.to_c_array_initialiser("data", self.default, [self.max_elements]))
         return struct
 
     def to_variable_initialiser(self) -> cc.Variable:
-        data = self._resolved_type.to_c_array_initialiser(
-            self._name, self.default, [self.max_elements]
-        )
+        data = self._resolved_type.to_c_array_initialiser(self._name, self.default, [self.max_elements])
+        length = len(self.default) if self.default else 0
 
         return cc.Variable(
             name=self._name,
             primitive="UNKNOWN PRIMITIVE",
-            value={"data": data.value, "num_elements": len(self.default)},  # type: ignore
+            value={"data": data.value, "num_elements": length},  # type: ignore
         )
 
     def to_object_initialiser(self) -> cc.Variable:
@@ -429,35 +453,6 @@ class VectorParameterModel(BaseParameterModel):
         return parameter.variable
 
 
-def get_discriminator_value(v: Any) -> str:
-    if isinstance(v, dict):
-        if "children" in v:
-            val = "group"
-        elif "reference" in v:
-            val = "reference"
-        elif "elements" in v:
-            val = "array"
-        elif "max_elements" in v:
-            val = "vector"
-        else:
-            val = "parameter"
-    else:
-        if isinstance(v, ParameterGroupModel):
-            val = "group"
-        elif isinstance(v, ReferenceParameterModel):
-            val = "reference"
-        elif isinstance(v, VectorParameterModel):
-            val = "vector"
-        elif isinstance(v, ArrayParameterModel):
-            val = "array"
-        elif isinstance(v, ParameterModel):
-            val = "parameter"
-        else:
-            raise ValueError(f"Unknown type {type(v)}")
-
-    return val
-
-
 class BaseParameterGroupModel(BaseParameterModel):
     children: """Dict[
         str,
@@ -466,8 +461,9 @@ class BaseParameterGroupModel(BaseParameterModel):
             | Annotated[ReferenceParameterModel, Tag("reference")]
             | Annotated[ArrayParameterModel, Tag("array")]
             | Annotated[VectorParameterModel, Tag("vector")]
-            | Annotated[ParameterGroupModel, Tag("group")],
-            Discriminator(get_discriminator_value)
+            | Annotated[ParameterGroupModel, Tag("group")]
+            | Annotated[VoidParameterModel, Tag("custom")],
+            Discriminator("type"),
         ]
     ]"""
     id_space_shift: int = Field(description="Number of bits to shift the children ids")
@@ -521,6 +517,7 @@ class BaseParameterGroupModel(BaseParameterModel):
                 or isinstance(child, ReferenceParameterModel)
                 or isinstance(child, VectorParameterModel)
                 or isinstance(child, ArrayParameterModel)
+                or isinstance(child, VoidParameterModel)
             ):
                 struct.add_variable(child.to_object_initialiser())
 
@@ -531,33 +528,43 @@ class BaseParameterGroupModel(BaseParameterModel):
 
     def to_variable_type(
         self,
-    ) -> cc.Struct:
+    ) -> cc.Struct | None:
         if isinstance(self, RootParameterModel):
             assert self._c_types is not None, "C types are not set"
             struct = StructVariable(name=self._c_types.variables_type, typedef=True)
         else:
             struct = StructVariable(var_name=self._name, typedef=False)
-
+        items = 0
         for child in self.children.values():
             if isinstance(child, ParameterGroupModel):
-                struct.add_struct(child.to_variable_type())
+                variable_type = child.to_variable_type()
+                if variable_type:
+                    struct.add_struct(variable_type)
+                    items += 1
 
             elif isinstance(child, VectorParameterModel):
                 child.to_variable_initialiser()
-                struct.add_struct(child.to_variable_type())
+                variable_type = child.to_variable_type()
+                if variable_type:
+                    struct.add_struct(variable_type)
+                    items += 1
 
-            elif isinstance(child, ParameterModel) or isinstance(
-                child, ArrayParameterModel
+            elif (
+                isinstance(child, ParameterModel)
+                or isinstance(child, ArrayParameterModel)
+                or isinstance(child, VoidParameterModel)
+                or isinstance(child, ReferenceParameterModel)
             ):
                 variable = child.to_variable_initialiser()
                 if variable:
                     struct.add_variable(variable)
-
-            elif isinstance(child, ReferenceParameterModel):
-                pass
+                    items += 1
 
             else:
                 raise ValueError("Unknown type")
+
+        if items == 0:
+            return None
 
         return struct
 
@@ -576,6 +583,9 @@ class BaseParameterGroupModel(BaseParameterModel):
 
             if initialiser:
                 values[initialiser.name] = initialiser.value
+
+        if len(values) == 0:
+            return None
 
         return cc.Variable(name=name, primitive=type, value=values)  # type: ignore
 
@@ -693,7 +703,9 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         return flat_list
 
+
 class ParameterGroupModel(BaseParameterGroupModel):
+    type: Literal["group"]
     pass
 
 

@@ -38,3 +38,10 @@ class MappedNumberIOExtension(IOExtension):
         )
 
         return model.variable
+
+class ReferenceIOExtension(BaseExtension):
+    type: Literal["custom_io"]
+    
+    def as_literal(self, parameter: "BaseParameterModel", next: str | None) -> str:
+        print("TODO: Implement ReferenceIOExtension")
+        return ""

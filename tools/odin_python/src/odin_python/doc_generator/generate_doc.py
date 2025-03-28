@@ -58,7 +58,7 @@ class DocGenerator:
                 table_data.append(
                     [
                         Paragraph(name, styles["Normal"]),
-                        Paragraph(child.type, styles["Normal"]),
+                        Paragraph(child.primitive, styles["Normal"]),
                         Paragraph(f"0x{child.global_id:08X}", styles["Normal"]),
                         Paragraph(child.resolved_description, styles["Normal"]),
                     ]

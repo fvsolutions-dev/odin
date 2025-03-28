@@ -25,7 +25,7 @@ class StardardDataType(DataType):
     py_typename: str = Field(description="The python typename that corresponds to the data type")
 
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
-        assert default is not None, "Default value must be provided"
+        assert default is not None, f"Default value must be provided, because {self.typename} does not provide a default value"
         return cc.Variable(
             name=name,
             primitive=self.c_typename,
@@ -102,12 +102,19 @@ class CharCDataType(StardardDataType):
             value=cc.TextModifier(f"'{default}'"),  # type: ignore
         )
 
-    def to_c_array_initialiser(self, name: str, defaults: List[Any], dimensions: List[int]) -> cc.Variable:
+    def to_c_array_initialiser(self, name: str, defaults: List[Any]|str|None, dimensions: List[int]) -> cc.Variable:
+
+        if isinstance(defaults, str):
+            value = cc.TextModifier(f'"{defaults}"')  # type: ignore
+        elif defaults is None:
+            value = [cc.TextModifier("0") ] # type: ignore
+        else:
+            value = [cc.TextModifier(f"'{x}'") for x in defaults]  # type: ignore
         return cc.Variable(
             name=name,
             primitive=self.c_typename,
             array=dimensions,
-            value=[cc.TextModifier(f"'{x}'") for x in defaults],  # type: ignore
+            value=value,  # type: ignore
         )
 
 

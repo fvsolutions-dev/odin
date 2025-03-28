@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
-#include "odin_datastore.h"
+#include "odin.h"
 
 void ODIN_dump(const ODIN_store_t *OD, bool compact, uint16_t access_group);
 void ODIN_dump_parameter(const ODIN_parameter_t *parameter, bool compact, uint16_t access_group);

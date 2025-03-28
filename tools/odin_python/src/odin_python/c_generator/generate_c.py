@@ -46,21 +46,28 @@ class CGenerator:
 
     @staticmethod
     def generate_header(
-        model: RootParameterModel, extra_includes: list[str] | None = None
+        model: RootParameterModel, extra_includes: list[str] | None = None, header_name: str | None = None
     ) -> str:
         cw = cc.CodeWriter()
         cw.add_line("#include <stdint.h>")
         cw.add_line("#include <stdbool.h>")
         cw.add_line("#include <odin.h>")
+        cw.add_line("#include <odin_core.h>")
         cw.add_line("#include <odin_security.h>")
         if extra_includes:
             for include in extra_includes:
                 cw.add_line(f'#include "{include}"')
-
+       
+        if not header_name:
+            header_name = "ODIN_GENERATED"
+            
+        # Add include guard
+        cw.add_line(f"#ifndef {header_name.upper()}_H")
+        cw.add_line(f"#define {header_name.upper()}_H")
         cw.add_line("")
 
         model.initialise_types(CGenerator.TYPES)
-
+        
         cw.add_struct(model.to_variable_type())
         cw.add_line("")
 
@@ -92,6 +99,9 @@ class CGenerator:
                 extern=True,
             )
 
+        cw.add_line("")
+        cw.add_line("#endif /* {model.header_name.upper()}_H */")
+        cw.add_line("")
         return str(cw)
 
     @staticmethod

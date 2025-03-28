@@ -18,7 +18,7 @@
         "odin.h": "c",
         "stddef.h": "c",
         "1a_simple_config_all_types.yaml.h": "c",
-        "odin_datastore.h": "c",
+        "odin.h": "c",
         "encode_string.h": "c",
         "ansi_colors.h": "c",
         "stdio_dump.h": "c",

@@ -1,12 +1,13 @@
 import os
 
 import click
-
+import json
 from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.c_generator.generate_c import CGenerator
 from .loader import AdvancedLoaderModel, SimpleLoaderModel
 from odin_python.parameter import RootParameterModel
 from .odin_db_generator import ODIN_DB_generator
+
 DEFAULT_NAME = "OD"
 
 
@@ -61,6 +62,18 @@ def gen_c(input_file: str, output_dir: str, name: str, advanced: bool):
         f.write(data)
 
     print("Conversion complete")
+
+
+@cli.command()
+@click.argument("output_file")
+@click.option("--advanced", is_flag=True, help="Use advanced loader")
+def gen_schema(output_file: str, advanced: bool = False):
+
+    with open(output_file, "w") as f:
+        if advanced:
+            f.write(json.dumps(AdvancedLoaderModel.model_json_schema(), indent=4))
+        else:
+            f.write(json.dumps(SimpleLoaderModel.model_json_schema(), indent=4))
 
 
 if __name__ == "__main__":
