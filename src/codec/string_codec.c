@@ -168,8 +168,20 @@ int ODIN_encode_parameter_to_string(const ODIN_parameter_t *parameter, char *out
 
         case ODIN_TYPE_VECTOR:
         case ODIN_TYPE_ARRAY: {
-            // Print all elements formatted in square brackets
 
+            // In case of a string, print it as a string
+            if (parameter->element_type == ODIN_ELEMENT_TYPE_CHAR) {
+                
+                // make sure the string is null terminated
+                if (ret_size >= output_buffer_size) {
+                    ret_size = output_buffer_size - 1;
+                }
+                data_buffer[ret_size] = '\0';
+                return snprintf(output_buffer, output_buffer_size, "\"%s\"", (char *)data_buffer);
+
+            }
+            
+            // Print all elements formatted in square brackets
             int len = 0;
             output_buffer[len++] = '[';
             uint8_t *data_buffer_ptr = data_buffer;
