@@ -60,7 +60,10 @@ int ODIN_element_to_string(const ODIN_parameter_t *parameter, void *data, char *
 
         case ODIN_ELEMENT_TYPE_HEX:
             return snprintf(output_buffer, output_buffer_size, "0x%02x", *(uint8_t *)data);
-
+        
+        case ODIN_ELEMENT_TYPE_CHAR:
+            return snprintf(output_buffer, output_buffer_size, "%c", *(char *)data);
+            
         case ODIN_ELEMENT_TYPE_CUSTOM: {
             // Check if the parameter has a custom string serialisation extension
             const ODIN_extension_t *extension = find_extension(parameter, ODIN_EXTENSION_TYPE_STRING_CODEC);
@@ -171,9 +174,13 @@ int ODIN_encode_parameter_to_string(const ODIN_parameter_t *parameter, char *out
             uint8_t *data_buffer_ptr = data_buffer;
 
             for (; data_buffer_ptr < data_buffer + ret_size; data_buffer_ptr += parameter->element_size) {
-                len += ODIN_element_to_string(parameter, data_buffer_ptr, output_buffer + len, output_buffer_size - len);
-                // cast fo rdouble
-                // double *data = (double *)data_buffer_ptr;
+
+                int ret = ODIN_element_to_string(parameter, data_buffer_ptr, output_buffer + len, output_buffer_size - len);
+                if (ret < 0) {
+                    return ret;
+                }
+
+                len += ret;
 
                 // if not last
                 if (data_buffer_ptr < data_buffer + ret_size - parameter->element_size) {
