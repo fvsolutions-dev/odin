@@ -75,7 +75,7 @@ int ODIN_encode_data_to_float(ODIN_element_type_t element_type, const uint8_t *d
 
     return ODIN_SUCCESS;
 }
-int ODIN_decode_float_do_data(ODIN_element_type_t element_type, const uint8_t *data, size_t size, float value) {
+int ODIN_decode_float_to_data(ODIN_element_type_t element_type, const uint8_t *data, size_t size, float value) {
     if (data == NULL) {
         return ODIN_ERROR_INVALID_ARGUMENT;
     }
@@ -134,5 +134,5 @@ int ODIN_decode_float_to_parameter(const ODIN_parameter_t *parameter, float data
         return ODIN_ERROR_INVALID_ARGUMENT;
     }
 
-    return ODIN_decode_float_do_data(parameter->element_type, parameter->data, parameter->element_size, data);
+    return ODIN_decode_float_to_data(parameter->element_type, parameter->data, parameter->element_size, data);
 }

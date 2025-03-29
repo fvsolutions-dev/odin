@@ -172,8 +172,8 @@ class BaseBaseParameterModel(BaseParameterModel):
     # The type this parameter resolves to, set by the post_load_resolve method
     _resolved_type: DataType = PrivateAttr()
 
-    extensions: List[Extensions] | None = Field(description="Extensions of the parameter", default=None)
-    
+    extensions: List[Extensions] = Field(description="Extensions of the parameter", default_factory=list)
+
     reference: str | None = Field(
         description="Sets the storage location of the parameter, if not set it will be managed internally",
         default=None,
@@ -182,16 +182,17 @@ class BaseBaseParameterModel(BaseParameterModel):
 class ParameterModel(BaseBaseParameterModel):
     """Parameter model, represents a single parameter"""
 
-    type: Literal["parameter"]
+    type: Literal["parameter"] | Literal["void"]
+
     # Default value of the parameter, it not set it will use the default value of the primitive type
     default: Any | None = Field(description="Default value of the parameter", default=None)
-    
+
     def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
         super().post_load_resolve(parent, name, type_registry)
         self._resolved_type = type_registry.get_type(self.primitive)
 
-        if isinstance(self._resolved_type, CustomDataType):
-            self.extensions = self.extensions or []
+        if isinstance(self._resolved_type, CustomDataType) and self._resolved_type.string_serialiser:
+            # Add the string codec extension to the parameter
             if self._resolved_type.string_serialiser:
                 self.extensions.append(
                     ReferenceStringCodecExtension(
@@ -213,11 +214,14 @@ class ParameterModel(BaseBaseParameterModel):
         uint32_t my_parameter = 0;
         ```
         """
-        
+
         if self.reference:
             # If the reference is set, then we don't need to initialise the variable
             return None
-        
+
+        if self.type == "void":
+            return None
+
         assert isinstance(self._resolved_type, StardardDataType)
         return self._resolved_type.to_c_initialiser(self._name, self.default)
 
@@ -229,7 +233,7 @@ class ParameterModel(BaseBaseParameterModel):
         assert isinstance(self._resolved_type, StardardDataType)
 
         formatted_extension = None
-        if self.extensions:
+        if len(self.extensions) > 0:
             next = None
             for extension in self.extensions:
                 formatted_extension = extension.as_literal(self, next)
@@ -239,75 +243,22 @@ class ParameterModel(BaseBaseParameterModel):
         if self.reference:
             self._absolute_variable_reference = self.reference
 
-            
-        parameter = ODIN_ParameterModel(
-            type=self._resolved_type,
-            access_group=self.access_control.collapse().to_c_definition(),
-            local_index=self.local_id,
-            global_index=self.global_id,
-            data=self.absolute_variable_reference,
-            name=self._name,
-            description=self.resolved_description,
-            extensions=formatted_extension,
-        )
-        return parameter.variable
+        data_address = self._absolute_variable_reference
 
-
-class VoidParameterModel(BaseBaseParameterModel):
-    """Parameter model, represents a single parameter"""
-
-    type: Literal["void"]
-
-    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
-        super().post_load_resolve(parent, name, type_registry)
-        self._resolved_type = type_registry.get_type(self.primitive)
-
-        if isinstance(self._resolved_type, CustomDataType):
-            self.extensions = self.extensions or []
-            if self._resolved_type.string_serialiser:
-                self.extensions.append(
-                    ReferenceStringCodecExtension(
-                        type="string_codec_reference",
-                        reference=self._resolved_type.string_serialiser,
-                    )
-                )
-
-    def one_line_summary(self, level=0):
-        return (
-            f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
-        )
-
-    def to_variable_initialiser(self) -> None:
-        """No need to initialise a ram storage entry because the parameter is referenced"""
-        return None
-
-    def to_object_initialiser(self) -> cc.Variable:
-        """Returns the odin C initialiser for the parameter"""
-
-        # permission_flags = self._access_configuration.get_permission_flags()
-
-        assert isinstance(self._resolved_type, StardardDataType)
-
-        formatted_extension = None
-        if self.extensions:
-            next = None
-            for extension in self.extensions:
-                formatted_extension = extension.as_literal(self, next)
-                next = formatted_extension
+        if self.type == "void":
+            data_address = None
 
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
             local_index=self.local_id,
             global_index=self.global_id,
-            data=None,
+            data=data_address,
             name=self._name,
             description=self.resolved_description,
             extensions=formatted_extension,
         )
         return parameter.variable
-
-
 
 
 class ArrayParameterModel(BaseBaseParameterModel):
@@ -332,11 +283,11 @@ class ArrayParameterModel(BaseBaseParameterModel):
         uint32_t my_parameter = 0;
         ```
         """
-        
+
         if self.reference:
             # If the reference is set, then we don't need to initialise the variable
             return None
-        
+
         assert isinstance(self._resolved_type, StardardDataType)
         return self._resolved_type.to_c_array_initialiser(
             self._name, self.default if self.default else [], [self.elements]
@@ -348,7 +299,7 @@ class ArrayParameterModel(BaseBaseParameterModel):
         if self.reference:
             # If the reference is set, then we don't need to initialise the variable
             self._absolute_variable_reference = self.reference
-            
+
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
@@ -427,11 +378,10 @@ class BaseParameterGroupModel(BaseParameterModel):
     children: """Dict[
         str,
         Annotated[
-            Annotated[ParameterModel, Tag("parameter")]
-            | Annotated[ArrayParameterModel, Tag("array")]
-            | Annotated[VectorParameterModel, Tag("vector")]
-            | Annotated[ParameterGroupModel, Tag("group")]
-            | Annotated[VoidParameterModel, Tag("custom")],
+            ParameterModel
+            |ArrayParameterModel
+            |VectorParameterModel
+            |ParameterGroupModel,
             Discriminator("type"),
         ]
     ]"""
@@ -485,7 +435,6 @@ class BaseParameterGroupModel(BaseParameterModel):
                 isinstance(child, ParameterModel)
                 or isinstance(child, VectorParameterModel)
                 or isinstance(child, ArrayParameterModel)
-                or isinstance(child, VoidParameterModel)
             ):
                 struct.add_variable(child.to_object_initialiser())
 
@@ -517,11 +466,7 @@ class BaseParameterGroupModel(BaseParameterModel):
                     struct.add_struct(variable_type)
                     items += 1
 
-            elif (
-                isinstance(child, ParameterModel)
-                or isinstance(child, ArrayParameterModel)
-                or isinstance(child, VoidParameterModel)
-            ):
+            elif isinstance(child, ParameterModel) or isinstance(child, ArrayParameterModel):
                 variable = child.to_variable_initialiser()
                 if variable:
                     struct.add_variable(variable)

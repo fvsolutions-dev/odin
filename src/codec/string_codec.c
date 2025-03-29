@@ -156,10 +156,15 @@ int ODIN_encode_parameter_to_string(const ODIN_parameter_t *parameter, char *out
     // TODO: Check if the parameter is accessible
 
     uint8_t data_buffer[ODIN_PRINT_BUFFER_SIZE];
-    int ret_size = ODIN_parameter_read_into_buffer(parameter, data_buffer, sizeof(data_buffer), access_group);
 
-    if (ret_size <= 0) {
+    int ret_size = ODIN_parameter_read_into_buffer(parameter, data_buffer, sizeof(data_buffer), access_group);
+                                       
+    if (ret_size < 0) {
         return ret_size;
+    }
+
+    if (ret_size == 0) {
+        return snprintf(output_buffer, output_buffer_size, "No data");
     }
 
     switch (parameter->odin_type) {

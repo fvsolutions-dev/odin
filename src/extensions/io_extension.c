@@ -21,7 +21,9 @@ static int read_operation(const ODIN_parameter_t *parameter, void *data, size_t 
     value = value * config->scale + config->offset;
 
     // Write to the current parameter
-    return ODIN_decode_float_do_data(parameter->element_type, data, size, value);
+    RETURN_ON_FAIL(ODIN_decode_float_to_data(parameter->element_type, data, size, value));
+
+    return size;
 }
 
 static int write_operation(const ODIN_parameter_t *parameter, const void *data, size_t size, odin_access_group_t access_group) {
@@ -39,8 +41,9 @@ static int write_operation(const ODIN_parameter_t *parameter, const void *data, 
     value = (value - config->offset) / config->scale;
 
     // Write to the current parameter
-    return ODIN_decode_float_do_data(config->reference->element_type, config->reference->data, config->reference->element_size,
-                                     value);
+    RETURN_ON_FAIL(ODIN_decode_float_to_data(config->reference->element_type, config->reference->data, config->reference->element_size,
+                                     value));
+    return size;
 }
 
 ODIN_io_extension_ops_t ODIN_extension_io_mapped_number_ops = {

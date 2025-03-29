@@ -23,9 +23,7 @@ class MappedNumberIOExtension(IOExtension):
 
     def as_literal(self, parameter: "BaseParameterModel", next: str | None) -> str:
         # Get root parameter
-        referenced_parameter = parameter.root.find_parameter_by_object_name(
-            self.reference
-        )
+        referenced_parameter = parameter.root.find_parameter_by_object_name(self.reference)
         assert referenced_parameter, f"Could not find parameter {self.reference}"
 
         # TODO check if variables are set correctly
@@ -39,9 +37,23 @@ class MappedNumberIOExtension(IOExtension):
 
         return model.variable
 
+
 class ReferenceIOExtension(BaseExtension):
     type: Literal["custom_io"]
-    
+    reference: str = Field(description="Reference to the C extension")
+
     def as_literal(self, parameter: "BaseParameterModel", next: str | None) -> str:
-        print("TODO: Implement ReferenceIOExtension")
-        return ""
+        # Get root parameter
+        # referenced_parameter = parameter.root.find_parameter_by_object_name(self.reference)
+        # assert referenced_parameter, f"Could not find parameter {self.reference}"
+
+        # TODO check if variables are set correctly
+
+        model = ODIN_ExtesionModel(
+            type=ODIN_ExtensionEnum.ODIN_EXTENSION_TYPE_IO,
+            ops=self.reference,
+            parameters=None,
+            next=next if next else None,
+        )
+
+        return model.variable

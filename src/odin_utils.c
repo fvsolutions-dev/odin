@@ -22,6 +22,8 @@ const char *ODIN_error_to_string(int error) {
             return "Not supported";
         case ODIN_ERROR_BUFFER_TOO_SMALL:
             return "Buffer too small";
+        case ODIN_ERROR_INVALID_PARAMETER_ACTION:
+            return "Invalid parameter action";
         case ODIN_ERROR:
             return "General error";
         default:
@@ -31,6 +33,7 @@ const char *ODIN_error_to_string(int error) {
 void ODIN_dump_parameter(const ODIN_parameter_t *parameter, int depth, odin_access_group_t access_group) {
     char str_buffer[512];
     int ret = ODIN_encode_parameter_to_string(parameter, str_buffer, sizeof(str_buffer), access_group);
+   
     if (ret < 0) {
         ret = sprintf(str_buffer, "Error: %s", ODIN_error_to_string(ret));
     }
