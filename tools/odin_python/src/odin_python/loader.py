@@ -9,7 +9,6 @@ from odin_python.parameter import (
     ArrayParameterModel,
     ParameterGroupModel,
     ParameterModel,
-    ReferenceParameterModel,
     VectorParameterModel,
     AccessControlCollection,
 )
@@ -21,7 +20,6 @@ class SimpleLoaderModel(
             str,
             ParameterModel
             | ParameterGroupModel
-            | ReferenceParameterModel
             | ArrayParameterModel
             | VectorParameterModel,
         ]
@@ -84,7 +82,6 @@ class AdvancedLoaderModel(BaseModel):
         str,
         ParameterModel
         | ParameterGroupModel
-        | ReferenceParameterModel
         | ArrayParameterModel
         | VectorParameterModel,
     ]

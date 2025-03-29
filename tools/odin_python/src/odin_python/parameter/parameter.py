@@ -173,7 +173,11 @@ class BaseBaseParameterModel(BaseParameterModel):
     _resolved_type: DataType = PrivateAttr()
 
     extensions: List[Extensions] | None = Field(description="Extensions of the parameter", default=None)
-
+    
+    reference: str | None = Field(
+        description="Sets the storage location of the parameter, if not set it will be managed internally",
+        default=None,
+    )
 
 class ParameterModel(BaseBaseParameterModel):
     """Parameter model, represents a single parameter"""
@@ -181,7 +185,7 @@ class ParameterModel(BaseBaseParameterModel):
     type: Literal["parameter"]
     # Default value of the parameter, it not set it will use the default value of the primitive type
     default: Any | None = Field(description="Default value of the parameter", default=None)
-
+    
     def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
         super().post_load_resolve(parent, name, type_registry)
         self._resolved_type = type_registry.get_type(self.primitive)
@@ -209,7 +213,11 @@ class ParameterModel(BaseBaseParameterModel):
         uint32_t my_parameter = 0;
         ```
         """
-
+        
+        if self.reference:
+            # If the reference is set, then we don't need to initialise the variable
+            return None
+        
         assert isinstance(self._resolved_type, StardardDataType)
         return self._resolved_type.to_c_initialiser(self._name, self.default)
 
@@ -227,6 +235,11 @@ class ParameterModel(BaseBaseParameterModel):
                 formatted_extension = extension.as_literal(self, next)
                 next = formatted_extension
 
+        # If the reference is set, then we don't need to initialise the variable
+        if self.reference:
+            self._absolute_variable_reference = self.reference
+
+            
         parameter = ODIN_ParameterModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
@@ -295,57 +308,6 @@ class VoidParameterModel(BaseBaseParameterModel):
         return parameter.variable
 
 
-class ReferenceParameterModel(BaseBaseParameterModel):
-    type: Literal["reference"]
-    reference: str = Field(description="Reference to the point in memory")
-
-    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
-        super().post_load_resolve(parent, name, type_registry)
-        self._resolved_type = type_registry.get_type(self.primitive)
-
-        if isinstance(self._resolved_type, CustomDataType):
-            self.extensions = self.extensions or []
-            if self._resolved_type.string_serialiser:
-                self.extensions.append(
-                    ReferenceStringCodecExtension(
-                        type="string_codec_reference",
-                        reference=self._resolved_type.string_serialiser,
-                    )
-                )
-
-    def one_line_summary(self, level=0):
-        return (
-            f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
-        )
-
-    def to_variable_initialiser(self) -> None:
-        """No need to initialise a ram storage entry because the parameter is referenced"""
-        return None
-
-    def to_object_initialiser(self) -> cc.Variable:
-        """Returns the odin C initialiser for the parameter"""
-
-        assert isinstance(self._resolved_type, StardardDataType)
-
-        formatted_extension = None
-        if self.extensions:
-            next = None
-            for extension in self.extensions:
-                formatted_extension = extension.as_literal(self, next)
-                next = formatted_extension
-
-        parameter = ODIN_ParameterModel(
-            type=self._resolved_type,
-            access_group=self.access_control.collapse().to_c_definition(),
-            local_index=self.local_id,
-            global_index=self.global_id,
-            data=self.reference,
-            name=self._name,
-            description=self.resolved_description,
-            extensions=formatted_extension,
-        )
-
-        return parameter.variable
 
 
 class ArrayParameterModel(BaseBaseParameterModel):
@@ -370,7 +332,11 @@ class ArrayParameterModel(BaseBaseParameterModel):
         uint32_t my_parameter = 0;
         ```
         """
-
+        
+        if self.reference:
+            # If the reference is set, then we don't need to initialise the variable
+            return None
+        
         assert isinstance(self._resolved_type, StardardDataType)
         return self._resolved_type.to_c_array_initialiser(
             self._name, self.default if self.default else [], [self.elements]
@@ -379,6 +345,10 @@ class ArrayParameterModel(BaseBaseParameterModel):
     def to_object_initialiser(self) -> cc.Variable:
         assert isinstance(self._resolved_type, StardardDataType)
 
+        if self.reference:
+            # If the reference is set, then we don't need to initialise the variable
+            self._absolute_variable_reference = self.reference
+            
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
             access_group=self.access_control.collapse().to_c_definition(),
@@ -458,7 +428,6 @@ class BaseParameterGroupModel(BaseParameterModel):
         str,
         Annotated[
             Annotated[ParameterModel, Tag("parameter")]
-            | Annotated[ReferenceParameterModel, Tag("reference")]
             | Annotated[ArrayParameterModel, Tag("array")]
             | Annotated[VectorParameterModel, Tag("vector")]
             | Annotated[ParameterGroupModel, Tag("group")]
@@ -514,7 +483,6 @@ class BaseParameterGroupModel(BaseParameterModel):
 
             elif (
                 isinstance(child, ParameterModel)
-                or isinstance(child, ReferenceParameterModel)
                 or isinstance(child, VectorParameterModel)
                 or isinstance(child, ArrayParameterModel)
                 or isinstance(child, VoidParameterModel)
@@ -553,7 +521,6 @@ class BaseParameterGroupModel(BaseParameterModel):
                 isinstance(child, ParameterModel)
                 or isinstance(child, ArrayParameterModel)
                 or isinstance(child, VoidParameterModel)
-                or isinstance(child, ReferenceParameterModel)
             ):
                 variable = child.to_variable_initialiser()
                 if variable:

@@ -1,7 +1,6 @@
 from .parameter import (
     ParameterModel,
     ArrayParameterModel,
-    ReferenceParameterModel,
     VectorParameterModel,
     ParameterGroupModel,
     RootParameterModel,
@@ -14,7 +13,6 @@ __all__ = [
     "BaseParameterModel",
     "ParameterModel",
     "ArrayParameterModel",
-    "ReferenceParameterModel",
     "VectorParameterModel",
     "ParameterGroupModel",
     "RootParameterModel",
