@@ -26,10 +26,10 @@
 int ODIN_element_to_string(const ODIN_parameter_t *parameter, void *data, char *output_buffer, size_t output_buffer_size) {
     switch (parameter->element_type) {
         case ODIN_ELEMENT_TYPE_UINT8:
-            return snprintf(output_buffer, output_buffer_size, "%" PRIu8, *(uint8_t *)data);
+            return snprintf(output_buffer, output_buffer_size, "%" PRIu16, (uint16_t) * (uint8_t *)data);
 
         case ODIN_ELEMENT_TYPE_INT8:
-            return snprintf(output_buffer, output_buffer_size, "%" PRId8, *(int8_t *)data);
+            return snprintf(output_buffer, output_buffer_size, "%" PRId16, (int16_t) * (int8_t *)data);
 
         case ODIN_ELEMENT_TYPE_UINT16:
             return snprintf(output_buffer, output_buffer_size, "%" PRIu16, *(uint16_t *)data);
@@ -60,10 +60,10 @@ int ODIN_element_to_string(const ODIN_parameter_t *parameter, void *data, char *
 
         case ODIN_ELEMENT_TYPE_HEX:
             return snprintf(output_buffer, output_buffer_size, "0x%02x", *(uint8_t *)data);
-        
+
         case ODIN_ELEMENT_TYPE_CHAR:
             return snprintf(output_buffer, output_buffer_size, "%c", *(char *)data);
-            
+
         case ODIN_ELEMENT_TYPE_CUSTOM: {
             // Check if the parameter has a custom string serialisation extension
             const ODIN_extension_t *extension = find_extension(parameter, ODIN_EXTENSION_TYPE_STRING_CODEC);
@@ -157,7 +157,7 @@ int ODIN_encode_parameter_to_string(const ODIN_parameter_t *parameter, char *out
 
     uint8_t data_buffer[ODIN_PRINT_BUFFER_SIZE];
     int ret_size = ODIN_parameter_read_into_buffer(parameter, data_buffer, sizeof(data_buffer), access_group);
-    
+
     if (ret_size <= 0) {
         return ret_size;
     }
@@ -168,26 +168,22 @@ int ODIN_encode_parameter_to_string(const ODIN_parameter_t *parameter, char *out
 
         case ODIN_TYPE_VECTOR:
         case ODIN_TYPE_ARRAY: {
-
             // In case of a string, print it as a string
             if (parameter->element_type == ODIN_ELEMENT_TYPE_CHAR) {
-                
                 // make sure the string is null terminated
                 if (ret_size >= output_buffer_size) {
                     ret_size = output_buffer_size - 1;
                 }
                 data_buffer[ret_size] = '\0';
                 return snprintf(output_buffer, output_buffer_size, "\"%s\"", (char *)data_buffer);
-
             }
-            
+
             // Print all elements formatted in square brackets
             int len = 0;
             output_buffer[len++] = '[';
             uint8_t *data_buffer_ptr = data_buffer;
 
             for (; data_buffer_ptr < data_buffer + ret_size; data_buffer_ptr += parameter->element_size) {
-
                 int ret = ODIN_element_to_string(parameter, data_buffer_ptr, output_buffer + len, output_buffer_size - len);
                 if (ret < 0) {
                     return ret;
