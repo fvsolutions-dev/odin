@@ -28,7 +28,11 @@ const ODIN_parameter_generic_t *ODIN_get_generic_parameter_by_id(const ODIN_para
 
         // If the parameter is a group, we need to check the children of the group
         if (parameter->odin_type == ODIN_TYPE_GROUP) {
-            return ODIN_get_generic_parameter_by_id((ODIN_parameter_group_t *)parameter, index, shift);
+            const ODIN_parameter_generic_t *param =
+                ODIN_get_generic_parameter_by_id((ODIN_parameter_group_t *)parameter, index, shift);
+            if (param != NULL) {
+                return param;
+            }
         }
     }
     return NULL;
