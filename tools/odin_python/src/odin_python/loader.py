@@ -77,7 +77,10 @@ class AdvancedLoaderModel(BaseModel):
         default_factory=TypeDefinitions.empty,
         description="Type definitions",
     )
-
+    groups: Dict[str, list[str]] = Field(
+        default_factory=dict,
+        description="Groups of parameters",
+    )
     parameters: Dict[
         str,
         ParameterModel

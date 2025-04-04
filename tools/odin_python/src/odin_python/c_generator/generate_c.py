@@ -36,7 +36,6 @@ class CGenerator:
         cw.add_line("")
 
         values = model.to_group_initialiser()
-
         for value in values:
             value.qualifiers = ["const"]
             cw.add_variable_initialization(value)
