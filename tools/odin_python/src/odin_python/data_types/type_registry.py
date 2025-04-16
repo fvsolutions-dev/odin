@@ -25,7 +25,9 @@ class StardardDataType(DataType):
     py_typename: str = Field(description="The python typename that corresponds to the data type")
 
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
-        assert default is not None, f"Default value must be provided, because {self.typename} does not provide a default value"
+        assert default is not None, (
+            f"Default value must be provided, because {self.typename} does not provide a default value"
+        )
         return cc.Variable(
             name=name,
             primitive=self.c_typename,
@@ -43,18 +45,24 @@ class StardardDataType(DataType):
 
 class CustomDataType(StardardDataType):
     c_typename: str = Field(description="The C typename that corresponds to the data type")
-    string_serialiser: str|None = Field(description="The string serialiser for the data type")
+    string_serialiser: str | None = Field(description="The string serialiser for the data type")
     default: Any | None = Field(description="The default value for the data type")
 
+    model: None | Any = Field(
+        description="The model for the data type",
+    )
+
+    resolved_model: None | dict[str, DataType] = Field(
+        description="The resolved model for the data type",
+        default=None,
+    )
+
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
-   
         if default is None:
             default = self.default
-            
-        assert default is not None, (
-            "Default value must be provided, either in the parameter or in the type definition"
-        )
-        
+
+        assert default is not None, "Default value must be provided, either in the parameter or in the type definition"
+
         return cc.Variable(
             name=name,
             primitive=self.c_typename,
@@ -73,6 +81,42 @@ class CustomDataType(StardardDataType):
 
     def extra_extension(self) -> str | None:
         return None
+
+    def resolve_model(self, registry: "TypeRegistry"):
+        """Resolve the model for the custom data type"""
+
+        if self.resolved_model is not None:
+            return
+
+        if self.model is None:
+            raise ValueError(f"Model for {self.typename} is not defined")
+
+        resolved_model = {}
+
+        for key, value in self.model.items():
+            if isinstance(value, dict):
+                # If the value is a dict, it is a custom type
+                resolved_model[key] = registry.get_type(value["type"])
+            else:
+                # Otherwise, it is a standard type
+                resolved_model[key] = registry.get_type(value)
+
+        self.resolved_model = resolved_model
+        self.size = self.get_model_size()
+
+    def get_model_size(self) -> int:
+        """Get the size of the model"""
+        if self.resolved_model is None:
+            return self.size
+
+        size = 0
+        for key, value in self.resolved_model.items():
+            if isinstance(value, CustomDataType):
+                size += value.get_model_size()
+            else:
+                size += value.size
+
+        return size
 
 
 class BooleanCDataType(StardardDataType):
@@ -102,12 +146,11 @@ class CharCDataType(StardardDataType):
             value=cc.TextModifier(f"'{default}'"),  # type: ignore
         )
 
-    def to_c_array_initialiser(self, name: str, defaults: List[Any]|str|None, dimensions: List[int]) -> cc.Variable:
-
+    def to_c_array_initialiser(self, name: str, defaults: List[Any] | str | None, dimensions: List[int]) -> cc.Variable:
         if isinstance(defaults, str):
             value = cc.TextModifier(f'"{defaults}"')  # type: ignore
         elif defaults is None:
-            value = [cc.TextModifier("0") ] # type: ignore
+            value = [cc.TextModifier("0")]  # type: ignore
         else:
             value = [cc.TextModifier(f"'{x}'") for x in defaults]  # type: ignore
         return cc.Variable(
@@ -160,3 +203,23 @@ class TypeRegistry:
             raise ValueError(f"Type {name} not found")
 
         return self.types[name]
+
+    def resolve_models(self):
+        """Resolve the models in the registry, this is used to resolve custom types"""
+
+        for type in self.types.values():
+            if isinstance(type, CustomDataType) and type.model is not None:
+                # Replace with the actual model
+                type.resolve_model(self)
+
+    def __repr__(self):
+        # Return a list of all type names
+        return f"TypeRegistry({', '.join(self.types.keys())})"
+
+    def __getitem__(self, item: str):
+        """Get a type by name"""
+        return self.get_type(item)
+    
+    def __iter__(self):
+        """Iterate over the types in the registry"""
+        return iter(self.types.items())

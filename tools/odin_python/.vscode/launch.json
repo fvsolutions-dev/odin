@@ -19,12 +19,14 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Python Debugger: TEST Advanced",
+            "name": "Python Debugger: TEST DEMO",
             "type": "debugpy",
             "request": "launch",
-            "program": "test/test_process_advanced_configs.py",
+            "program": "test/test_demo.py",
             "console": "integratedTerminal",
             "justMyCode": true,
         }
+ 
+ 
     ]
 }
