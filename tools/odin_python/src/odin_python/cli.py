@@ -57,7 +57,7 @@ def gen_c(input_file: str, output_dir: str, name: str, advanced: bool):
         f.write(CGenerator.generate_header(root_parameters, extra_includes=c_includes))
 
     with open(os.path.join(output_dir, f"{name}.odin"), "w") as f:
-        data = ODIN_DB_generator.generate_single_source(root_parameters)
+        data = ODIN_DB_generator.generate_single_source(root_parameters, types=registry)
         print(data)
         f.write(data)
 
