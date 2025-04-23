@@ -1,13 +1,8 @@
-import time
-
-from odin_db import OdinDBModel, OdinDBParameterGroupModel, OdinDBParameterModel, OdinDBTypeDefinitionModel
+from odin_db import OdinDBParameterGroupModel, OdinDBParameterModel, OdinDBTypeDefinitionModel
 from odin_db.models import ODINDBModelType
 
-from odin_python.data_types.type_registry import CustomDataType, StardardDataType, TypeRegistry
+from odin_python.data_types.type_registry import CustomDataType
 from odin_python.loader import ParameterGroupModel
-from odin_python.parameter import (
-    RootParameterModel,
-)
 from odin_python.parameter.parameter import BaseParameterGroupModel, ParameterModel
 
 
@@ -55,36 +50,3 @@ def type_to_db(type: CustomDataType) -> OdinDBTypeDefinitionModel | None:
         size=type.size,
         structure=structure_items,
     )
-
-
-class ODIN_DB_generator:
-    @staticmethod
-    def generate_single_source(model: RootParameterModel, types: TypeRegistry) -> str:
-        params = parameter_group_to_db(model)
-
-        # Create repetable hash of the configuration
-        import hashlib
-
-        hash = hashlib.md5()
-        hash.update(params.model_dump_json().encode("utf-8"))
-
-        db_types: dict[str, OdinDBTypeDefinitionModel] = {}
-        for name, defined_type in types:
-            if not isinstance(defined_type, CustomDataType):
-                continue
-
-            type = type_to_db(defined_type)
-            if type is None:
-                continue
-            db_types[name] = type
-            
-        db_model = OdinDBModel(
-            name="ODIN",
-            description="TODO",
-            creation_timestamp=time.time(),
-            configuration_hash=int(hash.hexdigest(), 16),
-            root=parameter_group_to_db(model),
-            types=db_types,
-        )
-
-        return db_model.model_dump_json(indent=4)

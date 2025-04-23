@@ -1,18 +1,14 @@
 from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
-from odin_python.c_generator.generate_c import (
+from odin_python.generators.abstract_generator import ModelContext
+from odin_python.generators.c.generator import (
     CGenerator,
 )
+from odin_python.generators.generator import default_generator
 from odin_python.loader import AdvancedLoaderModel
 from odin_python.parameter import (
     RootParameterModel,
 )
-from odin_python.odin_db_generator import ODIN_DB_generator
-
-
-import subprocess
-
-import pytest
-import glob
+from odin_python.generators.db.generator import ODIN_DB_generator
 
 
 def process_config(config: str):
@@ -22,28 +18,26 @@ def process_config(config: str):
     model.types.register_types(registry)
 
     root_parameters = RootParameterModel(
-      children=model.parameters,
+        children=model.parameters,
         access_control=model.access_control,
         id_space_shift=model.id_space_shift,
     )  # type: ignore
+
     root_parameters.post_load_resolve(None, "root", registry)
 
-    with open(f"{config}.c", "w") as f:
-        f.write(
-            CGenerator.generate_single_source(
-                root_parameters, extra_includes=model.c_include
-            )
-        )
 
-    with open(f"{config}.json", "w") as f:
-        f.write(
-            ODIN_DB_generator.generate_single_source(root_parameters, registry)  # type: ignore
-        )
-    
-
-    return f"{config}.c"
-
-
+    default_generator(
+        name="test",
+        model_context=ModelContext(
+            root_model=root_parameters,
+            types=registry,
+        ),
+        output_dir="test/demo",
+        doc=True,
+        db=True,
+        py=True,
+        c=True,
+    )
 
 
 if __name__ == "__main__":
@@ -51,4 +45,4 @@ if __name__ == "__main__":
 
     for config in CONFIGS:
         print(f"processing {config}")
-        file = process_config(config)
+        process_config(config)

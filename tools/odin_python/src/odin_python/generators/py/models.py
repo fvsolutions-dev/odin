@@ -10,7 +10,6 @@ class TemplateInterface:
     pass
 
 
-
 class GenericModel(ABC):
     @staticmethod
     @abstractmethod

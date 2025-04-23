@@ -4,7 +4,7 @@ import csnake as cc
 from odin_python.utils.string import escape_string
 from pydantic import BaseModel, Field
 
-from ..data_types.type_registry import DataType, StardardDataType
+from ...data_types.type_registry import DataType, StardardDataType
 from .odin_defs import ODIN_ElementTypeEnum, ODIN_ExtensionEnum, ODIN_TypeEnum
 
 ODIN_PARAMETER_TYPE = "ODIN_parameter_t"

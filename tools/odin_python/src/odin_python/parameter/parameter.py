@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Annotated, Any, Dict, List, Literal
 
 import csnake as cc
-from pydantic import BaseModel, ConfigDict, Discriminator, Field, PrivateAttr, Tag
+from pydantic import BaseModel, ConfigDict, Discriminator, Field, PrivateAttr
 
 from odin_python.extensions.string_codec_extension import ReferenceStringCodecExtension
 from odin_python.parameter.access_control import AccessControlCollection
@@ -16,7 +16,7 @@ from ..data_types.type_registry import (
     TypeRegistry,
 )
 from ..extensions import Extensions
-from ..c_generator.model import (
+from ..generators.c.model import (
     ODIN_ArrayModel,
     ODIN_ParameterGroupModel,
     ODIN_ParameterModel,

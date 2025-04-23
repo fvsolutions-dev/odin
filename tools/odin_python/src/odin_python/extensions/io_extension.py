@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from odin_python.c_generator.model import ODIN_ExtesionModel
-from odin_python.c_generator.odin_defs import ODIN_ExtensionEnum
+from odin_python.generators.c.model import ODIN_ExtesionModel
+from odin_python.generators.c.odin_defs import ODIN_ExtensionEnum
 
 from .common import BaseExtension
 

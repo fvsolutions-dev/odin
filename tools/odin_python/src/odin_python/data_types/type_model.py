@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, RootModel
 from typing import Any, Dict
-from .type_registry import CustomDataType, TypeRegistry,DataType
+from .type_registry import CustomDataType, TypeRegistry
 
 
 class TypeModel(BaseModel):

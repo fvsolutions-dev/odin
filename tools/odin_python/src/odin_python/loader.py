@@ -1,11 +1,10 @@
-from typing import Dict, Any
+from typing import Dict
 
 from pydantic import BaseModel, Field, RootModel, ValidationError
 from pydantic_yaml import parse_yaml_file_as
 
 
 from odin_python.data_types.type_model import TypeDefinitionsModel
-from odin_python.data_types.type_registry import CustomDataType, DataType, TypeRegistry
 from odin_python.parameter import (
     ArrayParameterModel,
     ParameterGroupModel,
@@ -34,7 +33,6 @@ class SimpleLoaderModel(
                 print(error["msg"])
 
             raise Exception("Failed to parse yaml file")
-
 
 
 class AdvancedLoaderModel(BaseModel):

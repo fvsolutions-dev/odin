@@ -1,11 +1,9 @@
 from typing import TYPE_CHECKING, Literal
 
-from csnake import TextModifier
-from pydantic import BaseModel, Field
+from pydantic import  Field
 
-from odin_python.c_generator.odin_defs import ODIN_ExtensionEnum
-
-from ..c_generator.model import ODIN_ExtesionModel
+from ..generators.c.odin_defs import ODIN_ExtensionEnum
+from ..generators.c.model import ODIN_ExtesionModel
 from .common import BaseExtension
 
 if TYPE_CHECKING:
@@ -17,18 +15,15 @@ class ValidationExtension(BaseExtension): ...
 
 class LimitValidationExtension(ValidationExtension):
     type: Literal["validation_limit_value"]
-    min: float | None = Field(
-        default=None, title="Minimum value, if not set, no minimum value is enforced"
-    )
+    min: float | None = Field(default=None, title="Minimum value, if not set, no minimum value is enforced")
     max: float | None = Field(
         default=None,
         title="Maximum allowed value, if not set, no maximum value is enforced",
     )
 
-    def as_literal(self, parameter: "BaseParameterModel", next: str|None) -> str:
-        
+    def as_literal(self, parameter: "BaseParameterModel", next: str | None) -> str:
         # TODO check if paramter is a regular parameter that can be cast to float
-        
+
         if self.min is None:
             self.min = -float("inf")
         if self.max is None:

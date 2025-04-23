@@ -1,5 +1,5 @@
 from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
-from odin_python.doc_generator.generate_doc import (
+from odin_python.generators.generator import (
     DocGenerator,
 )
 from odin_python.loader import AdvancedLoaderModel
@@ -26,7 +26,7 @@ def test():
 
     generator = DocGenerator()
 
-    data = generator.generate_single_source(root_parameters,target_file="test.pdf")
+    generator.generate_single_source(root_parameters,target_file="test.pdf")
 
 
 
