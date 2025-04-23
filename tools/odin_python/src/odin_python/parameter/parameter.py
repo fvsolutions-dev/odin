@@ -12,7 +12,7 @@ from odin_python.utils.csnake_custom import StructVariable
 from ..data_types.type_registry import (
     CustomDataType,
     DataType,
-    StardardDataType,
+    StandardDataType,
     TypeRegistry,
 )
 from ..extensions import Extensions
@@ -66,10 +66,6 @@ class BaseParameterModel(BaseModel, ABC):
     @abstractmethod
     def to_object_initialiser(self) -> cc.Variable:
         """Returns the C initialiser for the parameter"""
-
-    @abstractmethod
-    def to_variable_initialiser(self) -> cc.Variable | None:
-        """Returns the ram initialiser for the parameter"""
 
     def post_load_resolve(
         self,
@@ -206,31 +202,13 @@ class ParameterModel(BaseBaseParameterModel):
             f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
         )
 
-    def to_variable_initialiser(self) -> cc.Variable:
-        """Returns the C initialiser for the parameter
-
-        Example:
-        ```
-        uint32_t my_parameter = 0;
-        ```
-        """
-
-        if self.reference:
-            # If the reference is set, then we don't need to initialise the variable
-            return None
-
-        if self.type == "void":
-            return None
-
-        assert isinstance(self._resolved_type, StardardDataType)
-        return self._resolved_type.to_c_initialiser(self._name, self.default)
-
+  
     def to_object_initialiser(self) -> cc.Variable:
         """Returns the odin C initialiser for the parameter"""
 
         # permission_flags = self._access_configuration.get_permission_flags()
 
-        assert isinstance(self._resolved_type, StardardDataType)
+        assert isinstance(self._resolved_type, StandardDataType)
 
         formatted_extension = None
         if len(self.extensions) > 0:
@@ -275,26 +253,8 @@ class ArrayParameterModel(BaseBaseParameterModel):
             f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
         )
 
-    def to_variable_initialiser(self) -> cc.Variable:
-        """Returns the C initialiser for the parameter
-
-        Example:
-        ```
-        uint32_t my_parameter = 0;
-        ```
-        """
-
-        if self.reference:
-            # If the reference is set, then we don't need to initialise the variable
-            return None
-
-        assert isinstance(self._resolved_type, StardardDataType)
-        return self._resolved_type.to_c_array_initialiser(
-            self._name, self.default if self.default else [], [self.elements]
-        )
-
     def to_object_initialiser(self) -> cc.Variable:
-        assert isinstance(self._resolved_type, StardardDataType)
+        assert isinstance(self._resolved_type, StandardDataType)
 
         if self.reference:
             # If the reference is set, then we don't need to initialise the variable
@@ -327,38 +287,8 @@ class VectorParameterModel(BaseBaseParameterModel):
             f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
         )
 
-    def to_variable_type(
-        self,
-        type_name: str | None = None,
-    ) -> cc.Struct:
-        if type_name:
-            struct = StructVariable(name=type_name, typedef=True)
-        else:
-            struct = StructVariable(var_name=self._name, typedef=False)
-
-        struct.add_variable(
-            cc.Variable(
-                name="num_elements",
-                primitive="size_t",
-                value=len(self.default) if self.default else 0,  # type: ignore
-            ),
-        )
-
-        struct.add_variable(self._resolved_type.to_c_array_initialiser("data", self.default, [self.max_elements]))
-        return struct
-
-    def to_variable_initialiser(self) -> cc.Variable:
-        data = self._resolved_type.to_c_array_initialiser(self._name, self.default, [self.max_elements])
-        length = len(self.default) if self.default else 0
-
-        return cc.Variable(
-            name=self._name,
-            primitive="UNKNOWN PRIMITIVE",
-            value={"data": data.value, "num_elements": length},  # type: ignore
-        )
-
     def to_object_initialiser(self) -> cc.Variable:
-        assert isinstance(self._resolved_type, StardardDataType)
+        assert isinstance(self._resolved_type, StandardDataType)
 
         parameter = ODIN_ArrayModel(
             type=self._resolved_type,
@@ -442,64 +372,6 @@ class BaseParameterGroupModel(BaseParameterModel):
                 raise ValueError("Unknown type")
 
         return struct
-
-    def to_variable_type(
-        self,
-    ) -> cc.Struct | None:
-        if isinstance(self, RootParameterModel):
-            assert self._c_types is not None, "C types are not set"
-            struct = StructVariable(name=self._c_types.variables_type, typedef=True)
-        else:
-            struct = StructVariable(var_name=self._name, typedef=False)
-        items = 0
-        for child in self.children.values():
-            if isinstance(child, ParameterGroupModel):
-                variable_type = child.to_variable_type()
-                if variable_type:
-                    struct.add_struct(variable_type)
-                    items += 1
-
-            elif isinstance(child, VectorParameterModel):
-                child.to_variable_initialiser()
-                variable_type = child.to_variable_type()
-                if variable_type:
-                    struct.add_struct(variable_type)
-                    items += 1
-
-            elif isinstance(child, ParameterModel) or isinstance(child, ArrayParameterModel):
-                variable = child.to_variable_initialiser()
-                if variable:
-                    struct.add_variable(variable)
-                    items += 1
-
-            else:
-                raise ValueError("Unknown type")
-
-        if items == 0:
-            return None
-
-        return struct
-
-    def to_variable_initialiser(self) -> cc.Variable:
-        if isinstance(self, RootParameterModel):
-            assert self._c_types is not None, "C types are not set"
-            name = self._c_types.variables_name
-            type = self._c_types.variables_type
-        else:
-            name = self._name
-            type = "UNKNOWN PRIMITIVE"
-
-        values = {}
-        for child in self.children.values():
-            initialiser = child.to_variable_initialiser()
-
-            if initialiser:
-                values[initialiser.name] = initialiser.value
-
-        if len(values) == 0:
-            return None
-
-        return cc.Variable(name=name, primitive=type, value=values)  # type: ignore
 
     def to_object_initialiser(self) -> cc.Variable:
         if isinstance(self, RootParameterModel):

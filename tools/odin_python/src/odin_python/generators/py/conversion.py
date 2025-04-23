@@ -2,7 +2,7 @@
 from odin_python.loader import ParameterGroupModel
 from odin_python.parameter.parameter import BaseParameterGroupModel, ParameterModel
 
-from odin_python.data_types.type_registry import StardardDataType
+from odin_python.data_types.type_registry import StandardDataType
 
 def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int = 0) -> str:
     data = ""
@@ -14,7 +14,7 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int = 
     for child_name, child in model.children.items():
         if isinstance(child, ParameterModel):
             resolved_type = child._resolved_type
-            assert isinstance(resolved_type, StardardDataType)
+            assert isinstance(resolved_type, StandardDataType)
 
             type = resolved_type.py_typename
 

@@ -4,7 +4,7 @@ import csnake as cc
 from odin_python.utils.string import escape_string
 from pydantic import BaseModel, Field
 
-from ...data_types.type_registry import DataType, StardardDataType
+from ...data_types.type_registry import DataType, StandardDataType
 from .odin_defs import ODIN_ElementTypeEnum, ODIN_ExtensionEnum, ODIN_TypeEnum
 
 ODIN_PARAMETER_TYPE = "ODIN_parameter_t"
@@ -24,7 +24,7 @@ class ODIN_ParameterModel(BaseModel):
 
     @property
     def variable(self) -> cc.Variable:
-        assert isinstance(self.type, StardardDataType)
+        assert isinstance(self.type, StandardDataType)
 
         if self.extensions:
             extension = cc.TextModifier(self.extensions)
