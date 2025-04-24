@@ -10,8 +10,8 @@ from odin_python.generators.generator import GeneratorConfigurations
 from odin_python.generators.pdf.generator import DocGenerator
 from odin_python.generators.py.generator import PYGenerator
 
-from ..data_types.type_model import TypeDefinitionsModel
-from ..data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
+from ..data_types.input_type_model import TypeSpecifciationCollectionModel
+from ..data_types.type_registry import BASE_DATA_TYPES, UnresolvedTypeRegistry
 from ..generators.abstract_generator import ModelContext
 from .parameter import (
     AccessControlCollection,
@@ -100,8 +100,8 @@ class AdvancedLoaderModel(BaseModel):
         description="Access control for the parameters",
     )
 
-    types: TypeDefinitionsModel = Field(
-        default_factory=TypeDefinitionsModel.empty,
+    types: TypeSpecifciationCollectionModel = Field(
+        default_factory=TypeSpecifciationCollectionModel.empty,
         description="Type definitions",
     )
 
@@ -133,7 +133,7 @@ class ConfigurationReader:
         pass
 
     def load(self, file_path: str, type: Literal["simple", "advanced"]) -> tuple[ModelContext, GeneratorConfigurations]:
-        registry = TypeRegistry()
+        registry = UnresolvedTypeRegistry()
         registry.register(BASE_DATA_TYPES)
 
         try:

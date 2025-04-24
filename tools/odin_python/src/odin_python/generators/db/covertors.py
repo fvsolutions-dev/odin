@@ -34,16 +34,13 @@ def parameter_group_to_db(group: BaseParameterGroupModel) -> OdinDBParameterGrou
 
 def type_to_db(type: CustomDataType) -> OdinDBTypeDefinitionModel | None:
     structure_items = {}
+    print("WARNING: type_to_db is commented out")
 
-    if type.resolved_model is None:
-        print(f"Type {type.typename} has no resolved model")
-        return None
-
-    for name, child in type.resolved_model.items():
-        if isinstance(child, CustomDataType):
-            structure_items[name] = type_to_db(child)
-        else:
-            structure_items[name] = ODINDBModelType.from_string(child.typename)
+    # for name, child in type.model.root.items():
+    #     if isinstance(child, CustomDataType):
+    #         structure_items[name] = type_to_db(child)
+    #     else:
+    #         structure_items[name] = ODINDBModelType.from_string(child.typename)
 
     return OdinDBTypeDefinitionModel(
         size=type.size,

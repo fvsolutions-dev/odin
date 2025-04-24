@@ -58,7 +58,7 @@ def default_generator(
         py_generator = PYGenerator(generator_config.python_generator)
         py_generator.generate(
             model_context=model_context,
-            output_path=os.path.join(output_dir, f"{name}.py"),
+            output_path=os.path.join(output_dir, f"{name}"),
         )
 
     if db:
