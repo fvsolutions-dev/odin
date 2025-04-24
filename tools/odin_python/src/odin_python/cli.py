@@ -33,7 +33,7 @@ def generate(input_file: str, output_dir: str, name: str, advanced: bool, doc: b
     print(f"Converting {input_file} to {output_dir}")
 
     reader = ConfigurationReader()
-    model_context = reader.load(input_file, "advanced" if advanced else "simple")
+    model_context, config_model = reader.load(input_file, "advanced" if advanced else "simple")
 
     default_generator(
         name=name,
@@ -43,6 +43,7 @@ def generate(input_file: str, output_dir: str, name: str, advanced: bool, doc: b
         db=db,
         py=py,
         c=c,
+        generator_config=config_model,
     )
 
 

@@ -19,10 +19,10 @@ from .objects import (
 
 class CGenerator(AbstractGenerator):
     class Config(BaseModel):
-        objects_type: str = "odin_objects"
-        objects_name: str = "odin_objects_t"
-        variables_type: str = "odin_variables"
-        variables_name: str = "odin_variables_t"
+        objects_type: str = "odin_objects_t"
+        objects_name: str = "odin_objects"
+        variables_type: str = "odin_variables_t"
+        variables_name: str = "odin_variables"
         groups_name: str = "odin_store"
 
         extra_includes: list[str] = Field(

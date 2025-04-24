@@ -4,7 +4,7 @@ from odin_python.parameter.loader import ConfigurationReader
 
 def process_config(config: str):
     reader = ConfigurationReader()
-    model_context = reader.load(config, "advanced")
+    model_context,config_model = reader.load(config, "advanced")
     default_generator(
         name="test",
         model_context=model_context,
@@ -13,6 +13,7 @@ def process_config(config: str):
         db=True,
         py=True,
         c=True,
+        generator_config=config_model,
     )
 
 

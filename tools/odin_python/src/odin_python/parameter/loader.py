@@ -4,6 +4,12 @@ from pydantic import BaseModel, Field, RootModel, ValidationError
 from pydantic_yaml import parse_yaml_file_as
 from pytest import param
 
+from odin_python.generators.c.generator import CGenerator
+from odin_python.generators.db.generator import ODIN_DB_generator
+from odin_python.generators.generator import GeneratorConfigurations
+from odin_python.generators.pdf.generator import DocGenerator
+from odin_python.generators.py.generator import PYGenerator
+
 from ..data_types.type_model import TypeDefinitionsModel
 from ..data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from ..generators.abstract_generator import ModelContext
@@ -50,7 +56,6 @@ class CollectionDescriptionModel(BaseModel):
         description="List of parameters in the collection",
     )
 
-
     def to_group_model(
         self,
         group_name: str,
@@ -82,19 +87,24 @@ class CollectionDescriptionModel(BaseModel):
 
 
 class AdvancedLoaderModel(BaseModel):
+    class Config:
+        extra = "forbid"
+
+    config: GeneratorConfigurations = Field(
+        default_factory=GeneratorConfigurations,
+        description="Generator configurations",
+    )
+
     access_control: AccessControlCollection = Field(
         default_factory=AccessControlCollection.empty,
         description="Access control for the parameters",
-    )
-    c_include: list[str] = Field(
-        default_factory=list,
-        description="List of extra C includes",
     )
 
     types: TypeDefinitionsModel = Field(
         default_factory=TypeDefinitionsModel.empty,
         description="Type definitions",
     )
+
     collections: Dict[str, CollectionDescriptionModel] = Field(
         default_factory=dict,
         description="Collections of parameters",
@@ -122,7 +132,7 @@ class ConfigurationReader:
     def __init__(self):
         pass
 
-    def load(self, file_path: str, type: Literal["simple", "advanced"]) -> ModelContext:
+    def load(self, file_path: str, type: Literal["simple", "advanced"]) -> tuple[ModelContext, GeneratorConfigurations]:
         registry = TypeRegistry()
         registry.register(BASE_DATA_TYPES)
 
@@ -154,11 +164,17 @@ class ConfigurationReader:
                 for group_name, group in model.collections.items():
                     collections[group_name] = group.to_group_model(group_name, root_parameters)
 
-            return ModelContext(
-                root_model=root_parameters,
-                types=registry,
-                collections=collections,
-            )
+                return ModelContext(
+                    root_model=root_parameters,
+                    types=registry,
+                    collections=collections,
+                ), model.config
+
+            else:
+                return ModelContext(
+                    root_model=root_parameters,
+                    types=registry,
+                ), GeneratorConfigurations()
 
         except ValidationError as validation_error:
             print(validation_error.errors())
