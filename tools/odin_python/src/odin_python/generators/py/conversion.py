@@ -1,4 +1,7 @@
+from ctypes import Array
 from math import e
+
+from odin_python.parameter.parameter import ArrayParameterModel, VectorParameterModel
 from ...parameter import BaseParameterGroupModel, ParameterModel, ParameterGroupModel
 from ...data_types.type_registry import CustomDataType, BuiltinDataType, DataType, DataTypeModel
 
@@ -8,16 +11,33 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
     indent = "    " * tab_indent
     data += f"{indent}class {name}(BaseRootModel):\n"
 
-    data += f"{indent}    class Model(BaseModel):\n"
+    data += f"{indent}    class Model(ConfiguredBaseModel):\n"
 
     for child_name, child in model.children.items():
         if isinstance(child, ParameterModel):
             data += f"{indent}        {child_name}: {child._resolved_type.python_primitive_typename}\n"
 
+        elif isinstance(child, ArrayParameterModel):
+            # Special case for bytes
+            if child._resolved_type.c_typename == "uint8_t":
+                data += f"{indent}        {child_name}: bytes\n"
+            else:
+                data += f"{indent}        {child_name}: list[{child._resolved_type.python_primitive_typename}]\n"
+
+        elif isinstance(child, VectorParameterModel):
+            # Special case for string and bytes
+            if child._resolved_type.c_typename == "char":
+                data += f"{indent}        {child_name}: str\n"
+            elif child._resolved_type.c_typename == "uint8_t":
+                data += f"{indent}        {child_name}: bytes\n"
+            else:
+                data += f"{indent}        {child_name}: list[{child._resolved_type.python_primitive_typename}]\n"
+
         elif isinstance(child, ParameterGroupModel):
             # Camelcase
             class_child_name = child_name.title().replace("_", "")
             data += f"{indent}        {child_name}:  '{parent_model}.{class_child_name}.Model'\n"
+
         # Else add comment for missing type
         else:
             data += f"{indent}     #   {child_name}:  '{parent_model}.{child_name}' # {type(child)}\n"
@@ -41,7 +61,20 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
     for child_name, child in model.children.items():
         if isinstance(child, ParameterModel):
             data += f"{indent}        self.{child_name} = ODINEntry[{child._resolved_type.py_typename}](0x{child.global_id:08X}, cls={child._resolved_type.py_typename},interface=interface)\n"
-            children[child_name] = f"self.{child_name}"
+        elif isinstance(child, ArrayParameterModel):
+            if child._resolved_type.c_typename == "uint8_t":
+                data += f"{indent}        self.{child_name} = ODINBytesEntry(0x{child.global_id:08X}, interface=interface,max_length={child.elements}, fixed_length=True)\n"
+            else:
+                data += f"{indent}        self.{child_name} = ODINArrayEntry[{child._resolved_type.py_typename}](0x{child.global_id:08X}, cls={child._resolved_type.py_typename},elements={child.elements},element_size={child._resolved_type.size},interface=interface)\n"
+        elif isinstance(child, VectorParameterModel):
+            if child._resolved_type.c_typename == "char":
+                data += f"{indent}        self.{child_name} = ODINStringEntry(0x{child.global_id:08X}, interface=interface,max_length={child.max_elements})\n"
+            elif child._resolved_type.c_typename == "uint8_t":
+                data += f"{indent}        self.{child_name} = ODINBytesEntry(0x{child.global_id:08X}, interface=interface,max_length={child.max_elements},fixed_length=False)\n"
+            else:
+                data += f"{indent}        self.{child_name} = ODINVectorEntry[{child._resolved_type.py_typename}](0x{child.global_id:08X}, cls={child._resolved_type.py_typename},max_elements={child.max_elements},element_size={child._resolved_type.size},interface=interface)\n"
+
+        children[child_name] = f"self.{child_name}"
 
     for child_name, child in model.children.items():
         if isinstance(child, ParameterGroupModel):
@@ -62,6 +95,11 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
     for child_name, child in model.children.items():
         if isinstance(child, ParameterModel) or isinstance(child, ParameterGroupModel):
             data += f"{indent}            {child_name}=data['{child_name}'],\n"
+        elif isinstance(child, ArrayParameterModel):
+            data += f"{indent}            {child_name}=data['{child_name}'],\n"
+        elif isinstance(child, VectorParameterModel):
+            data += f"{indent}            {child_name}=data['{child_name}'],\n"
+
         # elif isinstance(child, ParameterGroupModel):
         # data += f"{indent}            {child_name}=data['{child_name}'].read(),\n"
         else:
@@ -162,7 +200,7 @@ def generate_rootmodel_type(name: str, datatype: CustomDataType) -> str:
 
 
 def generate_basemodel_type(name: str, datatype: CustomDataType) -> str:
-    output = f"""class {datatype.py_typename}(GenericModel,BaseModel):
+    output = f"""class {datatype.py_typename}(GenericModel,ConfiguredBaseModel):
 """
     resolved_types = datatype.model.to_flat_dict(depth=1)
 

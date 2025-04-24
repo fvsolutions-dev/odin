@@ -268,7 +268,7 @@ BASE_DATA_TYPES: List[DataType] = [
     BuiltinDataType(typename="f32", size=4, c_typename="float", struct_format="f", py_typename="OdinF32", default=0.0, primtive="float"),
     BuiltinDataType(typename="f64", size=8, c_typename="double", struct_format="d", py_typename="OdinF64", default=0.0, primtive="float"),
     BooleanCDataType(typename="bool", size=1, c_typename="bool", struct_format="?", py_typename="OdinBool", default=False, primtive="int"),
-    CharCDataType(typename="char", size=1, c_typename="char", struct_format="c", py_typename="OdinChar", default="0", primtive="str"),
+    CharCDataType(typename="char", size=1, c_typename="char", struct_format="B", py_typename="OdinChar", default=0, primtive="int"),
 ]
 
 
