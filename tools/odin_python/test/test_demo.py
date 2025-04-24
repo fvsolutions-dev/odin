@@ -1,14 +1,10 @@
 from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.generators.abstract_generator import ModelContext
-from odin_python.generators.c.generator import (
-    CGenerator,
-)
 from odin_python.generators.generator import default_generator
 from odin_python.loader import AdvancedLoaderModel
 from odin_python.parameter import (
     RootParameterModel,
 )
-from odin_python.generators.db.generator import ODIN_DB_generator
 
 
 def process_config(config: str):
