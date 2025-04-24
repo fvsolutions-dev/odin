@@ -1,4 +1,4 @@
-from odin_python.data_types.type_registry import BASE_DATA_TYPES, UnresolvedTypeRegistry
+from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.py_generator.generate_py import (
     PYGenerator,
 )
@@ -11,7 +11,7 @@ from odin_python.parameter import (
 def test():
     model = AdvancedLoaderModel.from_yaml(r"test\advanced_configs\5_bunch_of_params.yaml")
 
-    registry = UnresolvedTypeRegistry()
+    registry = TypeRegistry()
     registry.register(BASE_DATA_TYPES)
     model.types.register_types(registry)
 

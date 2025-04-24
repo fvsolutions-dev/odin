@@ -1,4 +1,4 @@
-from odin_python.data_types.type_registry import BASE_DATA_TYPES, UnresolvedTypeRegistry
+from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
 from odin_python.c_generator.generate_c import (
     CGenerator,
 )
@@ -18,7 +18,7 @@ CONFIGS = glob.glob("test/configs/*.yaml")
 
 
 def process_config(config: str):
-    registry = UnresolvedTypeRegistry()
+    registry = TypeRegistry()
     registry.register(BASE_DATA_TYPES)
 
     model = SimpleLoaderModel.from_yaml(config)

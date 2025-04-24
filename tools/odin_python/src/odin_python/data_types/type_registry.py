@@ -1,138 +1,23 @@
-from math import e
-from typing import Annotated, Dict
-from pydantic import BaseModel, PrivateAttr, RootModel
-from typing import List, Any
-from pydantic import Field
-import csnake as cc
-from abc import ABC, abstractmethod
+import re
 import struct
+from abc import ABC, abstractmethod
+from math import e
+from typing import Annotated, Any, Dict, List
+from unittest.mock import Base
 
+import csnake as cc
+from pydantic import BaseModel, Field, PrivateAttr, RootModel
 
-class TypeDefaultModel(BaseModel):
-    type: "list[TypeDefaultModel|DataType] | TypeDefaultModel | DataType"
-    default: Any | None = Field(description="The default value for the data type", default=None)
-
-
-class TypeModelDefinition(
-    RootModel[
-        Annotated[
-            "TypeDefaultModel | list[TypeDefaultModel] | list[str] | str ",
-            Field(union_mode="left_to_right"),
-        ],
-    ],
-):
-    _resolved: "list[TypeDefaultModel|DataType] | TypeDefaultModel | DataType | None" = PrivateAttr(default=None)
-
-    @property
-    def resolved(self) -> "list[TypeDefaultModel|DataType] | TypeDefaultModel | DataType":
-        """Get the resolved model"""
-
-        assert self._resolved is not None, "Model not resolved"
-
-        return self._resolved
-
-    def resolve(self, registry: "UnresolvedTypeRegistry"):
-        """Resolve the model for the data type"""
-
-        if self._resolved is not None:
-            return
-
-        if isinstance(self.root, str):
-            self._resolved = registry.get_type(self.root)
-            return
-
-        if isinstance(self.root, list):
-            self._resolved = []
-
-            for item in self.root:
-                if isinstance(item, str):
-                    self._resolved.append(registry.get_type(item))
-
-                elif isinstance(item, TypeDefaultModel):
-                    self._resolved.append(
-                        TypeDefaultModel(
-                            type=registry.get_type(item.type),
-                            default=item.default,
-                        )
-                    )
-                else:
-                    raise ValueError(f"Invalid type {item} in model")
-            return
-
-        raise ValueError(f"Invalid type {self.root} in model")
-
-
-class TypeModelDefinitions(
-    RootModel[
-        Dict[
-            str,
-            "TypeModelDefinition | TypeModelDefinitions",
-        ],
-    ],
-):
-    def resolve(self, registry: "UnresolvedTypeRegistry"):
-        """Resolve the model for the data type"""
-
-        for key, value in self.root.items():
-            if isinstance(value, TypeModelDefinition):
-                value.resolve(registry)
-            elif isinstance(value, TypeModelDefinitions):
-                value.resolve(registry)
-            else:
-                raise ValueError(f"Invalid type {value} in model")
-
-    def to_flat_dict(
-        self,
-        resolve: bool,
-        max_depth: int | None = None,
-    ) -> Dict[str, TypeModelDefinition]:
-        """Convert the model to a flat list of types"""
-
-        result = {}
-        for key, value in self.root.items():
-            if isinstance(value, TypeModelDefinition):
-                result[key] = value
-            elif isinstance(value, TypeModelDefinitions):
-                if max_depth is not None and max_depth <= 0:
-                    raise ValueError(f"Max depth {max_depth} reached for {key}")
-
-                # Decrease the max depth
-                if max_depth is not None:
-                    sub_results = value.to_flat_dict(resolve=resolve, max_depth=max_depth - 1)
-                else:
-                    sub_results = value.to_flat_dict(resolve=resolve)
-
-                for sub_key, sub_value in sub_results.items():
-                    result[f"{key}_{sub_key}"] = sub_value
-            else:
-                raise ValueError(f"Invalid type {value} in model")
-
-        if resolve:
-            for key, value in result.items():
-                result[key] = value._resolved
-
-        return result
-
-    def to_struct_format_string(self) -> str:
-        """Convert the model to a struct format string"""
-        format_string = ""
-        for key, value in self.to_flat_dict(resolve=True).items():
-            if isinstance(value, list):
-                for i in range(len(value)):
-                    _data_type = value[i]
-                    assert isinstance(_data_type, (StandardDataType, CustomDataType))
-                    format_string += _data_type.to_python_struct()
-
-            elif isinstance(value, StandardDataType):
-                format_string += value.to_python_struct()
-            else:
-                raise ValueError(f"Unknown type {value} for {key}")
-        return format_string
+from odin_python.data_types.type_definition import DataTypeDefintion, TypeAndDefaultModel, TypeModel, TypeModelDefinitions
 
 
 class DataType(BaseModel, ABC):
     typename: str
+    c_typename: str = Field(description="The C typename that corresponds to the data type")
+    py_typename: str = Field(description="The Python typename that corresponds to the data type")
     size: int = Field(description="Size of the data type in bytes")
+    default: Any = Field(description="The default value for the data type")
+    struct_format: str = Field(description="The python struct format string for the data type")
 
     @abstractmethod
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable: ...
@@ -140,23 +25,22 @@ class DataType(BaseModel, ABC):
     @abstractmethod
     def to_c_array_initialiser(self, name: str, defaults: Any, dimensions: List[int]) -> cc.Variable: ...
 
-    @abstractmethod
-    def to_python_struct(self) -> str: ...
-
     def extra_extension(self) -> str | None:
         return None
 
+    @property
+    def python_primitive_typename(self) -> str:
+        if isinstance(self, BuiltinDataType):
+            return self.primtive
+        else:
+            return self.py_typename
 
-class StandardDataType(DataType):
-    c_typename: str = Field(description="The C typename that corresponds to the data type")
-    python_struct_format: str | None = Field(
-        description="The python struct format string for the data type", default=None
-    )
+
+class BuiltinDataType(DataType):
+    primtive: str = Field(description="The python primitive type for the data type")
 
     def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
-        assert default is not None, (
-            f"Default value must be provided, because {self.typename} does not provide a default value"
-        )
+        assert default is not None, f"Default value must be provided, because {self.typename} does not provide a default value"
         return cc.Variable(
             name=name,
             primitive=self.c_typename,
@@ -174,17 +58,175 @@ class StandardDataType(DataType):
     def to_python_struct(self) -> str:
         """Convert the data type to a python struct format string"""
 
-        assert self.python_struct_format is not None, f"Python struct format string not defined for {self.typename}"
+        assert self.struct_format is not None, f"Python struct format string not defined for {self.typename}"
 
-        return self.python_struct_format
+        return self.struct_format
 
 
-class CustomDataType(StandardDataType):
-    c_typename: str = Field(description="The C typename that corresponds to the data type")
+class BooleanCDataType(BuiltinDataType):
+    def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+        assert default is not None, "Default value must be provided"
+
+        if default:
+            value = "true"
+        else:
+            value = "false"
+
+        return super().to_c_initialiser(name, value)
+
+    def to_c_array_initialiser(self, name: str, defaults: List[Any], dimensions: List[int]) -> cc.Variable:
+        value = ["true" if x else "false" for x in defaults]
+
+        return super().to_c_array_initialiser(name, value, dimensions)
+
+
+class CharCDataType(BuiltinDataType):
+    def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
+        assert default is not None, "Default value must be provided"
+
+        return cc.Variable(
+            name=name,
+            primitive=self.c_typename,
+            value=cc.TextModifier(f"'{default}'"),  # type: ignore
+        )
+
+    def to_c_array_initialiser(self, name: str, defaults: List[Any] | str | None, dimensions: List[int]) -> cc.Variable:
+        if isinstance(defaults, str):
+            value = cc.TextModifier(f'"{defaults}"')  # type: ignore
+        elif defaults is None:
+            value = [cc.TextModifier("0")]  # type: ignore
+        else:
+            value = [cc.TextModifier(f"'{x}'") for x in defaults]  # type: ignore
+        return cc.Variable(
+            name=name,
+            primitive=self.c_typename,
+            array=dimensions,
+            value=value,  # type: ignore
+        )
+
+
+class DataTypeModel(
+    RootModel["list[DataType] | DataType"],
+):
+    pass
+
+    def struct_format(self, depth: int) -> str:
+        if isinstance(self.root, DataType):
+            return self.root.struct_format
+        elif isinstance(self.root, list):
+            return "".join([x.struct_format for x in self.root])
+        else:
+            raise ValueError(f"Unknown type {self.root} for {self}")
+
+    @property
+    def default(self) -> Any:
+        if isinstance(self.root, DataType):
+            return self.root.default
+        elif isinstance(self.root, list):
+            return [x.default for x in self.root]
+        else:
+            raise ValueError(f"Unknown type {self.root} for {self}")
+
+    def to_flat_dict(self, depth: int) -> Dict[str, DataType | list[DataType]]:
+        """Convert the model to a flat list of type, will  flatten the model"""
+        if isinstance(self.root, DataType):
+            return {self.root.typename: self.root}
+        elif isinstance(self.root, list):
+            return {x.typename: x for x in self.root}
+
+        else:
+            raise ValueError(f"Unknown type {self.root} for {self}")
+
+
+class DataTypeModelDefinition(BaseModel):
+    root: (
+        DataTypeModel
+        | Dict[
+            str,
+            "DataTypeModel  | DataTypeModelDefinition",
+        ]
+    )
+    is_referenced: bool = Field(description="Whether the model is referenced based on another model")
+    is_custom: bool = Field(description="Whether the model is a custom type")
+
+    @property
+    def size(self) -> int:
+        return struct.calcsize(self.struct_format(depth=0))
+
+    @property
+    def default(self) -> Any:
+        if isinstance(self.root, DataTypeModel):
+            return self.root.default
+        if isinstance(self.root, dict):
+            defaults = {}
+            for key, value in self.root.items():
+                if isinstance(value, DataTypeModel):
+                    defaults[key] = value.default
+                elif isinstance(value, DataTypeModelDefinition):
+                    defaults[key] = value.default
+                else:
+                    raise ValueError(f"Unknown type {value} for {key}")
+            return defaults
+
+        else:
+            raise ValueError(f"Unknown type {self.root} for {self}")
+
+    def struct_format(self, depth: int) -> str:
+        if isinstance(self.root, DataTypeModel):
+            return self.root.struct_format(depth=depth)
+
+        elif isinstance(self.root, dict):
+            format = ""
+            for key, value in self.root.items():
+                if isinstance(value, DataTypeModel):
+                    format += value.struct_format(depth=depth)
+                elif isinstance(value, DataTypeModelDefinition):
+                    if value.is_referenced and depth < 1 and value.is_custom:
+                        format += f"{value.size}s"
+                    else:
+                        format += value.struct_format(depth=depth - 1)
+                else:
+                    raise ValueError(f"Unknown type {value} for {key}")
+            return format
+
+        else:
+            raise ValueError(f"Unknown type {self.root} for {self}")
+
+    def to_flat_dict(self, depth: int) -> dict[str, DataType | list[DataType]]:
+        """Convert the model to a flat list of type, will  flatten the model"""
+
+        assert isinstance(self.root, dict)
+
+        result: dict[str, DataType | list[DataType]] = {}
+
+        for key, value in self.root.items():
+            if isinstance(value.root, DataTypeModel):
+                if isinstance(value.root.root, list):
+                    keys : list[DataType] = []
+                    for i, sub_value in enumerate(value.root.root):
+                        keys.append(sub_value)
+                    
+                    result[key] = keys # type: ignore
+
+                else:
+                    result[key] = value.root.root
+
+            elif isinstance(value.root, dict):
+                if depth > 0:
+                    sub_results = value.to_flat_dict(depth=depth - 1)
+                else:
+                    sub_results = {key: value}
+                for sub_key, sub_value in sub_results.items():
+                    result[f"{key}_{sub_key}"] = sub_value
+            else:
+                raise ValueError(f"Unknown type {value} for {key}")
+
+        return result
+
+
+class CustomDataType(DataType):
     string_serialiser: str | None = Field(description="The string serialiser for the data type")
-    default: Any | None = Field(description="The default value for the data type")
-
-    model: TypeModelDefinitions = Field(
+    model: DataTypeModelDefinition = Field(
         description="The model for the data type",
     )
 
@@ -213,86 +255,99 @@ class CustomDataType(StandardDataType):
     def extra_extension(self) -> str | None:
         return None
 
-    def resolve_model(self, registry: "UnresolvedTypeRegistry"):
-        """Resolve the model for the custom data type"""
-
-        if self.model is None:
-            raise ValueError(f"Model for {self.typename} is not defined")
-
-        self.model.resolve(registry)
-        self.size = self.get_model_size()
-
-    def get_model_size(self) -> int:
-        """Get the size of the model"""
-        return struct.calcsize(self.to_python_struct())
-
-    def to_python_struct(self) -> str:
-        return self.model.to_struct_format_string()
-
-
-class BooleanCDataType(StandardDataType):
-    def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
-        assert default is not None, "Default value must be provided"
-
-        if default:
-            value = "true"
-        else:
-            value = "false"
-
-        return super().to_c_initialiser(name, value)
-
-    def to_c_array_initialiser(self, name: str, defaults: List[Any], dimensions: List[int]) -> cc.Variable:
-        value = ["true" if x else "false" for x in defaults]
-
-        return super().to_c_array_initialiser(name, value, dimensions)
-
-
-class CharCDataType(StandardDataType):
-    def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
-        assert default is not None, "Default value must be provided"
-
-        return cc.Variable(
-            name=name,
-            primitive=self.c_typename,
-            value=cc.TextModifier(f"'{default}'"),  # type: ignore
-        )
-
-    def to_c_array_initialiser(self, name: str, defaults: List[Any] | str | None, dimensions: List[int]) -> cc.Variable:
-        if isinstance(defaults, str):
-            value = cc.TextModifier(f'"{defaults}"')  # type: ignore
-        elif defaults is None:
-            value = [cc.TextModifier("0")]  # type: ignore
-        else:
-            value = [cc.TextModifier(f"'{x}'") for x in defaults]  # type: ignore
-        return cc.Variable(
-            name=name,
-            primitive=self.c_typename,
-            array=dimensions,
-            value=value,  # type: ignore
-        )
-
 
 BASE_DATA_TYPES: List[DataType] = [
-    StandardDataType(typename="u64", size=8, c_typename="uint64_t", python_struct_format="Q"),
-    StandardDataType(typename="u32", size=4, c_typename="uint32_t", python_struct_format="I"),
-    StandardDataType(typename="u16", size=2, c_typename="uint16_t", python_struct_format="H"),
-    StandardDataType(typename="u8", size=1, c_typename="uint8_t", python_struct_format="B"),
-    StandardDataType(typename="i64", size=8, c_typename="int64_t", python_struct_format="Q"),
-    StandardDataType(typename="i32", size=4, c_typename="int32_t", python_struct_format="I"),
-    StandardDataType(typename="i16", size=2, c_typename="int16_t", python_struct_format="H"),
-    StandardDataType(typename="i8", size=1, c_typename="int8_t", python_struct_format="B"),
-    StandardDataType(typename="f32", size=4, c_typename="float", python_struct_format="f"),
-    StandardDataType(typename="f64", size=8, c_typename="double", python_struct_format="d"),
-    BooleanCDataType(typename="bool", size=1, c_typename="bool", python_struct_format="?"),
-    CharCDataType(typename="char", size=1, c_typename="char", python_struct_format="c"),
+    BuiltinDataType(typename="u64", size=8, c_typename="uint64_t", struct_format="Q", py_typename="OdinU64", default=0, primtive="int"),
+    BuiltinDataType(typename="u32", size=4, c_typename="uint32_t", struct_format="I", py_typename="OdinU32", default=0, primtive="int"),
+    BuiltinDataType(typename="u16", size=2, c_typename="uint16_t", struct_format="H", py_typename="OdinU16", default=0, primtive="int"),
+    BuiltinDataType(typename="u8", size=1, c_typename="uint8_t", struct_format="B", py_typename="OdinU8", default=0, primtive="int"),
+    BuiltinDataType(typename="i64", size=8, c_typename="int64_t", struct_format="Q", py_typename="OdinI64", default=0, primtive="int"),
+    BuiltinDataType(typename="i32", size=4, c_typename="int32_t", struct_format="I", py_typename="OdinI32", default=0, primtive="int"),
+    BuiltinDataType(typename="i16", size=2, c_typename="int16_t", struct_format="H", py_typename="OdinI16", default=0, primtive="int"),
+    BuiltinDataType(typename="i8", size=1, c_typename="int8_t", struct_format="B", py_typename="OdinI8", default=0, primtive="int"),
+    BuiltinDataType(typename="f32", size=4, c_typename="float", struct_format="f", py_typename="OdinF32", default=0.0, primtive="float"),
+    BuiltinDataType(typename="f64", size=8, c_typename="double", struct_format="d", py_typename="OdinF64", default=0.0, primtive="float"),
+    BooleanCDataType(typename="bool", size=1, c_typename="bool", struct_format="?", py_typename="OdinBool", default=False, primtive="int"),
+    CharCDataType(typename="char", size=1, c_typename="char", struct_format="c", py_typename="OdinChar", default="0", primtive="str"),
 ]
 
 
-class UnresolvedTypeRegistry:
+def to_datatype_model(
+    type_registry: "TypeRegistry",
+    type: Dict[
+        str,
+        "TypeAndDefaultModel | TypeModel  | TypeModelDefinitions",
+    ]
+    | TypeModel
+    | TypeAndDefaultModel,
+) -> DataTypeModelDefinition:
+    """Convert a data type model to a data type"""
+
+    if isinstance(type, TypeModel) or isinstance(type, TypeAndDefaultModel):
+        if isinstance(type, TypeModel):
+            type_value = type.root
+        else:
+            type_value = type.type
+
+        if isinstance(type_value, str):
+            # If the model is a string, we need to resolve it
+            datatype = type_registry.find_type(type_value)
+            return DataTypeModelDefinition(
+                root=datatype,  # type: ignore
+                is_referenced=True,
+                is_custom=isinstance(datatype, CustomDataType),
+            )
+
+        elif isinstance(type_value, list):
+            return DataTypeModelDefinition(root=[type_registry.find_type(x) for x in type_value], is_referenced=True, is_custom=False)  # type: ignore
+        else:
+            raise ValueError(f"Unknown type {type_value}")
+
+    elif isinstance(type, dict):
+        models = {}
+        for type_value, value in type.items():
+            if isinstance(value, TypeAndDefaultModel) or isinstance(value, TypeModel):
+                models[type_value] = to_datatype_model(type_registry, value)
+            elif isinstance(value, dict):
+                models[type_value] = to_datatype_model(type_registry, value)
+            elif isinstance(value, TypeModelDefinitions):
+                models[type_value] = to_datatype_model(type_registry, value.root)
+            else:
+                raise ValueError(f"Invalid type {value} in model")
+
+        return DataTypeModelDefinition(root=models, is_referenced=False, is_custom=False)
+    else:
+        raise ValueError(f"Unknown type {type}")
+
+
+class TypeRegistry:
     """The type registry, us used to store datatypes, it allows adding custom types"""
 
     def __init__(self):
         self.types: Dict[str, DataType] = {}
+
+    def register_custom_datatype(self, name: str, type: DataTypeDefintion):
+        """Register a custom data type"""
+
+        if name in self.types:
+            raise ValueError(f"Type {name} already registered")
+
+        model = to_datatype_model(self, type.model.root)
+
+        # Create the custom data type
+        custom_type = CustomDataType(
+            typename=name,
+            c_typename=type.c_typename if type.c_typename is not None else f"{name}_t",
+            py_typename=type.py_typename if type.py_typename is not None else f"Odin{name.title().replace('_', '')}",
+            size=model.size,
+            default=model.default,
+            struct_format=model.struct_format(depth=0),
+            model=model,
+            string_serialiser=type.string_serialiser,
+        )
+
+        # Register the custom data type
+        self.register(custom_type)
 
     def register(self, type: DataType | List[DataType]):
         """Register a new type"""
@@ -307,7 +362,7 @@ class UnresolvedTypeRegistry:
 
         self.types[type.typename] = type
 
-    def get_type(self, name: str) -> DataType:
+    def find_type(self, name: str) -> DataType:
         """Get a type by name"""
 
         if name not in self.types:
@@ -315,21 +370,13 @@ class UnresolvedTypeRegistry:
 
         return self.types[name]
 
-    def resolve_models(self):
-        """Resolve the models in the registry, this is used to resolve custom types"""
-
-        for type in self.types.values():
-            if isinstance(type, CustomDataType) and type.model is not None:
-                # Replace with the actual model
-                type.resolve_model(self)
-
     def __repr__(self):
         # Return a list of all type names
         return f"TypeRegistry({', '.join(self.types.keys())})"
 
     def __getitem__(self, item: str):
         """Get a type by name"""
-        return self.get_type(item)
+        return self.find_type(item)
 
     def __iter__(self):
         """Iterate over the types in the registry"""

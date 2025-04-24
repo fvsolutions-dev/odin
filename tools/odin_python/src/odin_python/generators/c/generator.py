@@ -80,10 +80,10 @@ class CGenerator(AbstractGenerator):
 
         # Generate the ram storage type
         initaliser = to_variable_initialiser(model_context.root_model)
-        assert initaliser is not None, "Initialiser empty"
-
-        cw.add_variable_initialization(initaliser)  # type: ignore
-        cw.add_line("")
+        
+        if initaliser is not None:
+            cw.add_variable_initialization(initaliser)  # type: ignore
+            cw.add_line("")
 
         value = to_object_initialiser(model_context.root_model)
 
@@ -127,8 +127,13 @@ class CGenerator(AbstractGenerator):
         cw.add_line("")
 
         model_context.root_model.initialise_types(self.config.types)
+        variable_type = to_variable_type(model_context.root_model)
 
-        cw.add_struct(to_variable_type(model_context.root_model))  # type: ignore
+        variable_type = to_variable_type(model_context.root_model)
+
+        if variable_type is not None:
+            cw.add_struct(variable_type)
+
         cw.add_line("")
 
         cw.add_struct(to_object_type(model_context.root_model))
@@ -140,9 +145,8 @@ class CGenerator(AbstractGenerator):
 
         # Add external references
         initaliser = to_variable_initialiser(model_context.root_model)
-        assert initaliser is not None, "Initialiser empty"
-
-        cw.add_variable_declaration(initaliser, extern=True)
+        if initaliser is not None:
+            cw.add_variable_declaration(initaliser, extern=True)
 
         value = to_object_initialiser(model_context.root_model)
         value.qualifiers = ["const"]

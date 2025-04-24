@@ -1,4 +1,4 @@
-from .type_registry import UnresolvedTypeRegistry
+from .type_registry import TypeRegistry
 
 
-__all__ = ["UnresolvedTypeRegistry"]
+__all__ = ["TypeRegistry"]

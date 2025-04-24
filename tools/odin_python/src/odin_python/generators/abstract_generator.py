@@ -5,14 +5,14 @@ from pydantic import BaseModel
 
 from odin_python.parameter.parameter import ParameterGroupModel, ParameterModel
 
-from ..data_types.type_registry import UnresolvedTypeRegistry
+from ..data_types.type_registry import TypeRegistry
 from ..parameter import RootParameterModel
 from dataclasses import dataclass
 
 
 @dataclass
 class ModelContext:
-    types: UnresolvedTypeRegistry
+    types: TypeRegistry
     root_model: RootParameterModel
     collections: dict[str, ParameterGroupModel]|None = None
 

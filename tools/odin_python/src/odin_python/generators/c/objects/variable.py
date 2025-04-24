@@ -1,6 +1,6 @@
 import csnake as cc
 
-from ....data_types.type_registry import StandardDataType
+from ....data_types.type_registry import BuiltinDataType
 from ....parameter import (
     ArrayParameterModel,
     BaseBaseParameterModel,
@@ -25,12 +25,10 @@ def to_variable_initialiser(parameter: BaseParameterModel) -> cc.Variable | None
             if parameter.type == "void":
                 return None
 
-            assert isinstance(parameter._resolved_type, StandardDataType)
-
             return parameter._resolved_type.to_c_initialiser(parameter._name, parameter.default)
 
         elif isinstance(parameter, ArrayParameterModel):
-            assert isinstance(parameter._resolved_type, StandardDataType)
+            assert isinstance(parameter._resolved_type, BuiltinDataType)
 
             return parameter._resolved_type.to_c_array_initialiser(
                 parameter._name,

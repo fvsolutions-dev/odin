@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Discriminator, Field, PrivateAttr
 from ..data_types.type_registry import (
     CustomDataType,
     DataType,
-    UnresolvedTypeRegistry,
+    TypeRegistry,
 )
 from ..extensions import Extensions
 from ..extensions.string_codec_extension import ReferenceStringCodecExtension
@@ -58,7 +58,7 @@ class BaseParameterModel(BaseModel, ABC):
         self,
         parent: "BaseParameterModel | None",
         name: str,
-        type_registry: UnresolvedTypeRegistry,
+        type_registry: TypeRegistry,
     ):
         """Post load resolve method, must to be called after the model is created"""
 
@@ -171,9 +171,9 @@ class ParameterModel(BaseBaseParameterModel):
     # Default value of the parameter, it not set it will use the default value of the primitive type
     default: Any | None = Field(description="Default value of the parameter", default=None)
 
-    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: UnresolvedTypeRegistry):
+    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
         super().post_load_resolve(parent, name, type_registry)
-        self._resolved_type = type_registry.get_type(self.primitive)
+        self._resolved_type = type_registry.find_type(self.primitive)
 
         if isinstance(self._resolved_type, CustomDataType) and self._resolved_type.string_serialiser:
             # Add the string codec extension to the parameter
@@ -196,9 +196,9 @@ class ArrayParameterModel(BaseBaseParameterModel):
     default: List[Any] | str | None = Field(description="Default value of the parameter", default=None)
     elements: int = Field(description="Number of elements in the array")
 
-    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: UnresolvedTypeRegistry):
+    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
         super().post_load_resolve(parent, name, type_registry)
-        self._resolved_type = type_registry.get_type(self.primitive)
+        self._resolved_type = type_registry.find_type(self.primitive)
 
     def one_line_summary(self, level=0):
         return (
@@ -211,9 +211,9 @@ class VectorParameterModel(BaseBaseParameterModel):
     default: List[Any] | str | None = Field(description="Default value of the parameter", default=None)
     max_elements: int = Field(description="Number of elements in the array")
 
-    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: UnresolvedTypeRegistry):
+    def post_load_resolve(self, parent: BaseParameterModel | None, name: str, type_registry: TypeRegistry):
         super().post_load_resolve(parent, name, type_registry)
-        self._resolved_type = type_registry.get_type(self.primitive)
+        self._resolved_type = type_registry.find_type(self.primitive)
 
     def one_line_summary(self, level=0):
         return (
@@ -246,7 +246,7 @@ class BaseParameterGroupModel(BaseParameterModel):
         self,
         parent: BaseParameterModel | None,
         name: str,
-        type_registry: UnresolvedTypeRegistry,
+        type_registry: TypeRegistry,
     ):
         super().post_load_resolve(parent, name, type_registry)
         for child_name, child in self.children.items():

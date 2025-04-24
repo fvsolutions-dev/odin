@@ -1,6 +1,6 @@
 import csnake as cc
 
-from ....data_types.type_registry import StandardDataType
+from ....data_types.type_registry import BuiltinDataType
 from ....generators.c.model import ODIN_ArrayModel, ODIN_ParameterModel
 from ....parameter import (
     ArrayParameterModel,
@@ -16,7 +16,6 @@ from ....utils.csnake_custom import StructVariable
 
 def to_object_initialiser(parameter) -> cc.Variable:
     if isinstance(parameter, BaseBaseParameterModel):
-        assert isinstance(parameter._resolved_type, StandardDataType), "Type is not resolved"
 
         # If the reference is set, then we don't need to initialise the variable
         if parameter.reference:

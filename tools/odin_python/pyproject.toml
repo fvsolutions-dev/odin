@@ -25,7 +25,7 @@ select = ["E", "F"]
 ignore = ["E402"]
 
 [tool.ruff]
-line-length = 120
+line-length = 140
 exclude = ["**.pyi", "**/.venv/**"]
 include = ["src/**.py", "test/**.py"]
 

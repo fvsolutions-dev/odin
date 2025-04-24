@@ -1,57 +1,6 @@
+from math import e
 from ...parameter import BaseParameterGroupModel, ParameterModel, ParameterGroupModel
-from ...data_types.type_registry import CustomDataType, StandardDataType
-
-
-# class RootModel(BaseRootModel):
-#     class Model(BaseModel):
-#         raw_sensor_data: "RootModel.RawSensorData.Model"
-
-#     class RawSensorData(BaseRootModel):
-#         class Model(BaseModel):
-#             BMI323_1: OdinTimestampedvec7
-#             BMI323_2: OdinTimestampedvec7
-#             BMI323_3: OdinTimestampedvec7
-#             BMI323_4: OdinTimestampedvec7
-#             ADIS16607_1: OdinTimestampedvec7
-#             ADIS16607_2: OdinTimestampedvec7
-#             LIS3MDL_1: OdinTimestampedvec3
-#             ADXL1001_1: OdinTimestampedvec1
-
-
-#         def __init__(self, interface: TemplateInterface):
-#             self.BMI323_1 = ODINEntry[OdinTimestampedvec7](0xE0B10000, cls=OdinTimestampedvec7,interface=interface)
-#             self.BMI323_2 = ODINEntry[OdinTimestampedvec7](0xE0B20000, cls=OdinTimestampedvec7,interface=interface)
-#             self.BMI323_3 = ODINEntry[OdinTimestampedvec7](0xE0B30000, cls=OdinTimestampedvec7,interface=interface)
-#             self.BMI323_4 = ODINEntry[OdinTimestampedvec7](0xE0B40000, cls=OdinTimestampedvec7,interface=interface)
-#             self.ADIS16607_1 = ODINEntry[OdinTimestampedvec7](0xE0A10000, cls=OdinTimestampedvec7,interface=interface)
-#             self.ADIS16607_2 = ODINEntry[OdinTimestampedvec7](0xE0A20000, cls=OdinTimestampedvec7,interface=interface)
-#             self.LIS3MDL_1 = ODINEntry[OdinTimestampedvec3](0xE0C00000, cls=OdinTimestampedvec3,interface=interface)
-#             self.ADXL1001_1 = ODINEntry[OdinTimestampedvec1](0xE0A00000, cls=OdinTimestampedvec1,interface=interface)
-#             self._children = {
-#                 'BMI323_1': self.BMI323_1,
-#                 'BMI323_2': self.BMI323_2,
-#                 'BMI323_3': self.BMI323_3,
-#                 'BMI323_4': self.BMI323_4,
-#                 'ADIS16607_1': self.ADIS16607_1,
-#                 'ADIS16607_2': self.ADIS16607_2,
-#                 'LIS3MDL_1': self.LIS3MDL_1,
-#                 'ADXL1001_1': self.ADXL1001_1,
-#             }
-#             super().__init__(interface)
-
-#         async def read(self) -> Model:
-#             data = await self.read_all()
-
-#             return self.Model(
-#                 BMI323_1=data['BMI323_1'],
-#                 BMI323_2=data['BMI323_2'],
-#                 BMI323_3=data['BMI323_3'],
-#                 BMI323_4=data['BMI323_4'],
-#                 ADIS16607_1=data['ADIS16607_1'],
-#                 ADIS16607_2=data['ADIS16607_2'],
-#                 LIS3MDL_1=data['LIS3MDL_1'],
-#                 ADXL1001_1=data['ADXL1001_1'],
-#             )
+from ...data_types.type_registry import CustomDataType, BuiltinDataType, DataType, DataTypeModel
 
 
 def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, parent_model: str) -> str:
@@ -63,9 +12,7 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
 
     for child_name, child in model.children.items():
         if isinstance(child, ParameterModel):
-            resolved_type = child._resolved_type
-            assert isinstance(resolved_type, StandardDataType)
-            data += f"{indent}        {child_name}: {odin_type_to_python_type(resolved_type.typename)}\n"
+            data += f"{indent}        {child_name}: {child._resolved_type.python_primitive_typename}\n"
 
         elif isinstance(child, ParameterGroupModel):
             # Camelcase
@@ -76,9 +23,9 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
             data += f"{indent}     #   {child_name}:  '{parent_model}.{child_name}' # {type(child)}\n"
 
     # if not items print ...
-    data += f"{indent}        pass\n"
+    data += f"{indent}        pass\n\n"
 
-    childds = {}
+    children = {}
     for child_name, child in model.children.items():
         if isinstance(child, ParameterGroupModel):
             # Camelcase
@@ -87,31 +34,25 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
             # Generate the class
             data += "\n"
             data += generate_class(class_child_name, child, tab_indent + 1, f"{parent_model}.{class_child_name}")
-            childds[child_name] = f"self.{child_name}"
+            children[child_name] = f"self.{child_name}"
 
     data += f"{indent}    def __init__(self, interface: TemplateInterface):\n"
 
     for child_name, child in model.children.items():
         if isinstance(child, ParameterModel):
-            resolved_type = child._resolved_type
-            assert isinstance(resolved_type, StandardDataType)
-            # type = resolved_type.py_typename
-            # if isinstance(resolved_type, CustomDataType):
-            data += f"{indent}        self.{child_name} = ODINEntry[{get_pyton_type_name(resolved_type.typename)}](0x{child.global_id:08X}, cls={get_pyton_type_name(resolved_type.typename)},interface=interface)\n"
-            # else:
-            # data += f"{indent}        self.{child_name} = ODINEntry[{type}.BASE_TYPE](0x{child.global_id:08X}, cls={type})\n"
-            childds[child_name] = f"self.{child_name}"
+            data += f"{indent}        self.{child_name} = ODINEntry[{child._resolved_type.py_typename}](0x{child.global_id:08X}, cls={child._resolved_type.py_typename},interface=interface)\n"
+            children[child_name] = f"self.{child_name}"
 
     for child_name, child in model.children.items():
         if isinstance(child, ParameterGroupModel):
             data += f"{indent}        self.{child_name} = self.{child_name.title().replace('_', '')}(interface)\n"
 
     data += f"{indent}        self._children = {{\n"
-    for child_name, child in childds.items():
+    for child_name, child in children.items():
         data += f"{indent}            '{child_name}': {child},\n"
     data += f"{indent}        }}\n"
 
-    data += f"{indent}        super().__init__(interface)\n"
+    data += f"{indent}        super().__init__(interface)\n\n"
 
     # Read mehtod
     data += f"{indent}    async def read(self) -> Model:\n"
@@ -119,10 +60,10 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
 
     data += f"{indent}        return self.Model(\n"
     for child_name, child in model.children.items():
-        if isinstance(child, ParameterModel):
+        if isinstance(child, ParameterModel) or isinstance(child, ParameterGroupModel):
             data += f"{indent}            {child_name}=data['{child_name}'],\n"
-        elif isinstance(child, ParameterGroupModel):
-            data += f"{indent}            {child_name}=data['{child_name}'].read(),\n"
+        # elif isinstance(child, ParameterGroupModel):
+        # data += f"{indent}            {child_name}=data['{child_name}'].read(),\n"
         else:
             data += f"{indent}            # {child_name}: data['{child_name}'] # {type(child)}\n"
     data += f"{indent}        )\n"
@@ -130,125 +71,196 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
     return data
 
 
-def odin_type_to_python_type(odin_type: str) -> str:
-    """Convert an ODIN type to a Python type"""
-    if odin_type == "bool":
-        return "int"
-    elif odin_type in ["u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64"]:
-        return "int"
-    elif odin_type in ["f32", "f64"]:
-        return "float"
-    elif odin_type in ["char"]:
-        return "str"
+def generate_rootmodel_type(name: str, datatype: CustomDataType) -> str:
+    model = datatype.model.root
+    assert isinstance(model, DataTypeModel), "Model is not a DataTypeModel"
+
+    # Convert to python type if array use tuple, otherwise use the resolved type
+    if isinstance(model.root, list):
+        python_type = "tuple["
+        for i, sub_type in enumerate(model.root):
+            if isinstance(sub_type, BuiltinDataType):
+                python_type += sub_type.python_primitive_typename
+            elif isinstance(sub_type, CustomDataType):
+                python_type += sub_type.py_typename
+            else:
+                raise ValueError(f"Unknown type {sub_type} for {name}")
+
+            if i < len(model.root) - 1:
+                python_type += ", "
+
+        python_type += "]"
     else:
-        return get_pyton_type_name(odin_type)
-
-
-def get_pyton_type_name(odin_type: str) -> str:
-    # camelcase with odin prefix
-    return "Odin" + odin_type.title().replace("_", "")
-
-
-def generate_custom_type(name: str, type_class: CustomDataType) -> str:
-    if type_class.model is None:
-        print(f"Model for {name} is not defined")
-        return ""
-
-    # assert type_class.resolved_model is not None, "Model must be resolved before generating class"
-
-    type_name = get_pyton_type_name(type_class.typename)
-
-    data = f"""class {type_name}(GenericModel,BaseModel):
-"""
-    resolved_types = type_class.model.to_flat_dict().items()
-
-    for name, data_type in resolved_types:
-        if isinstance(data_type, list):
-            data += f"    {name}: tuple["
-            for i in range(len(data_type)):
-                data += f"{odin_type_to_python_type(data_type[i].typename)}, "
-
-            data = data[:-2]  # remove the last comma and space
-            data += f"]\n"
-
-        elif isinstance(data_type, StandardDataType):
-            data += f"    {name}: {odin_type_to_python_type(data_type.typename)}\n"
+        if isinstance(model.root, BuiltinDataType):
+            python_type = model.root.python_primitive_typename
+        elif isinstance(model.root, CustomDataType):
+            python_type = model.root.py_typename
         else:
-            raise ValueError(f"Unknown type {data_type} for {name}")
+            raise ValueError(f"Unknown type {model.root} for {name}")
 
+    output = f"""class {datatype.py_typename}(GenericModel,{python_type}):
+"""
     # Add the encode and decode methods, use struct
     #
-    data += f"""
+    output += f"""
     def encode_to_bytes(self) -> bytes:
         packed_data = struct.pack(
-            '{type_class.to_python_struct()}',
+            '<{datatype.struct_format}',
 """
-
-    for i, (name, data_type) in enumerate(resolved_types):
-        if isinstance(data_type, list):
-            for j in range(len(data_type)):
-                data += f"            self.{name}[{j}],\n"
-
-        elif isinstance(data_type, CustomDataType):
-            data += f"            {get_pyton_type_name(data_type.typename)}.encode_to_bytes(self.{name}),\n"
+    if isinstance(model.root, list):
+        for i, sub_type in enumerate(model.root):
+            if isinstance(sub_type, BuiltinDataType):
+                output += f"            self[{i}],\n"
+            elif isinstance(sub_type, CustomDataType):
+                output += f"            {sub_type.py_typename}.encode_to_bytes(self[{i}]),\n"
+            else:
+                raise ValueError(f"Unknown type {sub_type} for {name}")
+    else:
+        if isinstance(model.root, BuiltinDataType):
+            output += f"            self,\n"
+        elif isinstance(model.root, CustomDataType):
+            output += f"            {model.root.py_typename}.encode_to_bytes(self),\n"
         else:
-            data += f"            self.{name},\n"
+            raise ValueError(f"Unknown type {model.root} for {name}")
 
-    data += f"""
+    output += f"""
         )
         return packed_data
 
     @classmethod
-    def decode_from_bytes(cls, data: bytes) -> "{type_name}":
-        unpacked_data = struct.unpack('{type_class.to_python_struct()}', data)
+    def decode_from_bytes(cls, data: bytes) -> "{datatype.py_typename}":
+        unpacked_data = struct.unpack('<{datatype.struct_format}', data)
         return cls(
 """
+
     i = 0
-    for name, data_type in resolved_types:
-        if isinstance(data_type, list):
-            data += f"            {name}=("
-            for j in range(len(data_type)):
-                data += f"unpacked_data[{i + j}], "
 
-            data = data[:-2]  # remove the last comma and space
-            data += "),\n"
-            i += len(data_type)
-
-        elif isinstance(data_type, CustomDataType):
-            data += (
-                f"            {name}={get_pyton_type_name(data_type.typename)}.decode_from_bytes(unpacked_data[{i}]),\n"
-            )
-            i += 1
-        elif isinstance(data_type, StandardDataType):
-            data += f"            {name}=unpacked_data[{i}],\n"
-            i += 1
+    if isinstance(model.root, list):
+        output += "            (\n"
+        for i, sub_type in enumerate(model.root):
+            if isinstance(sub_type, BuiltinDataType):
+                output += f"            unpacked_data[{i}],\n"
+            elif isinstance(sub_type, CustomDataType):
+                output += f"            {sub_type.py_typename}.decode_from_bytes(unpacked_data[{i}]),\n"
+            else:
+                raise ValueError(f"Unknown type {sub_type} for {name}")
+        output += "            ),\n"
+    else:
+        if isinstance(model.root, BuiltinDataType):
+            output += "            *unpacked_data,\n"
+        elif isinstance(model.root, CustomDataType):
+            output += f"            *{model.root.py_typename}.decode_from_bytes(unpacked_data),\n"
         else:
-            raise ValueError(f"Unknown type {data_type} for {name}")
+            raise ValueError(f"Unknown type {model.root} for {name}")
 
-    data += """
+    output += """
         )
 
 """
 
-    return data
+    return output
 
 
-def generate_standard_type(name: str, type_class: StandardDataType) -> str:
-    python_type = odin_type_to_python_type(type_class.typename)
+def generate_basemodel_type(name: str, datatype: CustomDataType) -> str:
+    output = f"""class {datatype.py_typename}(GenericModel,BaseModel):
+"""
+    resolved_types = datatype.model.to_flat_dict(depth=1)
+
+    for sub_name, sub_datatype in resolved_types.items():
+        if isinstance(sub_datatype, DataType):
+            if isinstance(sub_datatype, BuiltinDataType):
+                output += f"    {sub_name}: {sub_datatype.python_primitive_typename}\n"
+            elif isinstance(sub_datatype, CustomDataType):
+                output += f"    {sub_name}: '{sub_datatype.py_typename}'\n"
+        elif isinstance(sub_datatype, list):
+            output += f"    {sub_name}: tuple["
+            for i, sub_type in enumerate(sub_datatype):
+                if isinstance(sub_type, BuiltinDataType):
+                    output += sub_type.python_primitive_typename
+                elif isinstance(sub_type, CustomDataType):
+                    output += sub_type.py_typename
+                else:
+                    raise ValueError(f"Unknown type {sub_type} for {sub_name}")
+
+                if i < len(sub_datatype) - 1:
+                    output += ", "
+
+            output += "]\n"
+
+        else:
+            raise ValueError(f"Unknown type {sub_datatype} for {sub_name}")
+
+    # Add the encode and decode methods, use struct
+    #
+    output += f"""
+    def encode_to_bytes(self) -> bytes:
+        packed_data = struct.pack(
+            '<{datatype.struct_format}',
+"""
+    for i, (name, sub_datatype) in enumerate(resolved_types.items()):
+        if isinstance(sub_datatype, list):
+            for j in range(len(sub_datatype)):
+                output += f"            self.{name}[{j}],\n"
+
+        elif isinstance(sub_datatype, CustomDataType):
+            output += f"            {sub_datatype.py_typename}.encode_to_bytes(self.{name}),\n"
+        else:
+            output += f"            self.{name},\n"
+
+    output += f"""
+        )
+        return packed_data
+
+    @classmethod
+    def decode_from_bytes(cls, data: bytes) -> "{datatype.py_typename}":
+        unpacked_data = struct.unpack('<{datatype.struct_format}', data)
+        return cls(
+"""
+
+    i = 0
+    for name, sub_datatype in resolved_types.items():
+        if isinstance(sub_datatype, list):
+            output += f"            {name}=("
+            for j in range(len(sub_datatype)):
+                output += f"unpacked_data[{i + j}], "
+
+            output = output[:-2]  # remove the last comma and space
+            output += "),\n"
+            i += len(sub_datatype)
+
+        elif isinstance(sub_datatype, CustomDataType):
+            output += f"            {name}={sub_datatype.py_typename}.decode_from_bytes(unpacked_data[{i}]),\n"
+            i += 1
+        elif isinstance(sub_datatype, BuiltinDataType):
+            output += f"            {name}=unpacked_data[{i}],\n"
+            i += 1
+        else:
+            raise ValueError(f"Unknown type {sub_datatype} for {name}")
+
+    output += """
+        )
+
+"""
+
+    return output
+
+
+def generate_standard_type(name: str, type_class: BuiltinDataType) -> str:
+    python_type = type_class.python_primitive_typename
     format_string = type_class.to_python_struct()
-    type_name = get_pyton_type_name(type_class.typename)
+    type_name = type_class.py_typename
 
     data = f"""class {type_name}(GenericModel,{python_type}):
     def encode_to_bytes(self) -> bytes:
         return struct.pack(
-            '{format_string}',
+            '<{format_string}',
             self,
         )
 
     @classmethod
     def decode_from_bytes(cls, data: bytes) -> "{type_name}":
         return cls(
-            *struct.unpack('{format_string}', data)
+            *struct.unpack('<{format_string}', data)
         )
 
 """
