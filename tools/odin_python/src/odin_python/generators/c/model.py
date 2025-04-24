@@ -44,7 +44,7 @@ class ODIN_ParameterModel(BaseModel):
                 "name_and_description": rf"{self.name}\0{escape_string(self.description)}",
                 "extension": extension,
             },  # type: ignore
-            comment=f"Local index: 0x{self.local_index:08X}",
+            comment=f"index: 0x{self.global_index:08X}",
         )
 
 
@@ -74,6 +74,7 @@ class ODIN_ParameterGroupModel(BaseModel):
                 "count": cc.TextModifier(str(len(parameters))),
                 "parameters": parameters,
             },
+            comment=f"index: 0x{self.global_id:08X}",
         )
         return variable
 

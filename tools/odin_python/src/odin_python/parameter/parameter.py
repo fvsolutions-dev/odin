@@ -302,23 +302,38 @@ class BaseParameterGroupModel(BaseParameterModel):
 
         return child_map
 
-    def find_parameter_by_object_name(self, name: str) -> BaseParameterModel | None:
+    def find_parameters_by_object_name(self, name: str) -> list[BaseParameterModel]:
         # Based name
         split_name = name.split(".")
         base_name = split_name[0]
 
         child_map = self.child_map
 
+        if base_name == "*":
+            return list(child_map.values())
+
         if base_name not in child_map:
-            return None
+            return []
 
         parameter = child_map[base_name]
 
         if isinstance(parameter, BaseParameterGroupModel):
-            assert len(split_name) > 1, "Group name is not set"
-            return parameter.find_parameter_by_object_name(".".join(split_name[1:]))
+            if len(split_name) == 1:
+                return [parameter]
+            else:
+                return parameter.find_parameters_by_object_name(".".join(split_name[1:]))
 
-        return parameter
+        return [parameter]
+
+    def find_parameter_by_object_name(self, name: str) -> BaseParameterModel | None:
+        parameters = self.find_parameters_by_object_name(name)
+        if parameters is None or len(parameters) == 0:
+            return None
+
+        if len(parameters) > 1:
+            raise ValueError(f"Multiple parameters found for {name}: {parameters}")
+
+        return parameters[0]
 
     def to_flat_list(self) -> List[BaseParameterModel]:
         flat_list = []
@@ -334,6 +349,13 @@ class BaseParameterGroupModel(BaseParameterModel):
 class ParameterGroupModel(BaseParameterGroupModel):
     type: Literal["group"]
     pass
+
+
+class CollectionModel(BaseParameterGroupModel):
+    type: Literal["collection"]
+    id_space_shift: int = 8
+    local_id: int = 0
+    
 
 
 class RootParameterModel(BaseParameterGroupModel):

@@ -98,6 +98,16 @@ class CGenerator(AbstractGenerator):
             cw.add_variable_initialization(value)
             cw.add_line("")
 
+        if model_context.collections is not None:
+            for collection_name, collection in model_context.collections.items():
+                cw.add_line(f"// Collection: {collection_name}")
+
+                values = to_group_initialiser(collection)
+                for value in values:
+                    value.qualifiers = ["const"]
+                    cw.add_variable_initialization(value)
+                    cw.add_line("")
+
         return str(cw)
 
     def generate_header(self, model_context: ModelContext) -> str:
@@ -148,6 +158,17 @@ class CGenerator(AbstractGenerator):
                 value,
                 extern=True,
             )
+
+        if model_context.collections is not None:
+            for collection_name, collection in model_context.collections.items():
+
+                values = to_group_initialiser(collection)
+                for value in values:
+                    value.qualifiers = ["const"]
+                    cw.add_variable_declaration(
+                        value,
+                        extern=True,
+                    )
 
         cw.add_line("")
         cw.add_line("#endif /* {model.header_name.upper()}_H */")
