@@ -80,7 +80,7 @@ class CGenerator(AbstractGenerator):
 
         # Generate the ram storage type
         initaliser = to_variable_initialiser(model_context.root_model)
-        
+
         if initaliser is not None:
             cw.add_variable_initialization(initaliser)  # type: ignore
             cw.add_line("")
@@ -165,7 +165,6 @@ class CGenerator(AbstractGenerator):
 
         if model_context.collections is not None:
             for collection_name, collection in model_context.collections.items():
-
                 values = to_group_initialiser(collection)
                 for value in values:
                     value.qualifiers = ["const"]

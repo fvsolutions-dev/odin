@@ -37,9 +37,7 @@ def to_variable_initialiser(parameter: BaseParameterModel) -> cc.Variable | None
             )
 
         elif isinstance(parameter, VectorParameterModel):
-            data = parameter._resolved_type.to_c_array_initialiser(
-                parameter._name, parameter.default, [parameter.max_elements]
-            )
+            data = parameter._resolved_type.to_c_array_initialiser(parameter._name, parameter.default, [parameter.max_elements])
             length = len(parameter.default) if parameter.default else 0
 
             return cc.Variable(
@@ -85,9 +83,7 @@ def to_variable_type(parameter: BaseParameterModel, type_name: str | None = None
             ),
         )
 
-        struct.add_variable(
-            parameter._resolved_type.to_c_array_initialiser("data", parameter.default, [parameter.max_elements])
-        )
+        struct.add_variable(parameter._resolved_type.to_c_array_initialiser("data", parameter.default, [parameter.max_elements]))
         return struct
 
     elif isinstance(parameter, BaseParameterGroupModel):

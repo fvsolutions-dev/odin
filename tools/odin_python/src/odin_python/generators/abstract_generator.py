@@ -3,7 +3,7 @@ from io import StringIO
 
 from pydantic import BaseModel
 
-from odin_python.parameter.parameter import ParameterGroupModel, ParameterModel
+from odin_python.parameter.parameter import ParameterGroupModel
 
 from ..data_types.type_registry import TypeRegistry
 from ..parameter import RootParameterModel
@@ -14,7 +14,8 @@ from dataclasses import dataclass
 class ModelContext:
     types: TypeRegistry
     root_model: RootParameterModel
-    collections: dict[str, ParameterGroupModel]|None = None
+    collections: dict[str, ParameterGroupModel] | None = None
+
 
 class AbstractGenerator(ABC):
     def __init__(self, config: BaseModel):

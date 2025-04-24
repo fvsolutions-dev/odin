@@ -87,9 +87,7 @@ class AccesControlDefinition(BaseModel):
         description="Override the default access control for the given group, if not specified it will not override",
     )
 
-    default: Set[str] | Set[AccessControlEnum] | str = Field(
-        default_factory=set, description="Default access control for the given group"
-    )
+    default: Set[str] | Set[AccessControlEnum] | str = Field(default_factory=set, description="Default access control for the given group")
 
     @model_validator(mode="after")  # type: ignore
     def convert_fields(cls, model: "AccesControlDefinition") -> "AccesControlDefinition":
@@ -229,9 +227,7 @@ class AccessControlCollection(RootModel[Dict[str, AccesControlDefinition | Set[s
             assert self_parameter is not None, "No parameter found for this entry"
             assert self_parameter._parent is not None, "No parent found for the parameter"
 
-            access_control = AccessControlCollection.recursive_get_build_permission_chain(
-                self_parameter._parent.access_control
-            )
+            access_control = AccessControlCollection.recursive_get_build_permission_chain(self_parameter._parent.access_control)
 
         access_control.append(self)
         return access_control

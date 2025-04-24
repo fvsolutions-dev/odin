@@ -2,14 +2,9 @@ from typing import Dict, Literal
 
 from pydantic import BaseModel, Field, RootModel, ValidationError
 from pydantic_yaml import parse_yaml_file_as
-from pytest import param
 
 from odin_python.data_types.type_definition import DataTypeDefintion
-from odin_python.generators.c.generator import CGenerator
-from odin_python.generators.db.generator import ODIN_DB_generator
 from odin_python.generators.generator import GeneratorConfigurations
-from odin_python.generators.pdf.generator import DocGenerator
-from odin_python.generators.py.generator import PYGenerator
 
 # from ..data_types.input_type_model import TypeSpecifciationCollectionModel
 from ..data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
@@ -101,7 +96,7 @@ class AdvancedLoaderModel(BaseModel):
         description="Access control for the parameters",
     )
 
-    types: dict[str,DataTypeDefintion] = Field(
+    types: dict[str, DataTypeDefintion] = Field(
         default_factory=dict,
         description="Type definitions",
     )
@@ -150,7 +145,7 @@ class ConfigurationReader:
                 model = AdvancedLoaderModel.from_yaml(file_path)
                 for type_name, type_definition in model.types.items():
                     registry.register_custom_datatype(type_name, type_definition)
-                
+
                 root_parameters = RootParameterModel(
                     children=model.parameters,
                     access_control=model.access_control,
@@ -161,7 +156,7 @@ class ConfigurationReader:
                 raise ValueError("Invalid type. Use 'simple' or 'advanced'.")
 
             root_parameters.post_load_resolve(None, "root", registry)
-            
+
             collections = {}
             if isinstance(model, AdvancedLoaderModel):
                 for group_name, group in model.collections.items():

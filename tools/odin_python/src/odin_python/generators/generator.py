@@ -29,6 +29,7 @@ class GeneratorConfigurations(BaseModel):
         description="DB generator configuration",
     )
 
+
 def default_generator(
     name: str,
     model_context: ModelContext,

@@ -1,6 +1,5 @@
 import csnake as cc
 
-from ....data_types.type_registry import BuiltinDataType
 from ....generators.c.model import ODIN_ArrayModel, ODIN_ParameterModel
 from ....parameter import (
     ArrayParameterModel,
@@ -16,7 +15,6 @@ from ....utils.csnake_custom import StructVariable
 
 def to_object_initialiser(parameter) -> cc.Variable:
     if isinstance(parameter, BaseBaseParameterModel):
-
         # If the reference is set, then we don't need to initialise the variable
         if parameter.reference:
             parameter._absolute_variable_reference = parameter.reference
@@ -111,11 +109,7 @@ def to_object_type(
         if isinstance(child, ParameterGroupModel):
             struct.add_struct(to_object_type(child))
 
-        elif (
-            isinstance(child, ParameterModel)
-            or isinstance(child, VectorParameterModel)
-            or isinstance(child, ArrayParameterModel)
-        ):
+        elif isinstance(child, ParameterModel) or isinstance(child, VectorParameterModel) or isinstance(child, ArrayParameterModel):
             struct.add_variable(to_object_initialiser(child))
 
         else:

@@ -1,8 +1,6 @@
 import asyncio
-from calendar import c
-import struct
 from abc import ABC, abstractmethod
-from typing import Any, Generator, Generic, Self, Type, TypeVar
+from typing import Any, Generic, Self, Type, TypeVar
 
 from pydantic import BaseModel
 
@@ -10,16 +8,15 @@ T = TypeVar("T")
 
 
 class TemplateInterface:
-    
-    async def get_single(self, id: int) -> bytes:
-        ...
+    async def get_single(self, id: int) -> bytes: ...
 
-    async def set_request(self, data: dict[int, bytes]):
-        ...
+    async def set_request(self, data: dict[int, bytes]): ...
+
 
 class ConfiguredBaseModel(BaseModel):
     class Config:
         ser_json_bytes = "hex"
+
 
 class GenericModel(ABC):
     @abstractmethod
@@ -59,6 +56,7 @@ class ODINArrayEntry(Generic[T]):
 
         await self.interface.set_request({self.id: b"".join([self.type_class.encode_to_bytes(v) for v in value])})  # type: ignore
 
+
 class ODINStringEntry:
     interface: TemplateInterface
 
@@ -71,7 +69,7 @@ class ODINStringEntry:
         data = await self.interface.get_single(self.id)
         if len(data) > self.max_length:
             raise ValueError(f"String length {len(data)} exceeds maximum length {self.max_length}")
-        return data.decode("utf-8",errors="ignore")  # type: ignore
+        return data.decode("utf-8", errors="ignore")  # type: ignore
 
     async def write(self, value: str):
         if len(value) > self.max_length:
@@ -82,7 +80,7 @@ class ODINStringEntry:
 class ODINBytesEntry:
     interface: TemplateInterface
 
-    def __init__(self, id: int, max_length: int, interface: TemplateInterface,fixed_length: bool):
+    def __init__(self, id: int, max_length: int, interface: TemplateInterface, fixed_length: bool):
         self.id = id
         self.interface = interface
         self.max_length = max_length
@@ -90,10 +88,10 @@ class ODINBytesEntry:
 
     async def read(self) -> bytes:
         data = await self.interface.get_single(self.id)
-        
+
         if self.fixed_length and len(data) != self.max_length:
             raise ValueError(f"Bytes length {len(data)} does not match expected length {self.max_length}")
-        
+
         if len(data) > self.max_length:
             raise ValueError(f"Bytes length {len(data)} exceeds maximum length {self.max_length}")
         return data  # type: ignore
@@ -101,11 +99,11 @@ class ODINBytesEntry:
     async def write(self, value: bytes):
         if self.fixed_length and len(value) != self.max_length:
             raise ValueError(f"Bytes length {len(value)} does not match expected length {self.max_length}")
-        
+
         if len(value) > self.max_length:
             raise ValueError(f"Bytes length {len(value)} exceeds maximum length {self.max_length}")
         await self.interface.set_request({self.id: value})
-        
+
 
 class ODINVectorEntry(Generic[T]):
     interface: TemplateInterface

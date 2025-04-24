@@ -1,12 +1,9 @@
-import re
 import struct
 from abc import ABC, abstractmethod
-from math import e
-from typing import Annotated, Any, Dict, List
-from unittest.mock import Base
+from typing import Any, Dict, List
 
 import csnake as cc
-from pydantic import BaseModel, Field, PrivateAttr, RootModel
+from pydantic import BaseModel, Field, RootModel
 
 from odin_python.data_types.type_definition import DataTypeDefintion, TypeAndDefaultModel, TypeModel, TypeModelDefinitions
 
@@ -202,11 +199,11 @@ class DataTypeModelDefinition(BaseModel):
         for key, value in self.root.items():
             if isinstance(value.root, DataTypeModel):
                 if isinstance(value.root.root, list):
-                    keys : list[DataType] = []
+                    keys: list[DataType] = []
                     for i, sub_value in enumerate(value.root.root):
                         keys.append(sub_value)
-                    
-                    result[key] = keys # type: ignore
+
+                    result[key] = keys  # type: ignore
 
                 else:
                     result[key] = value.root.root

@@ -92,9 +92,7 @@ class DocGenerator(AbstractGenerator):
 
     def generate(self, model_context: ModelContext, output_path: str | IO) -> None:
         # Create PDF document
-        doc = SimpleDocTemplate(
-            output_path, pagesize=LETTER, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40
-        )
+        doc = SimpleDocTemplate(output_path, pagesize=LETTER, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
 
         # Stylesheet for consistent styling
         styles = getSampleStyleSheet()

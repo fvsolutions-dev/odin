@@ -186,9 +186,7 @@ class ParameterModel(BaseBaseParameterModel):
                 )
 
     def one_line_summary(self, level=0):
-        return (
-            f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
-        )
+        return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
 
 
 class ArrayParameterModel(BaseBaseParameterModel):
@@ -201,9 +199,7 @@ class ArrayParameterModel(BaseBaseParameterModel):
         self._resolved_type = type_registry.find_type(self.primitive)
 
     def one_line_summary(self, level=0):
-        return (
-            f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
-        )
+        return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
 
 
 class VectorParameterModel(BaseBaseParameterModel):
@@ -216,9 +212,7 @@ class VectorParameterModel(BaseBaseParameterModel):
         self._resolved_type = type_registry.find_type(self.primitive)
 
     def one_line_summary(self, level=0):
-        return (
-            f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
-        )
+        return f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
 
 
 class BaseParameterGroupModel(BaseParameterModel):
@@ -273,9 +267,7 @@ class BaseParameterGroupModel(BaseParameterModel):
 
             # check if local id respects bit shift
             if child.local_id >= (1 << self.id_space_shift):
-                raise ValueError(
-                    f"Local id {child.local_id} is larger than the id shift {self.id_space_shift} in {self._name}"
-                )
+                raise ValueError(f"Local id {child.local_id} is larger than the id shift {self.id_space_shift} in {self._name}")
 
             if isinstance(child, BaseParameterGroupModel):
                 child.validate_local_id()
@@ -355,7 +347,6 @@ class CollectionModel(BaseParameterGroupModel):
     type: Literal["collection"]
     id_space_shift: int = 8
     local_id: int = 0
-    
 
 
 class RootParameterModel(BaseParameterGroupModel):

@@ -1,6 +1,3 @@
-from ctypes import Array
-from math import e
-
 from odin_python.parameter.parameter import ArrayParameterModel, VectorParameterModel
 from ...parameter import BaseParameterGroupModel, ParameterModel, ParameterGroupModel
 from ...data_types.type_registry import CustomDataType, BuiltinDataType, DataType, DataTypeModel
@@ -155,7 +152,7 @@ def generate_rootmodel_type(name: str, datatype: CustomDataType) -> str:
                 raise ValueError(f"Unknown type {sub_type} for {name}")
     else:
         if isinstance(model.root, BuiltinDataType):
-            output += f"            self,\n"
+            output += "            self,\n"
         elif isinstance(model.root, CustomDataType):
             output += f"            {model.root.py_typename}.encode_to_bytes(self),\n"
         else:

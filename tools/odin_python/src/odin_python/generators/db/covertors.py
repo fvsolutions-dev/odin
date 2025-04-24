@@ -1,5 +1,4 @@
 from odin_db import OdinDBParameterGroupModel, OdinDBParameterModel, OdinDBTypeDefinitionModel
-from odin_db.models import ODINDBModelType
 
 from ...data_types.type_registry import CustomDataType
 from ...parameter import BaseParameterGroupModel, ParameterGroupModel, ParameterModel

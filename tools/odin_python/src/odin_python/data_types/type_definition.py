@@ -1,7 +1,7 @@
 from typing import Dict
 
 from pydantic import BaseModel, Field, RootModel
-from typing import Any, List
+from typing import Any
 
 
 class TypeAndDefaultModel(BaseModel):
