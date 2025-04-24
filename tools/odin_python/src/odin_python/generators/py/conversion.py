@@ -1,8 +1,6 @@
+from ...parameter import BaseParameterGroupModel, ParameterModel, ParameterGroupModel
+from ...data_types.type_registry import StandardDataType
 
-from odin_python.loader import ParameterGroupModel
-from odin_python.parameter.parameter import BaseParameterGroupModel, ParameterModel
-
-from odin_python.data_types.type_registry import StandardDataType
 
 def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int = 0) -> str:
     data = ""
@@ -20,7 +18,7 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int = 
 
             data += f"{indent}        self.{child_name} = ODINEntry[{type}.BASE_TYPE](0x{child.global_id:08X}, cls={type})\n"
             childds[child_name] = f"self.{child_name}"
-        
+
         elif isinstance(child, ParameterGroupModel):
             # Camelcase
             class_child_name = child_name.title().replace("_", "")
@@ -39,4 +37,3 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int = 
     data += f"{indent}        super().__init__(interface)\n"
 
     return data
-

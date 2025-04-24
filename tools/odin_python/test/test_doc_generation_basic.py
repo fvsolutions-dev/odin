@@ -26,9 +26,7 @@ def test():
 
     generator = DocGenerator()
 
-    generator.generate_single_source(root_parameters,target_file="test.pdf")
-
-
+    generator.generate_single_source(root_parameters, target_file="test.pdf")
 
 
 if __name__ == "__main__":

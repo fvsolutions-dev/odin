@@ -1,33 +1,13 @@
-from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
-from odin_python.generators.abstract_generator import ModelContext
 from odin_python.generators.generator import default_generator
-from odin_python.loader import AdvancedLoaderModel
-from odin_python.parameter import (
-    RootParameterModel,
-)
+from odin_python.parameter.loader import ConfigurationReader
 
 
 def process_config(config: str):
-    model = AdvancedLoaderModel.from_yaml(config)
-    registry = TypeRegistry()
-    registry.register(BASE_DATA_TYPES)
-    model.types.register_types(registry)
-
-    root_parameters = RootParameterModel(
-        children=model.parameters,
-        access_control=model.access_control,
-        id_space_shift=model.id_space_shift,
-    )  # type: ignore
-
-    root_parameters.post_load_resolve(None, "root", registry)
-
-
+    reader = ConfigurationReader()
+    model_context = reader.load(config, "advanced")
     default_generator(
         name="test",
-        model_context=ModelContext(
-            root_model=root_parameters,
-            types=registry,
-        ),
+        model_context=model_context,
         output_dir="test/demo",
         doc=True,
         db=True,

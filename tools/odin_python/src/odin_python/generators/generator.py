@@ -1,4 +1,4 @@
-from odin_python.generators.abstract_generator import ModelContext
+from .abstract_generator import ModelContext
 from .c.generator import CGenerator
 from .db.generator import ODIN_DB_generator
 from .py.generator import PYGenerator

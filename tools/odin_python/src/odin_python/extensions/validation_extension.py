@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import  Field
+from pydantic import Field
 
 from ..generators.c.odin_defs import ODIN_ExtensionEnum
 from ..generators.c.model import ODIN_ExtesionModel

@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import Field
 
-from odin_python.generators.c.model import ODIN_ExtesionModel
-from odin_python.generators.c.odin_defs import ODIN_ExtensionEnum
+from ..generators.c.model import ODIN_ExtesionModel
+from ..generators.c.odin_defs import ODIN_ExtensionEnum
 
 from .common import BaseExtension
 

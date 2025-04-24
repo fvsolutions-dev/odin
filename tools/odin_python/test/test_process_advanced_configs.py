@@ -24,18 +24,14 @@ def process_config(config: str):
     model.types.register_types(registry)
 
     root_parameters = RootParameterModel(
-      children=model.parameters,
+        children=model.parameters,
         access_control=model.access_control,
         id_space_shift=model.id_space_shift,
     )  # type: ignore
     root_parameters.post_load_resolve(None, "root", registry)
 
     with open(f"{config}.c", "w") as f:
-        f.write(
-            CGenerator.generate_single_source(
-                root_parameters, extra_includes=model.c_include
-            )
-        )
+        f.write(CGenerator.generate_single_source(root_parameters, extra_includes=model.c_include))
 
     return f"{config}.c"
 
@@ -55,18 +51,14 @@ def test_advanced_parse(config: str):
     compile_file(file)
 
 
-@pytest.mark.parametrize(
-    "config", glob.glob("test/advanced_configs/acces_control_negative_configs/*.yaml")
-)
+@pytest.mark.parametrize("config", glob.glob("test/advanced_configs/acces_control_negative_configs/*.yaml"))
 def test_advanced_parse_negative(config: str):
     with pytest.raises(Exception):
         file = process_config(config)
         compile_file(file)
 
 
-@pytest.mark.parametrize(
-    "config", glob.glob("test/advanced_configs/parameter_space_negative_configs/*.yaml")
-)
+@pytest.mark.parametrize("config", glob.glob("test/advanced_configs/parameter_space_negative_configs/*.yaml"))
 def test_parameter_space_parse_negative(config: str):
     with pytest.raises(Exception):
         file = process_config(config)

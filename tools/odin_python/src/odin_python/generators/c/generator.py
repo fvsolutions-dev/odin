@@ -4,8 +4,8 @@ from typing import Literal
 import csnake as cc
 from pydantic import BaseModel, Field
 
-from odin_python.generators.abstract_generator import AbstractGenerator, ModelContext
-from odin_python.parameter.parameter import (
+from ..abstract_generator import AbstractGenerator, ModelContext
+from ...parameter.parameter import (
     C_Names,
 )
 from .objects import (

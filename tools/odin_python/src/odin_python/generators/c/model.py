@@ -1,7 +1,7 @@
 from typing import List
 
 import csnake as cc
-from odin_python.utils.string import escape_string
+from ...utils.string import escape_string
 from pydantic import BaseModel, Field
 
 from ...data_types.type_registry import DataType, StandardDataType
@@ -16,7 +16,7 @@ class ODIN_ParameterModel(BaseModel):
     local_index: int = Field(description="Index of the parameter")
     global_index: int = Field(description="Global index of the parameter")
 
-    data: str|None = Field(description="Reference to the data")
+    data: str | None = Field(description="Reference to the data")
     type: DataType = Field(description="Resolved type of the parameter")
     name: str = Field(description="Name of the parameter")
     description: str = Field(description="Description of the parameter")
@@ -35,12 +35,8 @@ class ODIN_ParameterModel(BaseModel):
             name=self.name,
             primitive=ODIN_PARAMETER_TYPE,
             value={
-                "odin_type": cc.TextModifier(
-                    str(ODIN_TypeEnum.ODIN_TYPE_PARAMETER.value)
-                ),
-                "element_type": cc.TextModifier(
-                    str(ODIN_ElementTypeEnum.from_c_type(self.type.c_typename).value)
-                ),
+                "odin_type": cc.TextModifier(str(ODIN_TypeEnum.ODIN_TYPE_PARAMETER.value)),
+                "element_type": cc.TextModifier(str(ODIN_ElementTypeEnum.from_c_type(self.type.c_typename).value)),
                 "flags": cc.TextModifier(str(self.access_group)),
                 "global_index": cc.TextModifier(f"0x{self.global_index:08X}"),
                 "element_size": cc.TextModifier(f"sizeof({self.type.c_typename})"),
@@ -90,9 +86,7 @@ class ODIN_ArrayModel(ODIN_ParameterModel):
     def variable(self) -> cc.Variable:
         variable = super().variable
         variable.value["odin_type"] = cc.TextModifier(  # type: ignore
-            str(ODIN_TypeEnum.ODIN_TYPE_ARRAY.value)
-            if self.fixed_size
-            else str(ODIN_TypeEnum.ODIN_TYPE_VECTOR.value)
+            str(ODIN_TypeEnum.ODIN_TYPE_ARRAY.value) if self.fixed_size else str(ODIN_TypeEnum.ODIN_TYPE_VECTOR.value)
         )
         variable.value["max_elements"] = cc.TextModifier(str(self.num_elements))  # type: ignore
         return variable
@@ -123,9 +117,7 @@ class ODIN_ArrayModel(ODIN_ParameterModel):
 class ODIN_ExtesionModel(BaseModel):
     type: ODIN_ExtensionEnum = Field(description="Access group")
     ops: str = Field(description="Opsset used for the extension")
-    parameters: str | None = Field(
-        description="parameters associated with the extension"
-    )
+    parameters: str | None = Field(description="parameters associated with the extension")
     next: str | None = Field(description="Next extension in the list")
 
     @property
@@ -137,5 +129,5 @@ class ODIN_ExtesionModel(BaseModel):
         param = "NULL"
         if self.parameters:
             param = f"&{self.parameters}"
-            
+
         return f"(ODIN_extension_t[]){{ {{\n\t\t\t.type={self.type.name},\n\t\t\t.ops =  &{self.ops},\n\t\t\t.data = {param},\n\t\t\t.next = {next} }} }}"

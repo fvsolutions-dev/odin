@@ -219,7 +219,7 @@ class TypeRegistry:
     def __getitem__(self, item: str):
         """Get a type by name"""
         return self.get_type(item)
-    
+
     def __iter__(self):
         """Iterate over the types in the registry"""
         return iter(self.types.items())

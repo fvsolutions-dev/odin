@@ -92,9 +92,7 @@ class AccesControlDefinition(BaseModel):
     )
 
     @model_validator(mode="after")  # type: ignore
-    def convert_fields(
-        cls, model: "AccesControlDefinition"
-    ) -> "AccesControlDefinition":
+    def convert_fields(cls, model: "AccesControlDefinition") -> "AccesControlDefinition":
         """Parses the fields to the correct type"""
 
         model.default = AccessControlEnum.normalize(model.default)
@@ -127,9 +125,7 @@ class AccesControlDefinition(BaseModel):
             )  # type: ignore
 
     @classmethod
-    def normalize(
-        cls, input: "str | Set[str]|AccesControlDefinition"
-    ) -> "AccesControlDefinition":
+    def normalize(cls, input: "str | Set[str]|AccesControlDefinition") -> "AccesControlDefinition":
         """Normalizes input to an access control definition"""
         if isinstance(input, AccesControlDefinition):
             return input
@@ -148,14 +144,10 @@ class AccesControlDefinition(BaseModel):
         if len(permissions) == 0:
             return None
 
-        return (
-            f"({GROUP_ACCESS_PREFIX}{group_name.upper()} & ({' | '.join(permissions)}))"
-        )
+        return f"({GROUP_ACCESS_PREFIX}{group_name.upper()} & ({' | '.join(permissions)}))"
 
 
-class AccessControlCollection(
-    RootModel[Dict[str, AccesControlDefinition | Set[str] | str]]
-):
+class AccessControlCollection(RootModel[Dict[str, AccesControlDefinition | Set[str] | str]]):
     # Reference to parent parameter model
     _parent: "BaseParameterModel | None" = PrivateAttr(default=None)
     _access_groups: Dict[int, str] | None = PrivateAttr(default=None)
@@ -163,9 +155,7 @@ class AccessControlCollection(
     pass
 
     @model_validator(mode="after")  # type: ignore
-    def validate_access_control(
-        cls, model: "AccessControlCollection"
-    ) -> "AccessControlCollection":
+    def validate_access_control(cls, model: "AccessControlCollection") -> "AccessControlCollection":
         """Validates the access control collection"""
 
         return model.normalize()
@@ -237,14 +227,10 @@ class AccessControlCollection(
 
         else:
             assert self_parameter is not None, "No parameter found for this entry"
-            assert (
-                self_parameter._parent is not None
-            ), "No parent found for the parameter"
+            assert self_parameter._parent is not None, "No parent found for the parameter"
 
-            access_control = (
-                AccessControlCollection.recursive_get_build_permission_chain(
-                    self_parameter._parent.access_control
-                )
+            access_control = AccessControlCollection.recursive_get_build_permission_chain(
+                self_parameter._parent.access_control
             )
 
         access_control.append(self)
@@ -260,9 +246,7 @@ class AccessControlCollection(
                 self._access_groups[id] = group_name
 
                 if id >= MAX_ACCESS_GROUPS:
-                    raise ValueError(
-                        f"Only {MAX_ACCESS_GROUPS} access groups are allowed"
-                    )
+                    raise ValueError(f"Only {MAX_ACCESS_GROUPS} access groups are allowed")
 
         return self._access_groups
 

@@ -35,8 +35,6 @@ def test_gen_c_invalid_input_file():
     name = "test_output"
     invalid_config_file = "test/configs/invalid.yaml"
 
-    result = runner.invoke(
-        cli, ["gen-c", invalid_config_file, output_dir, "--name", name]
-    )
+    result = runner.invoke(cli, ["gen-c", invalid_config_file, output_dir, "--name", name])
 
     assert result.exit_code != 0

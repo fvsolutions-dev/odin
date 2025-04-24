@@ -1,8 +1,7 @@
-
 import csnake as cc
 
-from odin_python.data_types.type_registry import StandardDataType
-from odin_python.parameter.parameter import (
+from ....data_types.type_registry import StandardDataType
+from ....parameter import (
     ArrayParameterModel,
     BaseBaseParameterModel,
     BaseParameterGroupModel,
@@ -12,7 +11,7 @@ from odin_python.parameter.parameter import (
     RootParameterModel,
     VectorParameterModel,
 )
-from odin_python.utils.csnake_custom import StructVariable
+from ....utils.csnake_custom import StructVariable
 
 
 def to_variable_initialiser(parameter: BaseParameterModel) -> cc.Variable | None:

@@ -5,7 +5,8 @@ from .parameter import (
     ParameterGroupModel,
     RootParameterModel,
     BaseParameterModel,
-    
+    BaseParameterGroupModel,
+    BaseBaseParameterModel,
 )
 from .access_control import AccessControlCollection
 
@@ -17,4 +18,6 @@ __all__ = [
     "ParameterGroupModel",
     "RootParameterModel",
     "AccessControlCollection",
+    "BaseParameterGroupModel",
+    "BaseBaseParameterModel",
 ]

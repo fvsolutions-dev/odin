@@ -4,15 +4,14 @@ from typing import Annotated, Any, Dict, List, Literal
 
 from pydantic import BaseModel, ConfigDict, Discriminator, Field, PrivateAttr
 
-from odin_python.extensions.string_codec_extension import ReferenceStringCodecExtension
-from odin_python.parameter.access_control import AccessControlCollection
-
 from ..data_types.type_registry import (
     CustomDataType,
     DataType,
     TypeRegistry,
 )
 from ..extensions import Extensions
+from ..extensions.string_codec_extension import ReferenceStringCodecExtension
+from ..parameter.access_control import AccessControlCollection
 
 MAX_ID_SIZE = 32
 
@@ -163,6 +162,7 @@ class BaseBaseParameterModel(BaseParameterModel):
         default=None,
     )
 
+
 class ParameterModel(BaseBaseParameterModel):
     """Parameter model, represents a single parameter"""
 
@@ -190,8 +190,6 @@ class ParameterModel(BaseBaseParameterModel):
             f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
         )
 
-  
-
 
 class ArrayParameterModel(BaseBaseParameterModel):
     type: Literal["array"]
@@ -206,7 +204,6 @@ class ArrayParameterModel(BaseBaseParameterModel):
         return (
             f"{level * '  '}{self._name} (0x{self.global_id:08X}): {self.primitive} - {self._resolved_type.size} bytes"
         )
-
 
 
 class VectorParameterModel(BaseBaseParameterModel):
@@ -265,10 +262,6 @@ class BaseParameterGroupModel(BaseParameterModel):
         for child in self.children.values():
             val += f"\n{child.one_line_summary(level + 1)}"
         return val
-
-
-
-
 
     def validate_local_id(self):
         local_id_map = {}

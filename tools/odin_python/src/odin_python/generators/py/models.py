@@ -6,6 +6,8 @@ from typing import Generator
 
 
 T = TypeVar("T")
+
+
 class TemplateInterface:
     pass
 
@@ -49,6 +51,7 @@ class ODINEntry(Generic[T], ODINBaseEntry):
 
 class OdinF32(GenericModel):
     BASE_TYPE = float
+
     @staticmethod
     def encode(value: float) -> bytes:
         return struct.pack("f", value)
@@ -60,6 +63,7 @@ class OdinF32(GenericModel):
 
 class OdinI32(GenericModel):
     BASE_TYPE = int
+
     @staticmethod
     def encode(value: int) -> bytes:
         return struct.pack("i", value)
@@ -71,7 +75,7 @@ class OdinI32(GenericModel):
 
 class OdinBool(GenericModel):
     BASE_TYPE = bool
-    
+
     @staticmethod
     def encode(value: bool) -> bytes:
         return struct.pack("?", value)
@@ -79,9 +83,6 @@ class OdinBool(GenericModel):
     @staticmethod
     def decode(data: bytes) -> bool:
         return struct.unpack("?", data)[0]
-
-
-
 
 
 class BaseRootModel:

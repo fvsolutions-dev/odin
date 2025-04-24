@@ -1,11 +1,11 @@
-
 import csnake as cc
 
-from odin_python.generators.c.model import ODIN_ParameterGroupModel
-from odin_python.parameter.parameter import (
+from ....generators.c.model import ODIN_ParameterGroupModel
+from ....parameter import (
     BaseParameterGroupModel,
     ParameterGroupModel,
 )
+
 
 def to_group_initialiser(self: BaseParameterGroupModel) -> list[cc.Variable]:
     variables = []

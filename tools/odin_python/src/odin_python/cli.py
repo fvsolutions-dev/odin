@@ -1,12 +1,10 @@
+import json
 import os
 
 import click
-import json
-from odin_python.data_types.type_registry import BASE_DATA_TYPES, TypeRegistry
-from odin_python.generators.abstract_generator import ModelContext
+
 from .generators.generator import default_generator
-from .loader import AdvancedLoaderModel, SimpleLoaderModel
-from odin_python.parameter import RootParameterModel
+from .parameter.loader import AdvancedLoaderModel, SimpleLoaderModel, ConfigurationReader
 
 DEFAULT_NAME = "OD"
 
@@ -14,29 +12,6 @@ DEFAULT_NAME = "OD"
 @click.group()
 def cli():
     pass
-
-
-def load_model(input_file: str, advanced: bool):
-    registry = TypeRegistry()
-    registry.register(BASE_DATA_TYPES)
-
-    if advanced:
-        model = AdvancedLoaderModel.from_yaml(input_file)
-        model.types.register_types(registry)
-
-        root_parameters = RootParameterModel(
-            children=model.parameters,
-            access_control=model.access_control,
-            id_space_shift=model.id_space_shift,
-        )
-
-    else:
-        model = SimpleLoaderModel.from_yaml(input_file)
-        root_parameters = RootParameterModel(children=model.root, id_space_shift=8)
-
-    root_parameters.post_load_resolve(None, "root", registry)
-
-    return model, root_parameters, registry
 
 
 @cli.command()
@@ -57,14 +32,12 @@ def generate(input_file: str, output_dir: str, name: str, advanced: bool, doc: b
 
     print(f"Converting {input_file} to {output_dir}")
 
-    model, root_parameters, registry = load_model(input_file, advanced)
+    reader = ConfigurationReader()
+    model_context = reader.load(input_file, "advanced" if advanced else "simple")
 
     default_generator(
         name=name,
-        model_context=ModelContext(
-            root_model=root_parameters,
-            types=registry,
-        ),
+        model_context=model_context,
         output_dir=output_dir,
         doc=doc,
         db=db,

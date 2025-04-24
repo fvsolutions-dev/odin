@@ -2,8 +2,8 @@ from typing import Literal
 
 from pydantic import Field
 
-from odin_python.generators.c.model import ODIN_ExtesionModel
-from odin_python.generators.c.odin_defs import ODIN_ExtensionEnum
+from ..generators.c.model import ODIN_ExtesionModel
+from ..generators.c.odin_defs import ODIN_ExtensionEnum
 from .common import BaseExtension
 from typing import TYPE_CHECKING
 
@@ -17,9 +17,8 @@ class StringCodecExtension(BaseExtension): ...
 class ReferenceStringCodecExtension(StringCodecExtension):
     type: Literal["string_codec_reference"]
     reference: str = Field(description="Refercene to the codec")
-    
-    def as_literal(self, parameter: "BaseParameterModel", next: str|None) -> str:
 
+    def as_literal(self, parameter: "BaseParameterModel", next: str | None) -> str:
         model = ODIN_ExtesionModel(
             type=ODIN_ExtensionEnum.ODIN_EXTENSION_TYPE_STRING_CODEC,
             ops=self.reference,

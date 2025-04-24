@@ -31,6 +31,5 @@ def test():
         f.write(data)
 
 
-
 if __name__ == "__main__":
     test()

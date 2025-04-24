@@ -5,8 +5,7 @@ from reportlab.lib.pagesizes import LETTER, inch  # type: ignore
 from reportlab.lib.styles import StyleSheet1, getSampleStyleSheet
 from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from odin_python.loader import ParameterGroupModel
-from odin_python.parameter.parameter import BaseParameterGroupModel, ParameterModel
+from ...parameter import BaseParameterGroupModel, ParameterModel, ParameterGroupModel
 from ..abstract_generator import AbstractGenerator, ModelContext
 
 TABLESTYLE = TableStyle(
@@ -92,7 +91,6 @@ class DocGenerator(AbstractGenerator):
         self.config = config
 
     def generate(self, model_context: ModelContext, output_path: str | IO) -> None:
-
         # Create PDF document
         doc = SimpleDocTemplate(
             output_path, pagesize=LETTER, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40

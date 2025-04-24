@@ -40,7 +40,6 @@ class TypeDefinitionsModel(RootModel[Dict[str, TypeModel | CustomTypeModel]]):
                         size=type_model.size,
                         string_serialiser=type_model.string_serialiser,
                         model=None,
-
                     )
                 )
             elif isinstance(type_model, CustomTypeModel):
