@@ -49,11 +49,22 @@ class BaseRootModel:
         self.interface = interface
 
     async def read_all(self) -> dict[str, Any]:
-        data = {}
+
+        # Prepare tasks for reading all children
+        tasks = {}
         for name, odin_var in self._children.items():
             if isinstance(odin_var, BaseRootModel):
-                data[name] = await odin_var.read_all()
+                tasks[name] = odin_var.read_all()
             else:
-                data[name] = await odin_var.read()
+                tasks[name] = odin_var.read()
+
+        # Execute all tasks concurrently
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+
+        # Combine task results into a dictionary
+        data = {
+            name: result
+            for name, result in zip(tasks.keys(), results)
+        }
 
         return data
