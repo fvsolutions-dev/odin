@@ -5,7 +5,13 @@ from typing import Any, Dict, List
 import csnake as cc
 from pydantic import BaseModel, Field, RootModel
 
-from odin_python.data_types.type_definition import DataTypeDefintion, TypeAndDefaultModel, TypeModel, TypeModelDefinitions
+from odin_python.data_types.type_definition import (
+    DataTypeDefintion,
+    ExpandedUserTypeModel,
+    ModelDataTypeDefintion,
+    RootModelDataTypeDefintion,
+    UserTypeModel,
+)
 
 
 class DataType(BaseModel, ABC):
@@ -106,6 +112,15 @@ class DataTypeModel(
     RootModel["list[DataType] | DataType"],
 ):
     pass
+
+    @property
+    def size(self) -> int:
+        if isinstance(self.root, DataType):
+            return self.root.size
+        elif isinstance(self.root, list):
+            return sum([x.size for x in self.root])
+        else:
+            raise ValueError(f"Unknown type {self.root} for {self}")
 
     def struct_format(self, depth: int) -> str:
         if isinstance(self.root, DataType):
@@ -271,48 +286,27 @@ BASE_DATA_TYPES: List[DataType] = [
 
 def to_datatype_model(
     type_registry: "TypeRegistry",
-    type: Dict[
-        str,
-        "TypeAndDefaultModel | TypeModel  | TypeModelDefinitions",
-    ]
-    | TypeModel
-    | TypeAndDefaultModel,
+    type: UserTypeModel | ExpandedUserTypeModel | Dict[str, UserTypeModel | ExpandedUserTypeModel],
 ) -> DataTypeModelDefinition:
     """Convert a data type model to a data type"""
 
-    if isinstance(type, TypeModel) or isinstance(type, TypeAndDefaultModel):
-        if isinstance(type, TypeModel):
-            type_value = type.root
-        else:
-            type_value = type.type
-
-        if isinstance(type_value, str):
-            # If the model is a string, we need to resolve it
-            datatype = type_registry.find_type(type_value)
-            return DataTypeModelDefinition(
-                root=datatype,  # type: ignore
-                is_referenced=True,
-                is_custom=isinstance(datatype, CustomDataType),
-            )
-
-        elif isinstance(type_value, list):
-            return DataTypeModelDefinition(root=[type_registry.find_type(x) for x in type_value], is_referenced=True, is_custom=False)  # type: ignore
-        else:
-            raise ValueError(f"Unknown type {type_value}")
-
-    elif isinstance(type, dict):
+    if isinstance(type, dict):
         models = {}
         for type_value, value in type.items():
-            if isinstance(value, TypeAndDefaultModel) or isinstance(value, TypeModel):
-                models[type_value] = to_datatype_model(type_registry, value)
-            elif isinstance(value, dict):
-                models[type_value] = to_datatype_model(type_registry, value)
-            elif isinstance(value, TypeModelDefinitions):
-                models[type_value] = to_datatype_model(type_registry, value.root)
-            else:
-                raise ValueError(f"Invalid type {value} in model")
+            models[type_value] = to_datatype_model(type_registry, value.expand)
 
         return DataTypeModelDefinition(root=models, is_referenced=False, is_custom=False)
+    
+    elif isinstance(type, UserTypeModel) | isinstance(type, ExpandedUserTypeModel):
+
+        datatype = type_registry.find_type(type.type)
+        return DataTypeModelDefinition(
+            root=datatype,  # type: ignore
+            is_referenced=True,
+            is_custom=isinstance(datatype, CustomDataType),
+        )
+    
+
     else:
         raise ValueError(f"Unknown type {type}")
 
@@ -323,13 +317,13 @@ class TypeRegistry:
     def __init__(self):
         self.types: Dict[str, DataType] = {}
 
-    def register_custom_datatype(self, name: str, type: DataTypeDefintion):
+    def register_custom_datatype(self, name: str, type: ModelDataTypeDefintion | RootModelDataTypeDefintion):
         """Register a custom data type"""
 
         if name in self.types:
             raise ValueError(f"Type {name} already registered")
 
-        model = to_datatype_model(self, type.model.root)
+        model = to_datatype_model(self, type.model)
 
         # Create the custom data type
         custom_type = CustomDataType(

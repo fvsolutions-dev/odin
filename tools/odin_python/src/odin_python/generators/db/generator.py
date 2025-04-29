@@ -35,7 +35,7 @@ class ODIN_DB_generator(AbstractGenerator):
             if not isinstance(defined_type, CustomDataType):
                 continue
 
-            type = type_to_db(defined_type)
+            type = type_to_db(defined_type.model)
 
             if type is None:
                 continue
