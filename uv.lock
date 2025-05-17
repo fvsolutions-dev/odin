@@ -211,19 +211,18 @@ sdist = { url = "https://files.pythonhosted.org/packages/b1/ec/6240f147530a2c8d3
 
 [[package]]
 name = "odin-db"
-version = "1.1.0"
+version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/91/df/90ecac5a0aba213c2fffb3ce4436af3675d935119680aa354140eeea7cd3/odin_db-1.1.0.tar.gz", hash = "sha256:725677faf70bc04788747211e9d8d44fbee8c65abdcb7392872ef3de9f334b0b", size = 11295 }
+sdist = { url = "https://files.pythonhosted.org/packages/b0/60/dbe98f21411107aeb10e458bb08a382c1d718f225a9b549e5b67582c8559/odin_db-1.2.0.tar.gz", hash = "sha256:3b57a1ebe46c9f6b9139b77a3b79af331719a2741cf9182a62f40cc443eb81e8", size = 11314 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1c/ae/6e7b946b9092bd80808e10e8fb57c416951832384d7f854da5cf849b40da/odin_db-1.1.0-py3-none-any.whl", hash = "sha256:0965a195757e9bbd10d339e27c65e659a73abe0e9c0b0afc51ce3e72959a9a29", size = 2267 },
+    { url = "https://files.pythonhosted.org/packages/04/8c/4b08828e30c0043934390aba063d9a0dc1c26f3aeb03dc39a7ee3e1da71c/odin_db-1.2.0-py3-none-any.whl", hash = "sha256:8fb306313c9621acdb4ff3d8e03a4d4cfae94ae54b32a412259a404d5e05c7c0", size = 2282 },
 ]
 
 [[package]]
 name = "odin-python"
-version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -250,7 +249,7 @@ requires-dist = [
     { name = "csnake", specifier = ">=0.4.0" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "mdutils", specifier = ">=1.6.0" },
-    { name = "odin-db", specifier = ">=1.1.0" },
+    { name = "odin-db", specifier = ">=1.2.0" },
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "pydantic-yaml", specifier = ">=1.4.0" },
     { name = "reportlab", specifier = ">=4.3.1" },

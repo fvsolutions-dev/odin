@@ -11,6 +11,29 @@
             "cwd": "${fileDirname}",
             "environment": [],
             "console": "externalTerminal"
+        },
+               {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python Debugger: TEST",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "test/test_process_configs.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python Debugger: TEST DEMO",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "test/test_demo.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
         }
+ 
     ]
 }

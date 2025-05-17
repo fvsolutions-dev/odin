@@ -1,7 +1,7 @@
 [project]
 name = "odin-python"
-# dynamic = ["version"]
-version = "0.1.0"
+dynamic = ["version"]
+# version = "0.1.0"
 description = "Odin tooling for Python"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -37,8 +37,7 @@ odin = "odin_python:cli"
 
 
 [build-system]
-# requires = ["hatchling", "hatch-vcs"]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]

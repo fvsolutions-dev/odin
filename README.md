@@ -1,8 +1,5 @@
 # ODIN
-An cross framework object dictionary for embedded systems
-
-TODO: Add more information
-
+An platform agnostic object dictionary for embedded systems
 
 ## gen
 Create object dictionary

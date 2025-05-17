@@ -1,5 +1,0 @@
-test/configs/*.c
-test/configs/*.out
-**.o
-.coverage
-**.pdf
