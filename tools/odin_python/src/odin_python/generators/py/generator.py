@@ -8,7 +8,7 @@ import pathlib
 import shutil
 
 TEMPLATE_PROJECT_DIR = (pathlib.Path(__file__).parent / "template").resolve()
-print(f"TEMPLATE_PROJECT_DIR: {TEMPLATE_PROJECT_DIR}")
+# print(f"TEMPLATE_PROJECT_DIR: {TEMPLATE_PROJECT_DIR}")
 
 
 class PYGenerator(AbstractGenerator):
