@@ -23,7 +23,7 @@ def cli():
 def generate(input_file: str, output_dir: str, name: str, advanced: bool, target: list[str]):
     assert os.path.exists(input_file), f"Input file {input_file} does not exist"
     assert os.path.exists(output_dir), f"Output directory {output_dir} does not exist"
-
+    
     # Check if the input file is a valid yaml file
     assert input_file.endswith(".yaml"), "Input file must be a yaml file"
 
@@ -32,14 +32,17 @@ def generate(input_file: str, output_dir: str, name: str, advanced: bool, target
     reader = ConfigurationReader()
     model_context, config_model = reader.load(input_file, "advanced" if advanced else "simple")
 
-    targets = [GeneratorTarget.from_string(t) for t in target]
+    resolved_targets = [GeneratorTarget.from_string(t) for t in target]
 
-    for target in targets:
+    if len(resolved_targets) == 0:
+        resolved_targets = GeneratorTarget.all()
+
+    for resolved_target in resolved_targets:
         generator(
             name=name,
             model_context=model_context,
             output_dir=output_dir,
-            target=target,
+            target=resolved_target,
             generator_config=config_model,
         )
 

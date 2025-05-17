@@ -12,11 +12,24 @@
             "environment": [],
             "console": "externalTerminal"
         },
-               {
-            "name": "Python Debugger: Current File",
+        {
+            "name": "Test: Base config",
             "type": "debugpy",
             "request": "launch",
-            "program": "${file}",
+            "program": "test/test_cli.py",
+            "args": [
+                "generate",
+                "test/test_configs/custom_types.yaml",
+                "test/generated",
+                "--advanced"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Test: Base all configs",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "test/test_all_config.py",
             "console": "integratedTerminal"
         },
         {
@@ -34,6 +47,5 @@
             "console": "integratedTerminal",
             "justMyCode": true,
         }
- 
     ]
 }

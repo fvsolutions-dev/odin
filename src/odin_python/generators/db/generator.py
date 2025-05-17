@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from odin_python.data_types.type_registry import CustomDataType
 
 from ..abstract_generator import AbstractGenerator, ModelContext
-from .covertors import parameter_group_to_db, type_to_db
+from .convertors import parameter_group_to_db, type_to_odin_db
 
 
 class ODIN_DB_generator(AbstractGenerator):
@@ -35,7 +35,7 @@ class ODIN_DB_generator(AbstractGenerator):
             if not isinstance(defined_type, CustomDataType):
                 continue
 
-            type = type_to_db(defined_type.model)
+            type = type_to_odin_db(defined_type.model)
 
             if type is None:
                 continue

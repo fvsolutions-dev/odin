@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from odin_python.data_types.type_registry import CustomDataType, BuiltinDataType, DataTypeModel
+from odin_python.data_types.type_registry import CustomDataType, BuiltinDataType, DataType
 
 from .conversion import generate_class, generate_basemodel_type, generate_rootmodel_type, generate_standard_type
 from ..abstract_generator import AbstractGenerator, ModelContext
@@ -42,7 +42,7 @@ class PYGenerator(AbstractGenerator):
             # Generate the type class
             for type_name, datatype in model_context.types:
                 if isinstance(datatype, CustomDataType):
-                    if isinstance(datatype.model.root, DataTypeModel):
+                    if isinstance(datatype.model.root, DataType):
                         f.write(generate_rootmodel_type(type_name, datatype))
                     else:
                         f.write(generate_basemodel_type(type_name, datatype))

@@ -1,7 +1,7 @@
 from odin_python.parameter.parameter import ArrayParameterModel, VectorParameterModel
 from ...parameter import BaseParameterGroupModel, ParameterModel, ParameterGroupModel
-from ...data_types.type_registry import CustomDataType, BuiltinDataType, DataType, DataTypeModel
 
+from ...data_types.type_registry import CustomDataType, BuiltinDataType, DataType
 
 def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, parent_model: str) -> str:
     data = ""
@@ -108,30 +108,30 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
 
 def generate_rootmodel_type(name: str, datatype: CustomDataType) -> str:
     model = datatype.model.root
-    assert isinstance(model, DataTypeModel), "Model is not a DataTypeModel"
+    assert isinstance(model, DataType), "Model is not a DataTypeModel"
 
     # Convert to python type if array use tuple, otherwise use the resolved type
-    if isinstance(model.root, list):
-        python_type = "tuple["
-        for i, sub_type in enumerate(model.root):
-            if isinstance(sub_type, BuiltinDataType):
-                python_type += sub_type.python_primitive_typename
-            elif isinstance(sub_type, CustomDataType):
-                python_type += sub_type.py_typename
-            else:
-                raise ValueError(f"Unknown type {sub_type} for {name}")
+    # if isinstance(model.root, list):
+    #     python_type = "tuple["
+    #     for i, sub_type in enumerate(model.root):
+    #         if isinstance(sub_type, BuiltinDataType):
+    #             python_type += sub_type.python_primitive_typename
+    #         elif isinstance(sub_type, CustomDataType):
+    #             python_type += sub_type.py_typename
+    #         else:
+    #             raise ValueError(f"Unknown type {sub_type} for {name}")
 
-            if i < len(model.root) - 1:
-                python_type += ", "
+    #         if i < len(model.root) - 1:
+    #             python_type += ", "
 
-        python_type += "]"
+    #     python_type += "]"
+    # else:
+    if isinstance(model, BuiltinDataType):
+        python_type = model.python_primitive_typename
+    elif isinstance(model, CustomDataType):
+        python_type = model.py_typename
     else:
-        if isinstance(model.root, BuiltinDataType):
-            python_type = model.root.python_primitive_typename
-        elif isinstance(model.root, CustomDataType):
-            python_type = model.root.py_typename
-        else:
-            raise ValueError(f"Unknown type {model.root} for {name}")
+        raise ValueError(f"Unknown type {model} for {name}")
 
     output = f"""class {datatype.py_typename}(GenericModel,{python_type}):
 """
@@ -142,21 +142,21 @@ def generate_rootmodel_type(name: str, datatype: CustomDataType) -> str:
         packed_data = struct.pack(
             '<{datatype.struct_format}',
 """
-    if isinstance(model.root, list):
-        for i, sub_type in enumerate(model.root):
-            if isinstance(sub_type, BuiltinDataType):
-                output += f"            self[{i}],\n"
-            elif isinstance(sub_type, CustomDataType):
-                output += f"            {sub_type.py_typename}.encode_to_bytes(self[{i}]),\n"
-            else:
-                raise ValueError(f"Unknown type {sub_type} for {name}")
+    # if isinstance(model, list):
+    #     for i, sub_type in enumerate(model):
+    #         if isinstance(sub_type, BuiltinDataType):
+    #             output += f"            self[{i}],\n"
+    #         elif isinstance(sub_type, CustomDataType):
+    #             output += f"            {sub_type.py_typename}.encode_to_bytes(self[{i}]),\n"
+    #         else:
+    #             raise ValueError(f"Unknown type {sub_type} for {name}")
+    # else:
+    if isinstance(model, BuiltinDataType):
+        output += "            self,\n"
+    elif isinstance(model, CustomDataType):
+        output += f"            {model.py_typename}.encode_to_bytes(self),\n"
     else:
-        if isinstance(model.root, BuiltinDataType):
-            output += "            self,\n"
-        elif isinstance(model.root, CustomDataType):
-            output += f"            {model.root.py_typename}.encode_to_bytes(self),\n"
-        else:
-            raise ValueError(f"Unknown type {model.root} for {name}")
+        raise ValueError(f"Unknown type {model} for {name}")
 
     output += f"""
         )
@@ -170,23 +170,23 @@ def generate_rootmodel_type(name: str, datatype: CustomDataType) -> str:
 
     i = 0
 
-    if isinstance(model.root, list):
-        output += "            (\n"
-        for i, sub_type in enumerate(model.root):
-            if isinstance(sub_type, BuiltinDataType):
-                output += f"            unpacked_data[{i}],\n"
-            elif isinstance(sub_type, CustomDataType):
-                output += f"            {sub_type.py_typename}.decode_from_bytes(unpacked_data[{i}]),\n"
-            else:
-                raise ValueError(f"Unknown type {sub_type} for {name}")
-        output += "            ),\n"
+    # if isinstance(model.root, list):
+    #     output += "            (\n"
+    #     for i, sub_type in enumerate(model.root):
+    #         if isinstance(sub_type, BuiltinDataType):
+    #             output += f"            unpacked_data[{i}],\n"
+    #         elif isinstance(sub_type, CustomDataType):
+    #             output += f"            {sub_type.py_typename}.decode_from_bytes(unpacked_data[{i}]),\n"
+    #         else:
+    #             raise ValueError(f"Unknown type {sub_type} for {name}")
+    #     output += "            ),\n"
+    # else:
+    if isinstance(model, BuiltinDataType):
+        output += "            *unpacked_data,\n"
+    elif isinstance(model, CustomDataType):
+        output += f"            *{model.py_typename}.decode_from_bytes(unpacked_data),\n"
     else:
-        if isinstance(model.root, BuiltinDataType):
-            output += "            *unpacked_data,\n"
-        elif isinstance(model.root, CustomDataType):
-            output += f"            *{model.root.py_typename}.decode_from_bytes(unpacked_data),\n"
-        else:
-            raise ValueError(f"Unknown type {model.root} for {name}")
+        raise ValueError(f"Unknown type {model} for {name}")
 
     output += """
         )

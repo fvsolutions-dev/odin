@@ -3,7 +3,7 @@ from typing import Dict, Literal
 from pydantic import BaseModel, Field, RootModel, ValidationError
 from pydantic_yaml import parse_yaml_file_as
 
-from odin_python.data_types.type_definition import DataTypeDefintion, ModelDataTypeDefintion, RootModelDataTypeDefintion
+from odin_python.data_types.type_definition import DataTypeDefintion, ModelDataTypeDefintion
 from odin_python.generators.generator import GeneratorConfigurations
 
 # from ..data_types.input_type_model import TypeSpecifciationCollectionModel
@@ -96,7 +96,7 @@ class AdvancedLoaderModel(BaseModel):
         description="Access control for the parameters",
     )
 
-    types: dict[str, ModelDataTypeDefintion | RootModelDataTypeDefintion] = Field(
+    types: dict[str, ModelDataTypeDefintion] = Field(
         default_factory=dict,
         description="Type definitions",
     )

@@ -1,7 +1,8 @@
-from typing import Dict
+"""Data type definition for the yaml definition."""
+
+from typing import Any, Dict
 
 from pydantic import BaseModel, Field, RootModel
-from typing import Any
 
 
 class ExpandedUserTypeModel(BaseModel):
@@ -28,19 +29,18 @@ class UserTypeModel(RootModel[str]):
             default=None,
             elements=None,
         )
-    
+
     @property
     def type(self) -> str:
         return self.root
-    
+
     @property
     def default(self) -> None:
         return None
-    
+
     @property
     def elements(self) -> None:
         return None
-    
 
 
 class DataTypeDefintion(BaseModel):
@@ -61,15 +61,10 @@ class DataTypeDefintion(BaseModel):
 
 
 class ModelDataTypeDefintion(DataTypeDefintion):
+    """Dictionary of data types with the name as the key and the data type as the value
+    This represents a struct
+    """
+
     model: Dict[str, UserTypeModel | ExpandedUserTypeModel] = Field(
         description="The model for the data type",
     )
-
-class RootModelDataTypeDefintion(DataTypeDefintion):
-    root_model: UserTypeModel | ExpandedUserTypeModel = Field(
-        description="The root model for the data type",
-    )
-
-    @property
-    def model(self) -> UserTypeModel | ExpandedUserTypeModel:
-        return self.root_model

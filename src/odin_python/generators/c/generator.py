@@ -126,11 +126,10 @@ class CGenerator(AbstractGenerator):
         cw.add_line(f"#define {self.config.header_file_name.upper().replace('.', '_')}_H")
         cw.add_line("")
 
-        model_context.root_model.initialise_types(self.config.types)
-        variable_type = to_variable_type(model_context.root_model)
+        # model_context.root_model.initialise_types(self.config.types)
 
+        # Create odin variables struct
         variable_type = to_variable_type(model_context.root_model)
-
         if variable_type is not None:
             cw.add_struct(variable_type)
 
