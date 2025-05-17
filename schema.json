@@ -1,0 +1,982 @@
+{
+    "$defs": {
+        "AccesControlDefinition": {
+            "description": "Access control definition for a single access group",
+            "properties": {
+                "override": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        {
+                            "items": {
+                                "$ref": "#/$defs/AccessControlEnum"
+                            },
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Override the default access control for the given group, if not specified it will not override",
+                    "title": "Override"
+                },
+                "default": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        {
+                            "items": {
+                                "$ref": "#/$defs/AccessControlEnum"
+                            },
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Default access control for the given group",
+                    "title": "Default"
+                }
+            },
+            "title": "AccesControlDefinition",
+            "type": "object"
+        },
+        "AccessControlCollection": {
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/$defs/AccesControlDefinition"
+                    },
+                    {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": true
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
+            },
+            "title": "AccessControlCollection",
+            "type": "object"
+        },
+        "AccessControlEnum": {
+            "description": "Access control enum, list all the possible access control items\nNeeds to match the odin definitions in the c library",
+            "enum": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "title": "AccessControlEnum",
+            "type": "integer"
+        },
+        "ArrayParameterModel": {
+            "additionalProperties": false,
+            "properties": {
+                "local_id": {
+                    "description": "Local id of the parameter, unique within the parent",
+                    "title": "Local Id",
+                    "type": "integer"
+                },
+                "description": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Description of the parameter, optional",
+                    "title": "Description"
+                },
+                "access_control": {
+                    "$ref": "#/$defs/AccessControlCollection",
+                    "description": "Access control configuration for the parameter"
+                },
+                "primitive": {
+                    "description": "Primitive type of the parameter",
+                    "title": "Primitive",
+                    "type": "string"
+                },
+                "extensions": {
+                    "description": "Extensions of the parameter",
+                    "items": {
+                        "discriminator": {
+                            "mapping": {
+                                "custom_io": "#/$defs/ReferenceIOExtension",
+                                "io_mapped_numner": "#/$defs/MappedNumberIOExtension",
+                                "string_codec_reference": "#/$defs/ReferenceStringCodecExtension",
+                                "validation_limit_value": "#/$defs/LimitValidationExtension"
+                            },
+                            "propertyName": "type"
+                        },
+                        "oneOf": [
+                            {
+                                "$ref": "#/$defs/MappedNumberIOExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/LimitValidationExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/ReferenceStringCodecExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/ReferenceIOExtension"
+                            }
+                        ]
+                    },
+                    "title": "Extensions",
+                    "type": "array"
+                },
+                "reference": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Sets the storage location of the parameter, if not set it will be managed internally",
+                    "title": "Reference"
+                },
+                "type": {
+                    "const": "array",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "default": {
+                    "anyOf": [
+                        {
+                            "items": {},
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Default value of the parameter",
+                    "title": "Default"
+                },
+                "elements": {
+                    "description": "Number of elements in the array",
+                    "title": "Elements",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "local_id",
+                "primitive",
+                "type",
+                "elements"
+            ],
+            "title": "ArrayParameterModel",
+            "type": "object"
+        },
+        "CollectionDescriptionModel": {
+            "properties": {
+                "description": {
+                    "default": "",
+                    "description": "Description of the collection",
+                    "title": "Description",
+                    "type": "string"
+                },
+                "children": {
+                    "description": "List of parameters in the collection",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Children",
+                    "type": "array"
+                }
+            },
+            "title": "CollectionDescriptionModel",
+            "type": "object"
+        },
+        "ExpandedUserTypeModel": {
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "title": "Type",
+                    "type": "string"
+                },
+                "default": {
+                    "anyOf": [
+                        {
+                            "items": {},
+                            "type": "array"
+                        },
+                        {},
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The default value for the data type",
+                    "title": "Default"
+                },
+                "elements": {
+                    "anyOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The size of the data type in bytes, if not specified the size will be calculated from the type",
+                    "title": "Elements"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "title": "ExpandedUserTypeModel",
+            "type": "object"
+        },
+        "GeneratorConfigurations": {
+            "additionalProperties": false,
+            "properties": {
+                "c_generator": {
+                    "$ref": "#/$defs/odin_python__generators__c__generator__CGenerator__Config",
+                    "description": "C generator configuration"
+                },
+                "python_generator": {
+                    "$ref": "#/$defs/odin_python__generators__py__generator__PYGenerator__Config",
+                    "description": "Python generator configuration"
+                },
+                "doc_generator": {
+                    "$ref": "#/$defs/odin_python__generators__pdf__generator__DocGenerator__Config",
+                    "description": "Doc generator configuration"
+                },
+                "db_generator": {
+                    "$ref": "#/$defs/odin_python__generators__db__generator__ODIN_DB_generator__Config",
+                    "description": "DB generator configuration"
+                }
+            },
+            "title": "GeneratorConfigurations",
+            "type": "object"
+        },
+        "LimitValidationExtension": {
+            "properties": {
+                "type": {
+                    "const": "validation_limit_value",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "min": {
+                    "anyOf": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Minimum value, if not set, no minimum value is enforced"
+                },
+                "max": {
+                    "anyOf": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Maximum allowed value, if not set, no maximum value is enforced"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "title": "LimitValidationExtension",
+            "type": "object"
+        },
+        "MappedNumberIOExtension": {
+            "properties": {
+                "type": {
+                    "const": "io_mapped_numner",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "reference": {
+                    "description": "Reference to another odin parameter",
+                    "title": "Reference",
+                    "type": "string"
+                },
+                "scale": {
+                    "default": 1.0,
+                    "description": "Scale factor",
+                    "title": "Scale",
+                    "type": "number"
+                },
+                "offset": {
+                    "default": 0.0,
+                    "description": "Offset",
+                    "title": "Offset",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "type",
+                "reference"
+            ],
+            "title": "MappedNumberIOExtension",
+            "type": "object"
+        },
+        "ModelDataTypeDefintion": {
+            "additionalProperties": false,
+            "properties": {
+                "description": {
+                    "default": "Not specified",
+                    "description": "Description of the data type",
+                    "title": "Description",
+                    "type": "string"
+                },
+                "string_serialiser": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The string serialiser extension for the data type",
+                    "title": "String Serialiser"
+                },
+                "c_typename": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The C typename that corresponds to the data type, if not specified _t will be added to the name",
+                    "title": "C Typename"
+                },
+                "py_typename": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The Python typename that corresponds to the data type ifnot specified the type will be camelcased with a Odin prefix",
+                    "title": "Py Typename"
+                },
+                "model": {
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/UserTypeModel"
+                            },
+                            {
+                                "$ref": "#/$defs/ExpandedUserTypeModel"
+                            }
+                        ]
+                    },
+                    "description": "The model for the data type",
+                    "title": "Model",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "model"
+            ],
+            "title": "ModelDataTypeDefintion",
+            "type": "object"
+        },
+        "ParameterGroupModel": {
+            "additionalProperties": false,
+            "properties": {
+                "local_id": {
+                    "description": "Local id of the parameter, unique within the parent",
+                    "title": "Local Id",
+                    "type": "integer"
+                },
+                "description": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Description of the parameter, optional",
+                    "title": "Description"
+                },
+                "access_control": {
+                    "$ref": "#/$defs/AccessControlCollection",
+                    "description": "Access control configuration for the parameter"
+                },
+                "children": {
+                    "additionalProperties": {
+                        "discriminator": {
+                            "mapping": {
+                                "array": "#/$defs/ArrayParameterModel",
+                                "group": "#/$defs/ParameterGroupModel",
+                                "parameter": "#/$defs/ParameterModel",
+                                "vector": "#/$defs/VectorParameterModel",
+                                "void": "#/$defs/ParameterModel"
+                            },
+                            "propertyName": "type"
+                        },
+                        "oneOf": [
+                            {
+                                "$ref": "#/$defs/ParameterModel"
+                            },
+                            {
+                                "$ref": "#/$defs/ArrayParameterModel"
+                            },
+                            {
+                                "$ref": "#/$defs/VectorParameterModel"
+                            },
+                            {
+                                "$ref": "#/$defs/ParameterGroupModel"
+                            }
+                        ]
+                    },
+                    "title": "Children",
+                    "type": "object"
+                },
+                "id_space_shift": {
+                    "description": "Number of bits to shift the children ids",
+                    "title": "Id Space Shift",
+                    "type": "integer"
+                },
+                "type": {
+                    "const": "group",
+                    "title": "Type",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "local_id",
+                "children",
+                "id_space_shift",
+                "type"
+            ],
+            "title": "ParameterGroupModel",
+            "type": "object"
+        },
+        "ParameterModel": {
+            "additionalProperties": false,
+            "description": "Parameter model, represents a single parameter",
+            "properties": {
+                "local_id": {
+                    "description": "Local id of the parameter, unique within the parent",
+                    "title": "Local Id",
+                    "type": "integer"
+                },
+                "description": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Description of the parameter, optional",
+                    "title": "Description"
+                },
+                "access_control": {
+                    "$ref": "#/$defs/AccessControlCollection",
+                    "description": "Access control configuration for the parameter"
+                },
+                "primitive": {
+                    "description": "Primitive type of the parameter",
+                    "title": "Primitive",
+                    "type": "string"
+                },
+                "extensions": {
+                    "description": "Extensions of the parameter",
+                    "items": {
+                        "discriminator": {
+                            "mapping": {
+                                "custom_io": "#/$defs/ReferenceIOExtension",
+                                "io_mapped_numner": "#/$defs/MappedNumberIOExtension",
+                                "string_codec_reference": "#/$defs/ReferenceStringCodecExtension",
+                                "validation_limit_value": "#/$defs/LimitValidationExtension"
+                            },
+                            "propertyName": "type"
+                        },
+                        "oneOf": [
+                            {
+                                "$ref": "#/$defs/MappedNumberIOExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/LimitValidationExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/ReferenceStringCodecExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/ReferenceIOExtension"
+                            }
+                        ]
+                    },
+                    "title": "Extensions",
+                    "type": "array"
+                },
+                "reference": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Sets the storage location of the parameter, if not set it will be managed internally",
+                    "title": "Reference"
+                },
+                "type": {
+                    "anyOf": [
+                        {
+                            "const": "parameter",
+                            "type": "string"
+                        },
+                        {
+                            "const": "void",
+                            "type": "string"
+                        }
+                    ],
+                    "title": "Type"
+                },
+                "default": {
+                    "anyOf": [
+                        {},
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Default value of the parameter",
+                    "title": "Default"
+                }
+            },
+            "required": [
+                "local_id",
+                "primitive",
+                "type"
+            ],
+            "title": "ParameterModel",
+            "type": "object"
+        },
+        "ReferenceIOExtension": {
+            "properties": {
+                "type": {
+                    "const": "custom_io",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "reference": {
+                    "description": "Reference to the C extension",
+                    "title": "Reference",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "reference"
+            ],
+            "title": "ReferenceIOExtension",
+            "type": "object"
+        },
+        "ReferenceStringCodecExtension": {
+            "properties": {
+                "type": {
+                    "const": "string_codec_reference",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "reference": {
+                    "description": "Refercene to the codec",
+                    "title": "Reference",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "reference"
+            ],
+            "title": "ReferenceStringCodecExtension",
+            "type": "object"
+        },
+        "RootModelDataTypeDefintion": {
+            "additionalProperties": false,
+            "properties": {
+                "description": {
+                    "default": "Not specified",
+                    "description": "Description of the data type",
+                    "title": "Description",
+                    "type": "string"
+                },
+                "string_serialiser": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The string serialiser extension for the data type",
+                    "title": "String Serialiser"
+                },
+                "c_typename": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The C typename that corresponds to the data type, if not specified _t will be added to the name",
+                    "title": "C Typename"
+                },
+                "py_typename": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The Python typename that corresponds to the data type ifnot specified the type will be camelcased with a Odin prefix",
+                    "title": "Py Typename"
+                },
+                "root_model": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/UserTypeModel"
+                        },
+                        {
+                            "$ref": "#/$defs/ExpandedUserTypeModel"
+                        }
+                    ],
+                    "description": "The root model for the data type",
+                    "title": "Root Model"
+                }
+            },
+            "required": [
+                "root_model"
+            ],
+            "title": "RootModelDataTypeDefintion",
+            "type": "object"
+        },
+        "UserTypeModel": {
+            "title": "UserTypeModel",
+            "type": "string"
+        },
+        "VectorParameterModel": {
+            "additionalProperties": false,
+            "properties": {
+                "local_id": {
+                    "description": "Local id of the parameter, unique within the parent",
+                    "title": "Local Id",
+                    "type": "integer"
+                },
+                "description": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Description of the parameter, optional",
+                    "title": "Description"
+                },
+                "access_control": {
+                    "$ref": "#/$defs/AccessControlCollection",
+                    "description": "Access control configuration for the parameter"
+                },
+                "primitive": {
+                    "description": "Primitive type of the parameter",
+                    "title": "Primitive",
+                    "type": "string"
+                },
+                "extensions": {
+                    "description": "Extensions of the parameter",
+                    "items": {
+                        "discriminator": {
+                            "mapping": {
+                                "custom_io": "#/$defs/ReferenceIOExtension",
+                                "io_mapped_numner": "#/$defs/MappedNumberIOExtension",
+                                "string_codec_reference": "#/$defs/ReferenceStringCodecExtension",
+                                "validation_limit_value": "#/$defs/LimitValidationExtension"
+                            },
+                            "propertyName": "type"
+                        },
+                        "oneOf": [
+                            {
+                                "$ref": "#/$defs/MappedNumberIOExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/LimitValidationExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/ReferenceStringCodecExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/ReferenceIOExtension"
+                            }
+                        ]
+                    },
+                    "title": "Extensions",
+                    "type": "array"
+                },
+                "reference": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Sets the storage location of the parameter, if not set it will be managed internally",
+                    "title": "Reference"
+                },
+                "type": {
+                    "const": "vector",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "default": {
+                    "anyOf": [
+                        {
+                            "items": {},
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Default value of the parameter",
+                    "title": "Default"
+                },
+                "max_elements": {
+                    "description": "Number of elements in the array",
+                    "title": "Max Elements",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "local_id",
+                "primitive",
+                "type",
+                "max_elements"
+            ],
+            "title": "VectorParameterModel",
+            "type": "object"
+        },
+        "odin_python__generators__c__generator__CGenerator__Config": {
+            "properties": {
+                "objects_type": {
+                    "default": "odin_objects_t",
+                    "title": "Objects Type",
+                    "type": "string"
+                },
+                "objects_name": {
+                    "default": "odin_objects",
+                    "title": "Objects Name",
+                    "type": "string"
+                },
+                "variables_type": {
+                    "default": "odin_variables_t",
+                    "title": "Variables Type",
+                    "type": "string"
+                },
+                "variables_name": {
+                    "default": "odin_variables",
+                    "title": "Variables Name",
+                    "type": "string"
+                },
+                "groups_name": {
+                    "default": "odin_store",
+                    "title": "Groups Name",
+                    "type": "string"
+                },
+                "extra_includes": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Extra Includes",
+                    "type": "array"
+                },
+                "header_file_name": {
+                    "default": "OD.h",
+                    "title": "Header File Name",
+                    "type": "string"
+                },
+                "src_file_name": {
+                    "default": "OD.c",
+                    "title": "Src File Name",
+                    "type": "string"
+                }
+            },
+            "title": "Config",
+            "type": "object"
+        },
+        "odin_python__generators__db__generator__ODIN_DB_generator__Config": {
+            "properties": {
+                "desctription": {
+                    "default": "Generic description",
+                    "title": "Desctription",
+                    "type": "string"
+                },
+                "name": {
+                    "default": "ODIN",
+                    "title": "Name",
+                    "type": "string"
+                },
+                "indent": {
+                    "anyOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": 4,
+                    "title": "Indent"
+                }
+            },
+            "title": "Config",
+            "type": "object"
+        },
+        "odin_python__generators__pdf__generator__DocGenerator__Config": {
+            "properties": {},
+            "title": "Config",
+            "type": "object"
+        },
+        "odin_python__generators__py__generator__PYGenerator__Config": {
+            "properties": {},
+            "title": "Config",
+            "type": "object"
+        }
+    },
+    "additionalProperties": false,
+    "properties": {
+        "config": {
+            "$ref": "#/$defs/GeneratorConfigurations",
+            "description": "Generator configurations"
+        },
+        "access_control": {
+            "$ref": "#/$defs/AccessControlCollection",
+            "description": "Access control for the parameters"
+        },
+        "types": {
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/$defs/ModelDataTypeDefintion"
+                    },
+                    {
+                        "$ref": "#/$defs/RootModelDataTypeDefintion"
+                    }
+                ]
+            },
+            "description": "Type definitions",
+            "title": "Types",
+            "type": "object"
+        },
+        "collections": {
+            "additionalProperties": {
+                "$ref": "#/$defs/CollectionDescriptionModel"
+            },
+            "description": "Collections of parameters",
+            "title": "Collections",
+            "type": "object"
+        },
+        "parameters": {
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/$defs/ParameterModel"
+                    },
+                    {
+                        "$ref": "#/$defs/ParameterGroupModel"
+                    },
+                    {
+                        "$ref": "#/$defs/ArrayParameterModel"
+                    },
+                    {
+                        "$ref": "#/$defs/VectorParameterModel"
+                    }
+                ]
+            },
+            "title": "Parameters",
+            "type": "object"
+        },
+        "id_space_shift": {
+            "description": "ID space shift for the parameters",
+            "title": "Id Space Shift",
+            "type": "integer"
+        }
+    },
+    "required": [
+        "parameters",
+        "id_space_shift"
+    ],
+    "title": "AdvancedLoaderModel",
+    "type": "object"
+}

@@ -1,3 +1,4 @@
+from enum import Enum
 from pydantic import Field
 from .abstract_generator import ModelContext
 from .c.generator import CGenerator
@@ -29,19 +30,37 @@ class GeneratorConfigurations(BaseModel):
         description="DB generator configuration",
     )
 
+class GeneratorTarget(Enum):
+    DOC = "doc"
+    DB = "db"
+    PY = "py"
+    C = "c"
 
-def default_generator(
+    @staticmethod
+    def all() -> "list[GeneratorTarget]":
+        results = []
+        for target in GeneratorTarget:
+            results.append(target)
+        return results
+    
+    @classmethod
+    def from_string(cls, name: str) -> "GeneratorTarget":
+        for target in cls.all():
+            if target.name == name:
+                return target
+        raise ValueError(f"Unknown generator target: {name}")
+    
+
+
+def generator(
     name: str,
     model_context: ModelContext,
     output_dir: str,
-    doc: bool,
-    db: bool,
-    py: bool,
-    c: bool,
+    target: GeneratorTarget,
     generator_config: GeneratorConfigurations,
 ):
     # Generate C code
-    if c:
+    if target == GeneratorTarget.C:
         c_generator = CGenerator(generator_config.c_generator)
         c_generator.generate(
             model_context=model_context,
@@ -55,23 +74,25 @@ def default_generator(
             type="header",
         )
 
-    if py:
+    elif target == GeneratorTarget.PY:
         py_generator = PYGenerator(generator_config.python_generator)
         py_generator.generate(
             model_context=model_context,
             output_path=os.path.join(output_dir, f"{name}"),
         )
 
-    if db:
+    elif target == GeneratorTarget.DB:
         db_generator = ODIN_DB_generator(generator_config.db_generator)
         db_generator.generate(
             model_context=model_context,
             output_path=os.path.join(output_dir, f"{name}.odin"),
         )
 
-    if doc:
+    elif target == GeneratorTarget.DOC:
         doc_generator = DocGenerator(generator_config.doc_generator)
         doc_generator.generate(
             model_context=model_context,
             output_path=os.path.join(output_dir, f"{name}.pdf"),
         )
+    else:
+        raise ValueError(f"Unknown generator target: {target}")

@@ -1,11 +1,11 @@
-from odin_python.generators.generator import default_generator
+from odin_python.generators.generator import generator
 from odin_python.parameter.loader import ConfigurationReader
 
 
 def process_config(config: str):
     reader = ConfigurationReader()
     model_context, config_model = reader.load(config, "advanced")
-    default_generator(
+    generator(
         name="test",
         model_context=model_context,
         output_dir="test/demo",

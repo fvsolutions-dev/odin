@@ -3,7 +3,7 @@ import os
 
 import click
 
-from .generators.generator import default_generator
+from .generators.generator import generator,GeneratorTarget
 from .parameter.loader import AdvancedLoaderModel, SimpleLoaderModel, ConfigurationReader
 
 DEFAULT_NAME = "OD"
@@ -19,11 +19,8 @@ def cli():
 @click.argument("output_dir")
 @click.option("name", "--name", default=DEFAULT_NAME, help="Name of the output files")
 @click.option("--advanced", is_flag=True, help="Use advanced loader")
-@click.option("--doc", is_flag=True, help="Generate documentation")
-@click.option("--db", is_flag=True, help="Generate database")
-@click.option("--py", is_flag=True, help="Generate python code")
-@click.option("--c", is_flag=True, help="Generate C code")
-def generate(input_file: str, output_dir: str, name: str, advanced: bool, doc: bool, db: bool, py: bool, c: bool):
+@click.option("--target", multiple=True, type=click.Choice([target.name for target in GeneratorTarget.all()]), help="Target language for code generation")
+def generate(input_file: str, output_dir: str, name: str, advanced: bool, target: list[str]):
     assert os.path.exists(input_file), f"Input file {input_file} does not exist"
     assert os.path.exists(output_dir), f"Output directory {output_dir} does not exist"
 
@@ -35,16 +32,16 @@ def generate(input_file: str, output_dir: str, name: str, advanced: bool, doc: b
     reader = ConfigurationReader()
     model_context, config_model = reader.load(input_file, "advanced" if advanced else "simple")
 
-    default_generator(
-        name=name,
-        model_context=model_context,
-        output_dir=output_dir,
-        doc=doc,
-        db=db,
-        py=py,
-        c=c,
-        generator_config=config_model,
-    )
+    targets = [GeneratorTarget.from_string(t) for t in target]
+
+    for target in targets:
+        generator(
+            name=name,
+            model_context=model_context,
+            output_dir=output_dir,
+            target=target,
+            generator_config=config_model,
+        )
 
 
 @cli.command()

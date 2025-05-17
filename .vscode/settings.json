@@ -13,28 +13,9 @@
         "CC": "clang",
         "CXX": "clang++"
     },
-    "files.associations": {
-        "string.h": "c",
-        "odin.h": "c",
-        "stddef.h": "c",
-        "1a_simple_config_all_types.yaml.h": "c",
-        "odin.h": "c",
-        "encode_string.h": "c",
-        "ansi_colors.h": "c",
-        "stdio_dump.h": "c",
-        "stdint.h": "c",
-        "stdbool.h": "c",
-        "inttypes.h": "c"
-    },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "peacock.color": "#dc82bb",
-    "python-envs.pythonProjects": [],
-    "python.analysis.autoImportCompletions": true,
-    "python.analysis.typeCheckingMode": "strict",
     "C_Cpp.default.compilerPath": "d:\\Tools\\gcc-arm-none-eabi-10.3-2021.10\\bin\\arm-none-eabi-gcc.exe",
-    "files.associations": {
-        "odin.h": "c"
-    },
     "python.testing.pytestArgs": [
         "test"
     ],
@@ -43,6 +24,8 @@
     "python.experiments.optInto": [
         "pythonTestAdapter"
     ],
-    "peacock.color": "#7fc28f",
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    "yaml.schemas": {
+        "schema.json": "**/[a-zA-Z]*.yaml"
+    },
 }
