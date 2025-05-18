@@ -3,6 +3,7 @@ from ...parameter import BaseParameterGroupModel, ParameterModel, ParameterGroup
 
 from ...data_types.type_registry import CustomDataType, BuiltinDataType, DataType
 
+
 def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, parent_model: str) -> str:
     data = ""
     indent = "    " * tab_indent
@@ -106,94 +107,94 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
     return data
 
 
-def generate_rootmodel_type(name: str, datatype: CustomDataType) -> str:
-    model = datatype.model.root
-    assert isinstance(model, DataType), "Model is not a DataTypeModel"
+# def generate_old_model_type(name: str, datatype: CustomDataType) -> str:
+#     model = datatype.model.root
+#     assert isinstance(model, DataType), "Model is not a DataTypeModel"
 
-    # Convert to python type if array use tuple, otherwise use the resolved type
-    # if isinstance(model.root, list):
-    #     python_type = "tuple["
-    #     for i, sub_type in enumerate(model.root):
-    #         if isinstance(sub_type, BuiltinDataType):
-    #             python_type += sub_type.python_primitive_typename
-    #         elif isinstance(sub_type, CustomDataType):
-    #             python_type += sub_type.py_typename
-    #         else:
-    #             raise ValueError(f"Unknown type {sub_type} for {name}")
+#     # Convert to python type if array use tuple, otherwise use the resolved type
+#     # if isinstance(model.root, list):
+#     #     python_type = "tuple["
+#     #     for i, sub_type in enumerate(model.root):
+#     #         if isinstance(sub_type, BuiltinDataType):
+#     #             python_type += sub_type.python_primitive_typename
+#     #         elif isinstance(sub_type, CustomDataType):
+#     #             python_type += sub_type.py_typename
+#     #         else:
+#     #             raise ValueError(f"Unknown type {sub_type} for {name}")
 
-    #         if i < len(model.root) - 1:
-    #             python_type += ", "
+#     #         if i < len(model.root) - 1:
+#     #             python_type += ", "
 
-    #     python_type += "]"
-    # else:
-    if isinstance(model, BuiltinDataType):
-        python_type = model.python_primitive_typename
-    elif isinstance(model, CustomDataType):
-        python_type = model.py_typename
-    else:
-        raise ValueError(f"Unknown type {model} for {name}")
+#     #     python_type += "]"
+#     # else:
+#     if isinstance(model, BuiltinDataType):
+#         python_type = model.python_primitive_typename
+#     elif isinstance(model, CustomDataType):
+#         python_type = model.py_typename
+#     else:
+#         raise ValueError(f"Unknown type {model} for {name}")
 
-    output = f"""class {datatype.py_typename}(GenericModel,{python_type}):
-"""
-    # Add the encode and decode methods, use struct
-    #
-    output += f"""
-    def encode_to_bytes(self) -> bytes:
-        packed_data = struct.pack(
-            '<{datatype.struct_format}',
-"""
-    # if isinstance(model, list):
-    #     for i, sub_type in enumerate(model):
-    #         if isinstance(sub_type, BuiltinDataType):
-    #             output += f"            self[{i}],\n"
-    #         elif isinstance(sub_type, CustomDataType):
-    #             output += f"            {sub_type.py_typename}.encode_to_bytes(self[{i}]),\n"
-    #         else:
-    #             raise ValueError(f"Unknown type {sub_type} for {name}")
-    # else:
-    if isinstance(model, BuiltinDataType):
-        output += "            self,\n"
-    elif isinstance(model, CustomDataType):
-        output += f"            {model.py_typename}.encode_to_bytes(self),\n"
-    else:
-        raise ValueError(f"Unknown type {model} for {name}")
+#     output = f"""class {datatype.py_typename}(GenericModel,{python_type}):
+# """
+#     # Add the encode and decode methods, use struct
+#     #
+#     output += f"""
+#     def encode_to_bytes(self) -> bytes:
+#         packed_data = struct.pack(
+#             '<{datatype.struct_format}',
+# """
+#     # if isinstance(model, list):
+#     #     for i, sub_type in enumerate(model):
+#     #         if isinstance(sub_type, BuiltinDataType):
+#     #             output += f"            self[{i}],\n"
+#     #         elif isinstance(sub_type, CustomDataType):
+#     #             output += f"            {sub_type.py_typename}.encode_to_bytes(self[{i}]),\n"
+#     #         else:
+#     #             raise ValueError(f"Unknown type {sub_type} for {name}")
+#     # else:
+#     if isinstance(model, BuiltinDataType):
+#         output += "            self,\n"
+#     elif isinstance(model, CustomDataType):
+#         output += f"            {model.py_typename}.encode_to_bytes(self),\n"
+#     else:
+#         raise ValueError(f"Unknown type {model} for {name}")
 
-    output += f"""
-        )
-        return packed_data
+#     output += f"""
+#         )
+#         return packed_data
 
-    @classmethod
-    def decode_from_bytes(cls, data: bytes) -> "{datatype.py_typename}":
-        unpacked_data = struct.unpack('<{datatype.struct_format}', data)
-        return cls(
-"""
+#     @classmethod
+#     def decode_from_bytes(cls, data: bytes) -> "{datatype.py_typename}":
+#         unpacked_data = struct.unpack('<{datatype.struct_format}', data)
+#         return cls(
+# """
 
-    i = 0
+#     i = 0
 
-    # if isinstance(model.root, list):
-    #     output += "            (\n"
-    #     for i, sub_type in enumerate(model.root):
-    #         if isinstance(sub_type, BuiltinDataType):
-    #             output += f"            unpacked_data[{i}],\n"
-    #         elif isinstance(sub_type, CustomDataType):
-    #             output += f"            {sub_type.py_typename}.decode_from_bytes(unpacked_data[{i}]),\n"
-    #         else:
-    #             raise ValueError(f"Unknown type {sub_type} for {name}")
-    #     output += "            ),\n"
-    # else:
-    if isinstance(model, BuiltinDataType):
-        output += "            *unpacked_data,\n"
-    elif isinstance(model, CustomDataType):
-        output += f"            *{model.py_typename}.decode_from_bytes(unpacked_data),\n"
-    else:
-        raise ValueError(f"Unknown type {model} for {name}")
+#     # if isinstance(model.root, list):
+#     #     output += "            (\n"
+#     #     for i, sub_type in enumerate(model.root):
+#     #         if isinstance(sub_type, BuiltinDataType):
+#     #             output += f"            unpacked_data[{i}],\n"
+#     #         elif isinstance(sub_type, CustomDataType):
+#     #             output += f"            {sub_type.py_typename}.decode_from_bytes(unpacked_data[{i}]),\n"
+#     #         else:
+#     #             raise ValueError(f"Unknown type {sub_type} for {name}")
+#     #     output += "            ),\n"
+#     # else:
+#     if isinstance(model, BuiltinDataType):
+#         output += "            *unpacked_data,\n"
+#     elif isinstance(model, CustomDataType):
+#         output += f"            *{model.py_typename}.decode_from_bytes(unpacked_data),\n"
+#     else:
+#         raise ValueError(f"Unknown type {model} for {name}")
 
-    output += """
-        )
+#     output += """
+#         )
 
-"""
+# """
 
-    return output
+#     return output
 
 
 def generate_basemodel_type(name: str, datatype: CustomDataType) -> str:
@@ -202,25 +203,18 @@ def generate_basemodel_type(name: str, datatype: CustomDataType) -> str:
     resolved_types = datatype.model.to_flat_dict(depth=1)
 
     for sub_name, sub_datatype in resolved_types.items():
-        if isinstance(sub_datatype, DataType):
-            if isinstance(sub_datatype, BuiltinDataType):
-                output += f"    {sub_name}: {sub_datatype.python_primitive_typename}\n"
-            elif isinstance(sub_datatype, CustomDataType):
-                output += f"    {sub_name}: '{sub_datatype.py_typename}'\n"
-        elif isinstance(sub_datatype, list):
-            output += f"    {sub_name}: tuple["
-            for i, sub_type in enumerate(sub_datatype):
-                if isinstance(sub_type, BuiltinDataType):
-                    output += sub_type.python_primitive_typename
-                elif isinstance(sub_type, CustomDataType):
-                    output += sub_type.py_typename
-                else:
-                    raise ValueError(f"Unknown type {sub_type} for {sub_name}")
+        if isinstance(sub_datatype.root, DataType):
+            if isinstance(sub_datatype.root, BuiltinDataType):
+                typename = sub_datatype.root.python_primitive_typename
+            elif isinstance(sub_datatype.root, CustomDataType):
+                typename = sub_datatype.root.py_typename
+            else:
+                raise ValueError(f"Unknown type {sub_datatype.root} for {sub_name}")
 
-                if i < len(sub_datatype) - 1:
-                    output += ", "
-
-            output += "]\n"
+            if sub_datatype.elements == 1:
+                output += f"    {sub_name}: {typename}\n"
+            else:
+                output += f"    {sub_name}: tuple[{','.join([typename] * sub_datatype.elements)}]\n"
 
         else:
             raise ValueError(f"Unknown type {sub_datatype} for {sub_name}")
@@ -233,12 +227,16 @@ def generate_basemodel_type(name: str, datatype: CustomDataType) -> str:
             '<{datatype.struct_format}',
 """
     for i, (name, sub_datatype) in enumerate(resolved_types.items()):
-        if isinstance(sub_datatype, list):
-            for j in range(len(sub_datatype)):
-                output += f"            self.{name}[{j}],\n"
+        # if isinstance(sub_datatype, list):
+        #     for j in range(len(sub_datatype)):
+        #         output += f"            self.{name}[{j}],\n"
 
-        elif isinstance(sub_datatype, CustomDataType):
-            output += f"            {sub_datatype.py_typename}.encode_to_bytes(self.{name}),\n"
+        if isinstance(sub_datatype.root, CustomDataType):
+            if sub_datatype.elements == 1:
+                output += f"            {sub_datatype.root.py_typename}.encode_to_bytes(self.{name}),\n"
+            else:
+                for j in range(sub_datatype.elements):
+                    output += f"            {sub_datatype.root.py_typename}.encode_to_bytes(self.{name}[{j}]),\n"
         else:
             output += f"            self.{name},\n"
 
@@ -254,19 +252,18 @@ def generate_basemodel_type(name: str, datatype: CustomDataType) -> str:
 
     i = 0
     for name, sub_datatype in resolved_types.items():
-        if isinstance(sub_datatype, list):
-            output += f"            {name}=("
-            for j in range(len(sub_datatype)):
-                output += f"unpacked_data[{i + j}], "
+        if isinstance(sub_datatype.root, CustomDataType):
+            if sub_datatype.elements == 1:
+                output += f"            {name}={sub_datatype.root.py_typename}.decode_from_bytes(unpacked_data[{i}]),\n"
+                i += 1
+            else:
+                output += f"            {name}=(\n"
+                for j in range(sub_datatype.elements):
+                    output += f"                {sub_datatype.root.py_typename}.decode_from_bytes(unpacked_data[{i}]),\n"
+                    i += 1
+                output += "            ),\n"
 
-            output = output[:-2]  # remove the last comma and space
-            output += "),\n"
-            i += len(sub_datatype)
-
-        elif isinstance(sub_datatype, CustomDataType):
-            output += f"            {name}={sub_datatype.py_typename}.decode_from_bytes(unpacked_data[{i}]),\n"
-            i += 1
-        elif isinstance(sub_datatype, BuiltinDataType):
+        elif isinstance(sub_datatype.root, BuiltinDataType):
             output += f"            {name}=unpacked_data[{i}],\n"
             i += 1
         else:

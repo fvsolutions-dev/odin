@@ -1,4 +1,3 @@
-from math import e
 from odin_db import (
     ODINDBModelType,
     OdinDBParameterGroupModel,
@@ -112,43 +111,3 @@ def type_to_odin_db(type: DataTypeModelDefinition) -> OdinDBTypeDefinitionModel:
 
     else:
         raise ValueError(f"Unknown data type: {type.root}")
-
-    # # Convert the type, which can be a dictionarty or a datatypemodel
-    # structure_item: ODINDBModelType | list[ODINDBModelType] | dict[str, OdinDBTypeDefinitionModel | ODINDBModelType] = {}
-
-    # # If the
-    # if isinstance(type.root, DataTypeModel):
-    #     item = datatypemodel_to_modeltype(type.root)
-
-    #     if isinstance(item,OdinDBTypeDefinitionModel):
-    #         return item
-
-    #     return OdinDBTypeDefinitionModel(
-    #         size=type.size,
-    #         structure=structure_item,
-    #     )
-
-    # elif isinstance(type.root, dict):
-    #     for name, child in type.root.items():
-    #         if isinstance(child, DataTypeModel):
-    #             structure_item[name] = datatypemodel_to_modeltype(child)
-
-    #         elif isinstance(child, DataTypeModelDefinition):
-    #             structure_item[name] = type_to_odin_db(child)
-
-    #             # if isinstance(child.root, CustomDataType):
-    #             #     structure_items[name] = type_to_db(child.root)
-    #             # else:
-    #             #     structure_items[name] = ODINDBModelType.from_string(child.root.typename)
-
-    #         #     structure_items[name] = type_to_db(child)
-    #         # else:
-    #         #     structure_items[name] = ODINDBModelType.from_string(child.typename)
-
-    # else:
-    #     raise ValueError(f"Unknown data type: {type.root}")
-
-    # return OdinDBTypeDefinitionModel(
-    #     size=type.size,
-    #     structure=structure_item,
-    # )

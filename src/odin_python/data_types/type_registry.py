@@ -1,14 +1,13 @@
 """Contains resolve types derived from the type definition"""
 
 import struct
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Dict, List
 
 # import csnake as cc
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field
 
 from odin_python.data_types.type_definition import (
-    DataTypeDefintion,
     ExpandedUserTypeModel,
     ModelDataTypeDefintion,
     UserTypeModel,
@@ -48,8 +47,9 @@ class BuiltinDataType(DataType):
 class BooleanCDataType(BuiltinDataType):
     pass
 
+
 class CharCDataType(BuiltinDataType):
-   pass
+    pass
 
 
 class DataTypeModelDefinition(BaseModel):
@@ -97,11 +97,11 @@ class DataTypeModelDefinition(BaseModel):
             format = ""
             for key, value in self.root.items():
                 # if isinstance(value, DataType):
-                    # raise ValueError(f"Presumed unused type {value} for {key}")
-                    # format += f"{value.elements}{value.struct_format}"
+                # raise ValueError(f"Presumed unused type {value} for {key}")
+                # format += f"{value.elements}{value.struct_format}"
                 if isinstance(value, DataTypeModelDefinition):
                     if value.is_referenced and depth < 1 and value.is_custom:
-                        format += f"{value.size*value.elements}s"
+                        format += f"{value.size * value.elements}s"
                     else:
                         format += f"{value.elements}{value.struct_format(depth=depth - 1)}"
                 else:
@@ -111,20 +111,16 @@ class DataTypeModelDefinition(BaseModel):
         else:
             raise ValueError(f"Unknown type {self.root} for {self}")
 
-    def to_flat_dict(self, depth: int) -> dict[str, DataType]:
+    def to_flat_dict(self, depth: int) -> "dict[str, DataTypeModelDefinition]":
         """Convert the model to a flat list of type, will  flatten the model"""
 
         assert isinstance(self.root, dict)
 
-        result: dict[str, DataType] = {}
+        result: dict[str, DataTypeModelDefinition] = {}
 
         for key, value in self.root.items():
-            # if isinstance(value, DataType):
-            #     result[key] = value
-            #     raise ValueError(f"Presumed unnused type {value} for {key}")
-            
             if isinstance(value, DataTypeModelDefinition):
-                result[key] = value.root  # type: ignore
+                result[key] = value  # type: ignore
             else:
                 raise ValueError(f"Unknown type {value} for {key}")
 

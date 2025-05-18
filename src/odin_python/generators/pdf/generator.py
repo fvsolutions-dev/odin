@@ -107,8 +107,6 @@ class DocGenerator(AbstractGenerator):
         models.extend(model_context.root_model.to_flat_list())  # type: ignore
 
         for parmeter in models:
-            print(parmeter._name)
-
             if not isinstance(parmeter, BaseParameterGroupModel):
                 continue
 

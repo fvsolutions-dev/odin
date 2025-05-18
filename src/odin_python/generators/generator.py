@@ -30,6 +30,7 @@ class GeneratorConfigurations(BaseModel):
         description="DB generator configuration",
     )
 
+
 class GeneratorTarget(Enum):
     DOC = "doc"
     DB = "db"
@@ -42,14 +43,13 @@ class GeneratorTarget(Enum):
         for target in GeneratorTarget:
             results.append(target)
         return results
-    
+
     @classmethod
     def from_string(cls, name: str) -> "GeneratorTarget":
         for target in cls.all():
             if target.name == name:
                 return target
         raise ValueError(f"Unknown generator target: {name}")
-    
 
 
 def generator(

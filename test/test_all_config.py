@@ -1,4 +1,3 @@
-from pytest import Config
 from odin_python.parameter.loader import ConfigurationReader
 from odin_python.generators.generator import GeneratorTarget, generator
 from pathlib import Path
@@ -10,9 +9,9 @@ def process_config(config_file: Path):
     output_dir = Path("test/demo") / config_file.stem
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     for target in GeneratorTarget.all():
-        print(f"Processing {target.name}")
+        print(f" - creating target '{target.name}'")
         generator(
             name="OD",
             model_context=model_context,
@@ -26,5 +25,5 @@ if __name__ == "__main__":
     CONFIGS = Path("test/test_configs").glob("*.yaml")
 
     for config in CONFIGS:
-        print(f"processing {config}")
+        print(f"processing config: '{config}")
         process_config(config)

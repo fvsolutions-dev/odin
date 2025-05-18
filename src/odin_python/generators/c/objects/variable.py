@@ -1,7 +1,7 @@
 from typing import Any
 import csnake as cc
 
-from ....data_types.type_registry import BuiltinDataType, CharCDataType, CustomDataType,DataType,BooleanCDataType
+from ....data_types.type_registry import BuiltinDataType, CharCDataType, CustomDataType, DataType, BooleanCDataType
 from ....parameter import (
     ArrayParameterModel,
     BaseBaseParameterModel,
@@ -14,19 +14,14 @@ from ....parameter import (
 )
 from ....utils.csnake_custom import StructVariable
 
-def type_to_c_initialiser(
-    type: DataType,
-    name: str,
-    default: str | None
-    ) -> cc.Variable:
 
+def type_to_c_initialiser(type: DataType, name: str, default: str | None) -> cc.Variable:
     if isinstance(type, BooleanCDataType):
         assert default is not None, "Default value must be provided"
         if default:
             default = "true"
         else:
             default = "false"
-
 
     if isinstance(type, CharCDataType):
         assert default is not None, "Default value must be provided"
@@ -36,7 +31,7 @@ def type_to_c_initialiser(
             primitive=type.c_typename,
             value=cc.TextModifier(f"'{default}'"),  # type: ignore
         )
-    
+
     elif isinstance(type, BuiltinDataType):
         assert default is not None, f"Default value must be provided, because {type.typename} does not provide a default value"
         return cc.Variable(
@@ -44,7 +39,7 @@ def type_to_c_initialiser(
             primitive=type.c_typename,
             value=cc.TextModifier(str(default)),  # type: ignore
         )
-    
+
     elif isinstance(type, CustomDataType):
         if default is None:
             default = type.default
@@ -61,14 +56,13 @@ def type_to_c_initialiser(
         # def to_c_initialiser(self, name: str, default: Any) -> cc.Variable:
         raise NotImplementedError("This function is not implemented yet")
 
+
 def type_to_c_array_initialiser(
     type: DataType,
     name: str,
     defaults: list[Any] | str | None,
     dimensions: list[int],
 ) -> cc.Variable:
-    
-
     if isinstance(type, BooleanCDataType) and defaults:
         defaults = ["true" if x else "false" for x in defaults]
 
@@ -85,7 +79,7 @@ def type_to_c_array_initialiser(
             array=dimensions,
             value=value,  # type: ignore
         )
-        
+
     elif isinstance(type, BuiltinDataType) and defaults:
         return cc.Variable(
             name=name,
@@ -93,20 +87,19 @@ def type_to_c_array_initialiser(
             array=dimensions,
             value=[cc.TextModifier(str(x)) for x in defaults],  # type: ignore
         )
-   
 
     elif isinstance(type, CustomDataType):
-
         return cc.Variable(
             name=name,
             primitive=type.c_typename,
             array=dimensions,
             value=defaults,  # type: ignore
         )
-    
+
     else:
         raise NotImplementedError("This func-tion is not implemented yet")
-    
+
+
 def to_variable_initialiser(parameter: BaseParameterModel) -> cc.Variable | None:
     if isinstance(parameter, BaseBaseParameterModel):
         # If the reference is set, then we don't need to initialise the variable
@@ -186,13 +179,15 @@ def to_variable_type(parameter: BaseParameterModel, type_name: str | None = None
             ),
         )
 
-        struct.add_variable(type_to_c_array_initialiser(
-            type=parameter._resolved_type,
-            name="data",
-            defaults=parameter.default,
-            dimensions=[parameter.max_elements],
-        ))
-            
+        struct.add_variable(
+            type_to_c_array_initialiser(
+                type=parameter._resolved_type,
+                name="data",
+                defaults=parameter.default,
+                dimensions=[parameter.max_elements],
+            )
+        )
+
         return struct
 
     elif isinstance(parameter, BaseParameterGroupModel):

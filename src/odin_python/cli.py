@@ -3,7 +3,7 @@ import os
 
 import click
 
-from .generators.generator import generator,GeneratorTarget
+from .generators.generator import generator, GeneratorTarget
 from .parameter.loader import AdvancedLoaderModel, SimpleLoaderModel, ConfigurationReader
 
 DEFAULT_NAME = "OD"
@@ -19,11 +19,16 @@ def cli():
 @click.argument("output_dir")
 @click.option("name", "--name", default=DEFAULT_NAME, help="Name of the output files")
 @click.option("--advanced", is_flag=True, help="Use advanced loader")
-@click.option("--target", multiple=True, type=click.Choice([target.name for target in GeneratorTarget.all()]), help="Target language for code generation")
+@click.option(
+    "--target",
+    multiple=True,
+    type=click.Choice([target.name for target in GeneratorTarget.all()]),
+    help="Target language for code generation",
+)
 def generate(input_file: str, output_dir: str, name: str, advanced: bool, target: list[str]):
     assert os.path.exists(input_file), f"Input file {input_file} does not exist"
     assert os.path.exists(output_dir), f"Output directory {output_dir} does not exist"
-    
+
     # Check if the input file is a valid yaml file
     assert input_file.endswith(".yaml"), "Input file must be a yaml file"
 

@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 from odin_python.data_types.type_registry import CustomDataType, BuiltinDataType, DataType
 
-from .conversion import generate_class, generate_basemodel_type, generate_rootmodel_type, generate_standard_type
+from .conversion import generate_class, generate_basemodel_type, generate_standard_type
 from ..abstract_generator import AbstractGenerator, ModelContext
 import pathlib
 import shutil

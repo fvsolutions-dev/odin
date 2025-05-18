@@ -19,7 +19,7 @@
             "program": "test/test_cli.py",
             "args": [
                 "generate",
-                "test/test_configs/custom_types.yaml",
+                "test/test_configs/simple_generation.yaml",
                 "test/generated",
                 "--advanced"
             ],
