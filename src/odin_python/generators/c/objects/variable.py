@@ -97,7 +97,7 @@ def type_to_c_array_initialiser(
         )
 
     else:
-        raise NotImplementedError("This func-tion is not implemented yet")
+        raise NotImplementedError("This function is not implemented yet")
 
 
 def to_variable_initialiser(parameter: BaseParameterModel) -> cc.Variable | None:

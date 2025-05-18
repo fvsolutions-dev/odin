@@ -3,20 +3,20 @@ cmake_minimum_required(VERSION 3.15...3.26)
 # If ESP-IDF is reading this CMakeLists.txt, register it as an ESP-IDF component
 if(DEFINED ENV{IDF_PATH})
   idf_component_register(SRCS
-      src/odin_core.c
-      src/codec/TLV_codec.c
-      src/codec/protobuff_codec.c
-      src/codec/string_codec.c
-      src/codec/number_codec.c
-      src/codec/json_codec.c
-      src/extensions/validate_extension.c
-      src/extensions/io_extension.c
-      src/extensions/extensions.c
-      src/odin_utils.c
-      src/odin_security.c
-      src/odin_lookup.c
+      src/odin_c/odin_core.c
+      src/odin_c/codec/TLV_codec.c
+      src/odin_c/codec/protobuff_codec.c
+      src/odin_c/codec/string_codec.c
+      src/odin_c/codec/number_codec.c
+      src/odin_c/codec/json_codec.c
+      src/odin_c/extensions/validate_extension.c
+      src/odin_c/extensions/io_extension.c
+      src/odin_c/extensions/extensions.c
+      src/odin_c/odin_utils.c
+      src/odin_c/odin_security.c
+      src/odin_c/odin_lookup.c
 
-      INCLUDE_DIRS src
+      INCLUDE_DIRS src/odin_c
       REQUIRES "main")
     return()
 endif()
@@ -25,20 +25,20 @@ endif()
 if(Zephyr_FOUND)
   zephyr_library_named(odin)
   zephyr_library_sources(
-        src/odin_core.c
-        src/codec/TLV_codec.c
-        src/codec/protobuff_codec.c
-        src/codec/string_codec.c
-        src/codec/number_codec.c
-        src/codec/json_codec.c
-        src/extensions/validate_extension.c
-        src/extensions/io_extension.c
-        src/extensions/extensions.c
-        src/odin_utils.c
-        src/odin_security.c
-        src/odin_lookup.c
+        src/odin_c/odin_core.c
+        src/odin_c/codec/TLV_codec.c
+        src/odin_c/codec/string_codec.c
+        src/odin_c/codec/number_codec.c
+        # src/odin_c/codec/protobuff_codec.c
+        # src/odin_c/codec/json_codec.c
+        src/odin_c/extensions/validate_extension.c
+        src/odin_c/extensions/io_extension.c
+        src/odin_c/extensions/extensions.c
+        src/odin_c/odin_utils.c
+        src/odin_c/odin_security.c
+        src/odin_c/odin_lookup.c
   )
-  target_include_directories(odin PUBLIC src)
+  target_include_directories(odin PUBLIC src/odin_c)
 
   return()
 endif()
