@@ -57,7 +57,7 @@ class DataTypeModelDefinition(BaseModel):
         DataType
         | dict[
             str,
-            "DataType  | DataTypeModelDefinition",
+            "DataTypeModelDefinition",
         ]
     )
     is_referenced: bool = Field(description="Whether the model is referenced based on another model")
@@ -65,6 +65,7 @@ class DataTypeModelDefinition(BaseModel):
     elements: int = Field(
         description="The amount of elements in this model, used for arrays",
     )
+    type_default: Any = Field(description="The default value for the data type")
 
     @property
     def size(self) -> int:
@@ -72,18 +73,20 @@ class DataTypeModelDefinition(BaseModel):
 
     @property
     def default(self) -> Any:
+
         if isinstance(self.root, DataType):
-            return self.root.default
+            if self.type_default is not None:
+                return self.type_default
+            elif self.elements == 1:
+                return self.root.default
+            else:
+                return [self.root.default] * self.elements
+
         if isinstance(self.root, dict):
             defaults = {}
             for key, value in self.root.items():
-                # if isinstance(value, DataType):
-                #     defaults[key] = value.default
+                defaults[key] = value.default
 
-                if isinstance(value, DataTypeModelDefinition):
-                    defaults[key] = value.default
-                else:
-                    raise ValueError(f"Unknown type {value} for {key}")
             return defaults
 
         else:
@@ -164,7 +167,7 @@ def resolve_datatype_model(
         for type_value, value in type.items():
             models[type_value] = resolve_datatype_model(type_registry, value.expand)
 
-        return DataTypeModelDefinition(root=models, is_referenced=False, is_custom=False, elements=1)
+        return DataTypeModelDefinition(root=models, is_referenced=False, is_custom=False, elements=1, type_default=None)
 
     elif isinstance(type, UserTypeModel) | isinstance(type, ExpandedUserTypeModel):
         datatype = type_registry.find_type(type.type)
@@ -173,6 +176,7 @@ def resolve_datatype_model(
             is_referenced=True,
             is_custom=isinstance(datatype, CustomDataType),
             elements=type.elements if type.elements is not None else 1,
+            type_default=type.default,
         )
 
     else:

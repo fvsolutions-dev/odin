@@ -80,7 +80,7 @@ def type_to_c_array_initialiser(
             value=value,  # type: ignore
         )
 
-    elif isinstance(type, BuiltinDataType) and defaults:
+    elif isinstance(type, BuiltinDataType):
         return cc.Variable(
             name=name,
             primitive=type.c_typename,

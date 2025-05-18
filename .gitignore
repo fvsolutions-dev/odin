@@ -9,3 +9,4 @@ test/configs/*.out
 .coverage
 **.pdf
 test/demo
+test/test_configs/data.yaml

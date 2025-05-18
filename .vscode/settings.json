@@ -28,4 +28,7 @@
     "yaml.schemas": {
         "schema.json": "**/[a-zA-Z]*.yaml"
     },
+    "files.associations": {
+        "od.h": "c"
+    },
 }
