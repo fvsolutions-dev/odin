@@ -61,6 +61,22 @@ To integrate the ODIN C library into your project, you can use the CMakelist.txt
 
 using a makefile (only) based build system, just compile the nessecary files and include the header files in your project.
 
+# Testing
+The ODIN library is tested using the `pytest` framework, you can run the tests using the following command:
+
+```bash
+uv run pytest test
+```
+
+ODIN-has 91% test coverage, you can check the coverage report using the following command:
+
+```bash
+uv run pytest --cov=odin_python --cov-report=term test
+```
+
+Or use the code [coverage feature](https://code.visualstudio.com/docs/python/testing#_run-tests-with-coverage) in vscode
+
+
 
 # Open Source
 This project is open source and licensed under the MPL-2.0 license, see the LICENSE file for more information.
