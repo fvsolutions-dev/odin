@@ -268,7 +268,10 @@ class BaseParameterGroupModel(BaseParameterModel):
             # check if local id respects bit shift
             if child.local_id >= (1 << self.id_space_shift):
                 raise ValueError(f"Local id {child.local_id} is larger than the id shift {self.id_space_shift} in {self._name}")
-
+            
+            if child.local_id < 0:
+                raise ValueError(f"Local id {child.local_id} is negative in {self._name}")
+            
             if isinstance(child, BaseParameterGroupModel):
                 child.validate_local_id()
 

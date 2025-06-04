@@ -4,7 +4,7 @@ import os
 import click
 
 from .generators.generator import generator, GeneratorTarget
-from .parameter.loader import AdvancedLoaderModel, SimpleLoaderModel, ConfigurationReader
+from .parameter.loader import AdvancedLoaderModel, ConfigurationReader
 
 DEFAULT_NAME = "OD"
 
@@ -18,14 +18,13 @@ def cli():
 @click.argument("input_file")
 @click.argument("output_dir")
 @click.option("name", "--name", default=DEFAULT_NAME, help="Name of the output files")
-@click.option("--advanced", is_flag=True, help="Use advanced loader")
 @click.option(
     "--target",
     multiple=True,
     type=click.Choice([target.name for target in GeneratorTarget.all()]),
     help="Target language for code generation",
 )
-def generate(input_file: str, output_dir: str, name: str, advanced: bool, target: list[str]):
+def generate(input_file: str, output_dir: str, name: str, target: list[str]):
     assert os.path.exists(input_file), f"Input file {input_file} does not exist"
     assert os.path.exists(output_dir), f"Output directory {output_dir} does not exist"
 
@@ -35,7 +34,7 @@ def generate(input_file: str, output_dir: str, name: str, advanced: bool, target
     print(f"Converting {input_file} to {output_dir}")
 
     reader = ConfigurationReader()
-    model_context, config_model = reader.load(input_file, "advanced" if advanced else "simple")
+    model_context, config_model = reader.load(input_file, "advanced")
 
     resolved_targets = [GeneratorTarget.from_string(t) for t in target]
 
@@ -54,13 +53,9 @@ def generate(input_file: str, output_dir: str, name: str, advanced: bool, target
 
 @cli.command()
 @click.argument("output_file")
-@click.option("--advanced", is_flag=True, help="Use advanced loader")
-def gen_schema(output_file: str, advanced: bool = False):
+def gen_schema(output_file: str, simple: bool = False):
     with open(output_file, "w") as f:
-        if advanced:
-            f.write(json.dumps(AdvancedLoaderModel.model_json_schema(), indent=4))
-        else:
-            f.write(json.dumps(SimpleLoaderModel.model_json_schema(), indent=4))
+        f.write(json.dumps(AdvancedLoaderModel.model_json_schema(), indent=4))
 
 
 if __name__ == "__main__":

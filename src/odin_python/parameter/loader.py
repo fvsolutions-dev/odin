@@ -20,27 +20,6 @@ from .parameter import (
 )
 
 
-class SimpleLoaderModel(
-    RootModel[
-        Dict[
-            str,
-            ParameterModel | ParameterGroupModel | ArrayParameterModel | VectorParameterModel,
-        ]
-    ]
-):
-    @classmethod
-    def from_yaml(cls, file_path: str):
-        try:
-            return parse_yaml_file_as(cls, file_path)
-        except ValidationError as validation_error:
-            print(validation_error.errors())
-            for error in validation_error.errors():
-                print(error["loc"])
-                print(error["msg"])
-
-            raise Exception("Failed to parse yaml file")
-
-
 class CollectionDescriptionModel(BaseModel):
     description: str = Field(
         default="",
@@ -128,21 +107,14 @@ class ConfigurationReader:
     def __init__(self):
         pass
 
-    def load(self, file_path: str, type: Literal["simple", "advanced"]) -> tuple[ModelContext, GeneratorConfigurations]:
+    def load(self, file_path: str, type: Literal["advanced"]) -> tuple[ModelContext, GeneratorConfigurations]:
         registry = TypeRegistry()
         registry.register(BASE_DATA_TYPES)
 
         try:
-            if type == "simple":
-                model = SimpleLoaderModel.from_yaml(file_path)
-
-                root_parameters = RootParameterModel(
-                    children=model.root,
-                    id_space_shift=8,
-                )
-
-            elif type == "advanced":
+            if type == "advanced":
                 model = AdvancedLoaderModel.from_yaml(file_path)
+
                 for type_name, type_definition in model.types.items():
                     registry.register_custom_datatype(type_name, type_definition)
 
@@ -153,26 +125,19 @@ class ConfigurationReader:
                 )
 
             else:
-                raise ValueError("Invalid type. Use 'simple' or 'advanced'.")
+                raise ValueError("Invalid type. Use 'advanced'.")
 
             root_parameters.post_load_resolve(None, "root", registry)
 
             collections = {}
-            if isinstance(model, AdvancedLoaderModel):
-                for group_name, group in model.collections.items():
-                    collections[group_name] = group.to_group_model(group_name, root_parameters)
+            for group_name, group in model.collections.items():
+                collections[group_name] = group.to_group_model(group_name, root_parameters)
 
-                return ModelContext(
-                    root_model=root_parameters,
-                    types=registry,
-                    collections=collections,
-                ), model.config
-
-            else:
-                return ModelContext(
-                    root_model=root_parameters,
-                    types=registry,
-                ), GeneratorConfigurations()
+            return ModelContext(
+                root_model=root_parameters,
+                types=registry,
+                collections=collections,
+            ), model.config
 
         except ValidationError as validation_error:
             print(validation_error.errors())
@@ -181,3 +146,4 @@ class ConfigurationReader:
                 print(error["msg"])
 
             raise Exception("Failed to parse yaml file")
+        

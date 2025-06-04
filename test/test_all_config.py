@@ -2,6 +2,11 @@ from odin_python.parameter.loader import ConfigurationReader
 from odin_python.generators.generator import GeneratorTarget, generator
 from pathlib import Path
 
+import pytest
+
+POSTITIVE_TEST_CONFIGS = list(Path("test/test_configs").glob("*.yaml"))
+NEGATIVE_TEST_CONFIGS = list(Path("test/flawed_test_configs").glob("*.yaml"))
+
 
 def process_config(config_file: Path):
     model_context, config_model = ConfigurationReader().load(config_file.as_posix(), "advanced")
@@ -20,18 +25,15 @@ def process_config(config_file: Path):
             generator_config=config_model,
         )
 
-def test_all_configs():
-    """Test all configurations in the test/test_configs directory."""
-    CONFIGS = Path("test/test_configs").glob("*.yaml")
 
-    for config in CONFIGS:
-        print(f"processing config: '{config}")
-        process_config(config)
-        
+@pytest.mark.parametrize("config", POSTITIVE_TEST_CONFIGS, ids=[str(config.name) for config in POSTITIVE_TEST_CONFIGS])
+def test_all_configs(config: Path):
+    print(f"processing config: '{config}")
+    process_config(config)
 
-if __name__ == "__main__":
-    CONFIGS = Path("test/test_configs").glob("*.yaml")
 
-    for config in CONFIGS:
-        print(f"processing config: '{config}")
+@pytest.mark.parametrize("config", NEGATIVE_TEST_CONFIGS, ids=[str(config.name) for config in NEGATIVE_TEST_CONFIGS])
+def test_all_flawed_configs(config: Path):
+    print(f"processing config: '{config}")
+    with pytest.raises(Exception):
         process_config(config)
