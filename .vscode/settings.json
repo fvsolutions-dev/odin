@@ -13,39 +13,22 @@
         "CC": "clang",
         "CXX": "clang++"
     },
-    "files.associations": {
-        "string.h": "c",
-        "odin.h": "c",
-        "stddef.h": "c",
-        "1a_simple_config_all_types.yaml.h": "c",
-        "odin.h": "c",
-        "encode_string.h": "c",
-        "ansi_colors.h": "c",
-        "stdio_dump.h": "c",
-        "stdint.h": "c",
-        "stdbool.h": "c",
-        "inttypes.h": "c"
-    },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-    "workbench.colorCustomizations": {
-        "activityBar.activeBackground": "#e7aad1",
-        "activityBar.background": "#e7aad1",
-        "activityBar.foreground": "#15202b",
-        "activityBar.inactiveForeground": "#15202b99",
-        "activityBarBadge.background": "#5c7c23",
-        "activityBarBadge.foreground": "#e7e7e7",
-        "commandCenter.border": "#15202b99",
-        "sash.hoverBorder": "#e7aad1",
-        "statusBar.background": "#dc82bb",
-        "statusBar.foreground": "#15202b",
-        "statusBarItem.hoverBackground": "#d15aa5",
-        "statusBarItem.remoteBackground": "#dc82bb",
-        "statusBarItem.remoteForeground": "#15202b",
-        "titleBar.activeBackground": "#dc82bb",
-        "titleBar.activeForeground": "#15202b",
-        "titleBar.inactiveBackground": "#dc82bb99",
-        "titleBar.inactiveForeground": "#15202b99"
-    },
     "peacock.color": "#dc82bb",
-    "python-envs.pythonProjects": []
+    "C_Cpp.default.compilerPath": "d:\\Tools\\gcc-arm-none-eabi-10.3-2021.10\\bin\\arm-none-eabi-gcc.exe",
+    "python.testing.pytestArgs": [
+        "test"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.experiments.optInto": [
+        "pythonTestAdapter"
+    ],
+    "python-envs.pythonProjects": [],
+    "yaml.schemas": {
+        "schema.json": "**/[a-zA-Z]*.yaml"
+    },
+    "files.associations": {
+        "od.h": "c"
+    },
 }
