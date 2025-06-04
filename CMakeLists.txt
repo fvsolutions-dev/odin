@@ -15,7 +15,6 @@ if(DEFINED ENV{IDF_PATH})
       src/odin_c/odin_utils.c
       src/odin_c/odin_security.c
       src/odin_c/odin_lookup.c
-
       INCLUDE_DIRS src/odin_c
       REQUIRES "main")
     return()
@@ -29,8 +28,8 @@ if(Zephyr_FOUND)
         src/odin_c/codec/TLV_codec.c
         src/odin_c/codec/string_codec.c
         src/odin_c/codec/number_codec.c
-        # src/odin_c/codec/protobuff_codec.c
-        # src/odin_c/codec/json_codec.c
+        # src/odin_c/codec/protobuff_codec.c  #Currently not supported in zephyr, needs a bit more work
+        # src/odin_c/codec/json_codec.c  #Currently not supported in zephyr, needs a bit more work
         src/odin_c/extensions/validate_extension.c
         src/odin_c/extensions/io_extension.c
         src/odin_c/extensions/extensions.c
@@ -43,7 +42,10 @@ if(Zephyr_FOUND)
   return()
 endif()
 
+# TODO Fix the llvm based build
+error("This CMakeLists.txt was not able to dettect your build system.")
 
+# Otherwhise compile with LLVM
 cmake_minimum_required(VERSION 3.10)
 project(ODIN VERSION 1.0 LANGUAGES C CXX)
 

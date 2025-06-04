@@ -10,3 +10,4 @@ test/configs/*.out
 **.pdf
 test/demo
 test/test_configs/data.yaml
+schema.json

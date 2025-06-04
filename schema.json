@@ -356,6 +356,7 @@
         },
         "ModelDataTypeDefintion": {
             "additionalProperties": false,
+            "description": "Dictionary of data types with the name as the key and the data type as the value\nThis represents a struct",
             "properties": {
                 "description": {
                     "default": "Not specified",
@@ -646,73 +647,6 @@
             "title": "ReferenceStringCodecExtension",
             "type": "object"
         },
-        "RootModelDataTypeDefintion": {
-            "additionalProperties": false,
-            "properties": {
-                "description": {
-                    "default": "Not specified",
-                    "description": "Description of the data type",
-                    "title": "Description",
-                    "type": "string"
-                },
-                "string_serialiser": {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "The string serialiser extension for the data type",
-                    "title": "String Serialiser"
-                },
-                "c_typename": {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "The C typename that corresponds to the data type, if not specified _t will be added to the name",
-                    "title": "C Typename"
-                },
-                "py_typename": {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "The Python typename that corresponds to the data type ifnot specified the type will be camelcased with a Odin prefix",
-                    "title": "Py Typename"
-                },
-                "root_model": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/UserTypeModel"
-                        },
-                        {
-                            "$ref": "#/$defs/ExpandedUserTypeModel"
-                        }
-                    ],
-                    "description": "The root model for the data type",
-                    "title": "Root Model"
-                }
-            },
-            "required": [
-                "root_model"
-            ],
-            "title": "RootModelDataTypeDefintion",
-            "type": "object"
-        },
         "UserTypeModel": {
             "title": "UserTypeModel",
             "type": "string"
@@ -926,14 +860,7 @@
         },
         "types": {
             "additionalProperties": {
-                "anyOf": [
-                    {
-                        "$ref": "#/$defs/ModelDataTypeDefintion"
-                    },
-                    {
-                        "$ref": "#/$defs/RootModelDataTypeDefintion"
-                    }
-                ]
+                "$ref": "#/$defs/ModelDataTypeDefintion"
             },
             "description": "Type definitions",
             "title": "Types",
