@@ -2,14 +2,11 @@
 
 # TODO
 - Extensions 
-- Support for custom types
-- Support for custom string codec
-- Create tracing module
-- Fix import order  
-- Lookup by name
-- Add genratieon disclamer
-- make advanced loader used by default
-
-
-
-Generate documetnation
+- Support for custom types [OK]
+- Support for custom string codec [OK]
+- Create tracing module [OK]
+- Fix import order [OK] 
+- Lookup by name [OK]
+- Create generation disclaimer [OK]
+- make advanced loader used by default [OK]
+- Create documentation [OK]
