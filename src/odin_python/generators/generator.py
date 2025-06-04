@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import Field
+from pydantic import ConfigDict, Field
 from .abstract_generator import ModelContext
 from .c.generator import CGenerator
 from .db.generator import ODIN_DB_generator
@@ -10,8 +10,9 @@ import os
 
 
 class GeneratorConfigurations(BaseModel):
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(
+        extra="forbid",
+    )
 
     c_generator: CGenerator.Config = Field(
         default_factory=CGenerator.Config,

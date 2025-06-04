@@ -2,7 +2,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from typing import Any, Generic, Self, Type, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 T = TypeVar("T")
 
@@ -14,9 +14,9 @@ class TemplateInterface:
 
 
 class ConfiguredBaseModel(BaseModel):
-    class Config:
-        ser_json_bytes = "hex"
-
+    model_config = ConfigDict(
+        ser_json_bytes="hex",
+    )
 
 class GenericModel(ABC):
     @abstractmethod

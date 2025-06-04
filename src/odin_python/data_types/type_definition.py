@@ -3,11 +3,12 @@
 from typing import Any, Dict
 
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 class ExpandedUserTypeModel(BaseModel):
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(
+        extra="forbid",
+    )
 
     type: "str"
     default: "list[Any] | Any|None" = Field(description="The default value for the data type", default=None)
@@ -44,8 +45,10 @@ class UserTypeModel(RootModel[str]):
 
 
 class DataTypeDefintion(BaseModel):
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+
 
     description: str = Field(description="Description of the data type", default="Not specified")
     string_serialiser: str | None = Field(default=None, description="The string serialiser extension for the data type")

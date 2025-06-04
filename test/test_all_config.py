@@ -20,6 +20,14 @@ def process_config(config_file: Path):
             generator_config=config_model,
         )
 
+def test_all_configs():
+    """Test all configurations in the test/test_configs directory."""
+    CONFIGS = Path("test/test_configs").glob("*.yaml")
+
+    for config in CONFIGS:
+        print(f"processing config: '{config}")
+        process_config(config)
+        
 
 if __name__ == "__main__":
     CONFIGS = Path("test/test_configs").glob("*.yaml")

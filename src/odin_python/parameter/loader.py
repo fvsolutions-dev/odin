@@ -1,6 +1,6 @@
 from typing import Dict, Literal
 
-from pydantic import BaseModel, Field, RootModel, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, RootModel, ValidationError
 from pydantic_yaml import parse_yaml_file_as
 
 from odin_python.data_types.type_definition import ModelDataTypeDefintion
@@ -83,9 +83,9 @@ class CollectionDescriptionModel(BaseModel):
 
 
 class AdvancedLoaderModel(BaseModel):
-    class Config:
-        extra = "forbid"
-
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     config: GeneratorConfigurations = Field(
         default_factory=GeneratorConfigurations,
         description="Generator configurations",
