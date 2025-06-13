@@ -97,7 +97,7 @@ class DataTypeModelDefinition(BaseModel):
             return self.root.struct_format
 
         elif isinstance(self.root, dict):
-            format = ""
+            format = "<"
             for key, value in self.root.items():
                 # if isinstance(value, DataType):
                 # raise ValueError(f"Presumed unused type {value} for {key}")
