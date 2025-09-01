@@ -5,10 +5,10 @@ if(DEFINED ENV{IDF_PATH})
   idf_component_register(SRCS
       src/odin_c/odin_core.c
       src/odin_c/codec/TLV_codec.c
-      src/odin_c/codec/protobuff_codec.c
+   #   src/odin_c/codec/protobuff_codec.c
       src/odin_c/codec/string_codec.c
       src/odin_c/codec/number_codec.c
-      src/odin_c/codec/json_codec.c
+    #  src/odin_c/codec/json_codec.c
       src/odin_c/extensions/validate_extension.c
       src/odin_c/extensions/io_extension.c
       src/odin_c/extensions/extensions.c
