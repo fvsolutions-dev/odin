@@ -149,8 +149,11 @@ def generate_basemodel_type(name: str, datatype: CustomDataType) -> str:
                 for j in range(sub_datatype.elements):
                     output += f"            {sub_datatype.root.py_typename}.encode_to_bytes(self.{name}[{j}]),\n"
         else:
-            output += f"            self.{name},\n"
-
+            if sub_datatype.elements == 1:
+                output += f"            self.{name},\n"
+            else:
+                output += f"            *self.{name},\n"
+                
     output += f"""
         )
         return packed_data
