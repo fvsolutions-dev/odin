@@ -126,11 +126,12 @@ class ODINVectorEntry(Generic[T]):
     async def read(self) -> list[T]:
         return self.decode_from_bytes(await self.interface.get_single(self.id))  # type: ignore
 
+
     async def write(self, value: list[T]):
         if len(value) > self.max_elements:
             raise ValueError(f"Value length {len(value)} exceeds maximum length {self.max_elements}")
 
-        await self.interface.set_single({self.id: b"".join([self.type_class.encode_to_bytes(v) for v in value])})  # type: ignore
+        await self.interface.set_single(self.id, b"".join([self.type_class.encode_to_bytes(v) for v in value]))  # type: ignore
 
 
 class ODINEntry(Generic[T]):
