@@ -16,6 +16,11 @@ class ExpandedUserTypeModel(BaseModel):
         default=None,
         description="The size of the data type in bytes, if not specified the size will be calculated from the type",
     )
+    as_array: bool = Field(
+        default=False,
+        description="Whether the data type is an array, needed for defining bitmap types",
+    )
+
 
     @property
     def expand(self) -> "ExpandedUserTypeModel":
