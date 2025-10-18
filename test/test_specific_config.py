@@ -2,9 +2,8 @@ from odin_python.parameter.loader import ConfigurationReader
 from odin_python.generators.generator import GeneratorTarget, generator
 from pathlib import Path
 
-import pytest
 
-CONFIG = Path("test.yaml")
+CONFIG = Path(__file__).parent / "test_configs" / "test_as_array.yaml"
 
 
 def process_config(config_file: Path):

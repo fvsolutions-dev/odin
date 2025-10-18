@@ -62,6 +62,11 @@ class DataTypeModelDefinition(BaseModel):
     )
     is_referenced: bool = Field(description="Whether the model is referenced based on another model")
     is_custom: bool = Field(description="Whether the model is a custom type")
+    is_array: bool = Field(
+        description="Whether the model is an array type",
+        default=False,
+    )
+
     elements: int = Field(
         description="The amount of elements in this model, used for arrays",
     )
@@ -73,11 +78,10 @@ class DataTypeModelDefinition(BaseModel):
 
     @property
     def default(self) -> Any:
-
         if isinstance(self.root, DataType):
             if self.type_default is not None:
                 return self.type_default
-            elif self.elements == 1:
+            elif self.elements == 1 and not self.is_array:
                 return self.root.default
             else:
                 return [self.root.default] * self.elements
@@ -167,14 +171,21 @@ def resolve_datatype_model(
         for type_value, value in type.items():
             models[type_value] = resolve_datatype_model(type_registry, value.expand)
 
-        return DataTypeModelDefinition(root=models, is_referenced=False, is_custom=False, elements=1, type_default=None)
+        return DataTypeModelDefinition(root=models, is_referenced=False, is_custom=False, elements=1, type_default=None, is_array=False)
 
     elif isinstance(type, UserTypeModel) | isinstance(type, ExpandedUserTypeModel):
         datatype = type_registry.find_type(type.type)
+        is_array = False
+        if type.elements is not None and type.elements > 1:
+            is_array = True
+        if type.as_array:
+            is_array = True
+
         return DataTypeModelDefinition(
             root=datatype,  # type: ignore
             is_referenced=True,
             is_custom=isinstance(datatype, CustomDataType),
+            is_array=is_array,
             elements=type.elements if type.elements is not None else 1,
             type_default=type.default,
         )
