@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.24)
-
 set(UNITY_DIR "$ENV{UNITY_DIR}" CACHE PATH "Path to Unity test framework")
 if(NOT UNITY_DIR)
     set(UNITY_DIR "/opt/Unity" CACHE PATH "" FORCE)
