@@ -31,7 +31,11 @@ class MappedNumberIOExtension(IOExtension):
         model = ODIN_ExtesionModel(
             type=ODIN_ExtensionEnum.ODIN_EXTENSION_TYPE_IO,
             ops="ODIN_extension_io_mapped_number_ops",
-            parameters=f"(mapped_number_parameters_t){{ .reference = &{referenced_parameter.absolute_object_reference}, .scale = {self.scale}, .offset = {self.offset} }}",
+            parameters=(
+                f"(mapped_number_parameters_t){{ "
+                f".reference = &{referenced_parameter.absolute_object_reference}, "
+                f".scale = {self.scale}, .offset = {self.offset} }}"
+            ),
             next=next if next else None,
         )
 

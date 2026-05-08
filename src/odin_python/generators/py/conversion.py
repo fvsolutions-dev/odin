@@ -58,19 +58,52 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
 
     for child_name, child in model.children.items():
         if isinstance(child, ParameterModel):
-            data += f"{indent}        self.{child_name} = ODINEntry[{child._resolved_type.py_typename}](0x{child.global_id:08X}, cls={child._resolved_type.py_typename},interface=interface)\n"
+            type_name = child._resolved_type.py_typename
+            data += (
+                f"{indent}        self.{child_name} = "
+                f"ODINEntry[{type_name}](0x{child.global_id:08X}, "
+                f"cls={type_name},interface=interface)\n"
+            )
         elif isinstance(child, ArrayParameterModel):
+            type_name = child._resolved_type.py_typename
             if child._resolved_type.c_typename == "uint8_t":
-                data += f"{indent}        self.{child_name} = ODINBytesEntry(0x{child.global_id:08X}, interface=interface,max_length={child.elements}, fixed_length=True)\n"
+                data += (
+                    f"{indent}        self.{child_name} = "
+                    f"ODINBytesEntry(0x{child.global_id:08X}, "
+                    f"interface=interface,max_length={child.elements}, "
+                    f"fixed_length=True)\n"
+                )
             else:
-                data += f"{indent}        self.{child_name} = ODINArrayEntry[{child._resolved_type.py_typename}](0x{child.global_id:08X}, cls={child._resolved_type.py_typename},elements={child.elements},element_size={child._resolved_type.size},interface=interface)\n"
+                data += (
+                    f"{indent}        self.{child_name} = "
+                    f"ODINArrayEntry[{type_name}](0x{child.global_id:08X}, "
+                    f"cls={type_name},elements={child.elements},"
+                    f"element_size={child._resolved_type.size},"
+                    f"interface=interface)\n"
+                )
         elif isinstance(child, VectorParameterModel):
+            type_name = child._resolved_type.py_typename
             if child._resolved_type.c_typename == "char":
-                data += f"{indent}        self.{child_name} = ODINStringEntry(0x{child.global_id:08X}, interface=interface,max_length={child.max_elements})\n"
+                data += (
+                    f"{indent}        self.{child_name} = "
+                    f"ODINStringEntry(0x{child.global_id:08X}, "
+                    f"interface=interface,max_length={child.max_elements})\n"
+                )
             elif child._resolved_type.c_typename == "uint8_t":
-                data += f"{indent}        self.{child_name} = ODINBytesEntry(0x{child.global_id:08X}, interface=interface,max_length={child.max_elements},fixed_length=False)\n"
+                data += (
+                    f"{indent}        self.{child_name} = "
+                    f"ODINBytesEntry(0x{child.global_id:08X}, "
+                    f"interface=interface,max_length={child.max_elements},"
+                    f"fixed_length=False)\n"
+                )
             else:
-                data += f"{indent}        self.{child_name} = ODINVectorEntry[{child._resolved_type.py_typename}](0x{child.global_id:08X}, cls={child._resolved_type.py_typename},max_elements={child.max_elements},element_size={child._resolved_type.size},interface=interface)\n"
+                data += (
+                    f"{indent}        self.{child_name} = "
+                    f"ODINVectorEntry[{type_name}](0x{child.global_id:08X}, "
+                    f"cls={type_name},max_elements={child.max_elements},"
+                    f"element_size={child._resolved_type.size},"
+                    f"interface=interface)\n"
+                )
 
         children[child_name] = f"self.{child_name}"
 

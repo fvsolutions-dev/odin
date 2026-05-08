@@ -107,7 +107,11 @@ class ODIN_ArrayModel(ODIN_ParameterModel):
 #         if self.max is None:
 #             self.max = float("inf")
 
-#         value = f"(ODIN_extension_t[]){{ {{.type=ODIN_EXTENSION_TYPE_IO, .ops =  &ODIN_validate_extension_ops, .data = &(range_parameter_t){{ .max = {self.max}, .min = {self.min} }} }} }}"
+#         value = (
+#             "(ODIN_extension_t[]){{ {{.type=ODIN_EXTENSION_TYPE_IO, "
+#             ".ops =  &ODIN_validate_extension_ops, "
+#             ".data = &(range_parameter_t){{ .max = {self.max}, .min = {self.min} }} }} }}"
+#         )
 
 #         return TextModifier(value)
 # next
@@ -129,4 +133,10 @@ class ODIN_ExtesionModel(BaseModel):
         if self.parameters:
             param = f"&{self.parameters}"
 
-        return f"(ODIN_extension_t[]){{ {{\n\t\t\t.type={self.type.name},\n\t\t\t.ops =  &{self.ops},\n\t\t\t.data = {param},\n\t\t\t.next = {next} }} }}"
+        return (
+            f"(ODIN_extension_t[]){{ {{\n"
+            f"\t\t\t.type={self.type.name},\n"
+            f"\t\t\t.ops =  &{self.ops},\n"
+            f"\t\t\t.data = {param},\n"
+            f"\t\t\t.next = {next} }} }}"
+        )

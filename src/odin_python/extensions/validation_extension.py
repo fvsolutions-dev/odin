@@ -36,7 +36,11 @@ class LimitValidationExtension(ValidationExtension):
             next=next if next else None,
         )
 
-        # value = f"(ODIN_extension_t[]){{ {{.type=ODIN_EXTENSION_TYPE_IO, .ops =  &ODIN_validate_extension_ops, .data = &(range_parameter_t){{ .max = {self.max}, .min = {self.min} }} }} }}"
+        # value = (
+        #     "(ODIN_extension_t[]){{ {{.type=ODIN_EXTENSION_TYPE_IO, "
+        #     ".ops =  &ODIN_validate_extension_ops, "
+        #     ".data = &(range_parameter_t){{ .max = {self.max}, .min = {self.min} }} }} }}"
+        # )
         return model.variable
 
     # next
