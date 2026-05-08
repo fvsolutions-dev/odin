@@ -7,7 +7,7 @@
 
 #include "inttypes.h"
 #include "odin.h"
-#include "odin.pb.h"
+#include "pb/odin.pb.h"
 #include "odin_codec.h"
 #include "odin_core.h"
 #include "odin_lookup.h"
