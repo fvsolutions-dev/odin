@@ -11,3 +11,11 @@ test/configs/*.out
 test/demo
 test/test_configs/data.yaml
 schema.json
+
+# ESP-IDF build artefacts (generated when building examples/esp32_basic)
+examples/**/build/
+examples/**/managed_components/
+examples/**/sdkconfig
+examples/**/sdkconfig.old
+examples/**/dependencies.lock
+.unity/
