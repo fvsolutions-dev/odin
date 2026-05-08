@@ -10,7 +10,7 @@ T = TypeVar("T")
 class TemplateInterface:
     async def get_single(self, id: int) -> bytes: ...
 
-    async def set_request(self, data: dict[int, bytes]): ...
+    async def set_single(self, id: int, data:bytes): ...
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -54,7 +54,7 @@ class ODINArrayEntry(Generic[T]):
         if len(value) != self.elements:
             raise ValueError(f"Value length {len(value)} does not match expected length {self.elements}")
 
-        await self.interface.set_request({self.id: b"".join([self.type_class.encode_to_bytes(v) for v in value])})  # type: ignore
+        await self.interface.set_single({self.id: b"".join([self.type_class.encode_to_bytes(v) for v in value])})  # type: ignore
 
 
 class ODINStringEntry:
@@ -126,11 +126,12 @@ class ODINVectorEntry(Generic[T]):
     async def read(self) -> list[T]:
         return self.decode_from_bytes(await self.interface.get_single(self.id))  # type: ignore
 
+
     async def write(self, value: list[T]):
         if len(value) > self.max_elements:
             raise ValueError(f"Value length {len(value)} exceeds maximum length {self.max_elements}")
 
-        await self.interface.set_request({self.id: b"".join([self.type_class.encode_to_bytes(v) for v in value])})  # type: ignore
+        await self.interface.set_single(self.id, b"".join([self.type_class.encode_to_bytes(v) for v in value]))  # type: ignore
 
 
 class ODINEntry(Generic[T]):
