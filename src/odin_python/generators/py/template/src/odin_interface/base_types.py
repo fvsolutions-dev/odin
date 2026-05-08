@@ -10,13 +10,14 @@ T = TypeVar("T")
 class TemplateInterface:
     async def get_single(self, id: int) -> bytes: ...
 
-    async def set_single(self, id: int, data:bytes): ...
+    async def set_single(self, id: int, data: bytes): ...
 
 
 class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         ser_json_bytes="hex",
     )
+
 
 class GenericModel(ABC):
     @abstractmethod
@@ -125,7 +126,6 @@ class ODINVectorEntry(Generic[T]):
 
     async def read(self) -> list[T]:
         return self.decode_from_bytes(await self.interface.get_single(self.id))  # type: ignore
-
 
     async def write(self, value: list[T]):
         if len(value) > self.max_elements:

@@ -1,4 +1,3 @@
-from pathlib import Path
 from click.testing import CliRunner
 from odin_python.cli import cli
 
@@ -7,7 +6,6 @@ def test_schema_generation():
     runner = CliRunner()
     result = runner.invoke(cli, ["gen-schema", "test/demo/schema.json"])
     assert result.exit_code == 0, f"CLI command failed with error: {result.output}"
-
 
 
 def test_invalid_schema_path():

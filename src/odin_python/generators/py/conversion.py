@@ -107,7 +107,6 @@ def generate_class(name: str, model: BaseParameterGroupModel, tab_indent: int, p
     return data
 
 
-
 def generate_basemodel_type(name: str, datatype: CustomDataType) -> str:
     output = f"""class {datatype.py_typename}(GenericModel,ConfiguredBaseModel):
 """
@@ -153,7 +152,7 @@ def generate_basemodel_type(name: str, datatype: CustomDataType) -> str:
                 output += f"            self.{name},\n"
             else:
                 output += f"            *self.{name},\n"
-                
+
     output += f"""
         )
         return packed_data

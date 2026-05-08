@@ -1,6 +1,6 @@
 from typing import Dict, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from pydantic_yaml import parse_yaml_file_as
 # from pytest import param
 
@@ -147,4 +147,3 @@ class ConfigurationReader:
                 print(error["msg"])
 
             raise Exception("Failed to parse yaml file")
-        

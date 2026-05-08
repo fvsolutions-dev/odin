@@ -9,7 +9,7 @@ CONFIG = Path(__file__).parent / "test_configs" / "test_as_array.yaml"
 def process_config(config_file: Path):
     model_context, config_model = ConfigurationReader().load(config_file.as_posix(), "advanced")
 
-    output_dir = Path(__file__) .parent / "demo"/ config_file.stem
+    output_dir = Path(__file__).parent / "demo" / config_file.stem
 
     output_dir.mkdir(parents=True, exist_ok=True)
 

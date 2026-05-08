@@ -5,6 +5,7 @@ from typing import Any, Dict
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
+
 class ExpandedUserTypeModel(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -20,7 +21,6 @@ class ExpandedUserTypeModel(BaseModel):
         default=False,
         description="Whether the data type is an array, needed for defining bitmap types",
     )
-
 
     @property
     def expand(self) -> "ExpandedUserTypeModel":
@@ -53,7 +53,6 @@ class DataTypeDefintion(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-
 
     description: str = Field(description="Description of the data type", default="Not specified")
     string_serialiser: str | None = Field(default=None, description="The string serialiser extension for the data type")
