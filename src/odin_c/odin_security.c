@@ -44,7 +44,7 @@ odin_error_t ODIN_validate_access(const ODIN_parameter_t *parameter, odin_access
                                   odin_acces_operation_t operation) {
     // Checks access to the parameter, logs an error if access is denied
     if (!ODIN_check_access(parameter, access_group, operation)) {
-        printf( "Permission denied when reading %s", parameter->name_and_description);
+        printf( "Permission denied when accessing %s\r\n", parameter->name_and_description);
         return ODIN_ERROR_PERMISSION_DENIED;
     }
 
