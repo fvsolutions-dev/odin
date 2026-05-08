@@ -42,8 +42,7 @@ void ODIN_dump_parameter(const ODIN_parameter_t *parameter, int depth, odin_acce
         ret = sprintf(str_buffer, "Error: %s", ODIN_error_to_string(ret));
     }
 
-    printf_like(context, ANSI_CYN "%*s%s" ANSI_RESET ": " ANSI_BLK "%s" ANSI_RESET "\n", depth, "",
-                parameter->name_and_description, str_buffer);
+    printf(ANSI_CYN "%*s%s" ANSI_RESET ": " ANSI_WHT "%s" ANSI_RESET "\n", depth,"", parameter->name_and_description, str_buffer);
 }
 
 void ODIN_dump_recursive_tree(const ODIN_parameter_group_t *group, int depth, odin_access_group_t access_group,
