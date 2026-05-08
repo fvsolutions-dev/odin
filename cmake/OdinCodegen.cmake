@@ -38,6 +38,24 @@ function(odin_generate_c)
         set(ODIN_GEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/odin_generated")
     endif()
 
+    set(_odin_gen_c "${ODIN_GEN_OUTPUT_DIR}/${ODIN_GEN_NAME}.c")
+    set(_odin_gen_h "${ODIN_GEN_OUTPUT_DIR}/${ODIN_GEN_NAME}.h")
+
+    # Always export the paths so callers can plumb them into the consuming
+    # target (e.g. idf_component_register SRCS / INCLUDE_DIRS).
+    set(ODIN_GEN_C           "${_odin_gen_c}"            PARENT_SCOPE)
+    set(ODIN_GEN_H           "${_odin_gen_h}"            PARENT_SCOPE)
+    set(ODIN_GEN_SOURCES     "${_odin_gen_c}" "${_odin_gen_h}" PARENT_SCOPE)
+    set(ODIN_GEN_INCLUDE_DIR "${ODIN_GEN_OUTPUT_DIR}"    PARENT_SCOPE)
+
+    # add_custom_command / set_source_files_properties are not allowed in
+    # script mode (`cmake -P`), which is what ESP-IDF uses for its
+    # component_get_requirements phase. The function gets called again during
+    # the real configure pass, where these commands will register correctly.
+    if(CMAKE_SCRIPT_MODE_FILE)
+        return()
+    endif()
+
     if(NOT ODIN_CODEGEN_COMMAND)
         find_program(ODIN_CLI_EXE odin)
         if(ODIN_CLI_EXE)
@@ -57,9 +75,6 @@ function(odin_generate_c)
         endif()
     endif()
 
-    set(_odin_gen_c "${ODIN_GEN_OUTPUT_DIR}/${ODIN_GEN_NAME}.c")
-    set(_odin_gen_h "${ODIN_GEN_OUTPUT_DIR}/${ODIN_GEN_NAME}.h")
-
     add_custom_command(
         OUTPUT "${_odin_gen_c}" "${_odin_gen_h}"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${ODIN_GEN_OUTPUT_DIR}"
@@ -73,9 +88,4 @@ function(odin_generate_c)
 
     set_source_files_properties("${_odin_gen_c}" "${_odin_gen_h}"
         PROPERTIES GENERATED TRUE)
-
-    set(ODIN_GEN_C           "${_odin_gen_c}"            PARENT_SCOPE)
-    set(ODIN_GEN_H           "${_odin_gen_h}"            PARENT_SCOPE)
-    set(ODIN_GEN_SOURCES     "${_odin_gen_c}" "${_odin_gen_h}" PARENT_SCOPE)
-    set(ODIN_GEN_INCLUDE_DIR "${ODIN_GEN_OUTPUT_DIR}"    PARENT_SCOPE)
 endfunction()
