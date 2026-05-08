@@ -41,6 +41,11 @@ function(odin_generate_c)
     set(_odin_gen_c "${ODIN_GEN_OUTPUT_DIR}/${ODIN_GEN_NAME}.c")
     set(_odin_gen_h "${ODIN_GEN_OUTPUT_DIR}/${ODIN_GEN_NAME}.h")
 
+    # ESP-IDF's idf_component_register asserts that every INCLUDE_DIRS entry
+    # exists at configure time. The codegen only runs at build time, so create
+    # the output directory now to satisfy that check.
+    file(MAKE_DIRECTORY "${ODIN_GEN_OUTPUT_DIR}")
+
     # Always export the paths so callers can plumb them into the consuming
     # target (e.g. idf_component_register SRCS / INCLUDE_DIRS).
     set(ODIN_GEN_C           "${_odin_gen_c}"            PARENT_SCOPE)
