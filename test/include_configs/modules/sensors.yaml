@@ -1,0 +1,6 @@
+type: group
+local_id: 2
+id_space_shift: 8
+description: Sensors
+children:
+  temperature: !include sensor_temperature.yaml

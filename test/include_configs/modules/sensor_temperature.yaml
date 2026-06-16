@@ -1,0 +1,5 @@
+type: parameter
+local_id: 1
+primitive: f32
+default: 0.0
+description: Latest temperature reading

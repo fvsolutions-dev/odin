@@ -1,0 +1,17 @@
+access_control: {}
+id_space_shift: 8
+
+types:
+  status_test:
+    c_typename: test_status_t
+
+    model:
+      statusmap: { type: u32, as_array: true }
+      timestamp: u32
+
+parameters:
+  raw_sensor_data:
+    type: parameter
+    local_id: 0xB1
+    description: Status test parameter
+    primitive: status_test

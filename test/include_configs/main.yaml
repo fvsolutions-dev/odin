@@ -1,0 +1,12 @@
+id_space_shift: 8
+
+types: !include modules/types.yaml
+
+parameters:
+  param_float:
+    type: parameter
+    local_id: 0
+    primitive: f32
+    default: 1.0
+  device:   !include modules/device.yaml
+  sensors:  !include modules/sensors.yaml

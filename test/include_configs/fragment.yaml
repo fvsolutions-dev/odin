@@ -1,0 +1,17 @@
+id_space_shift: 8
+
+parameters:
+  config:
+    type: group
+    local_id: 1
+    id_space_shift: 8
+    description: All driver config grouped together
+    children:
+      driver: !include modules/driver.yaml#config
+  data:
+    type: group
+    local_id: 2
+    id_space_shift: 8
+    description: All driver data grouped together
+    children:
+      driver: !include modules/driver.yaml#data

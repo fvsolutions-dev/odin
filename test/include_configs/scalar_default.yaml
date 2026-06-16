@@ -1,0 +1,8 @@
+id_space_shift: 8
+
+parameters:
+  param_float:
+    type: parameter
+    local_id: 0
+    primitive: f32
+    default: !include scalar/float_default.yaml

@@ -1,0 +1,23 @@
+config:
+  type: group
+  local_id: 1
+  id_space_shift: 8
+  description: Driver configuration
+  children:
+    enabled:
+      type: parameter
+      local_id: 1
+      primitive: bool
+      default: false
+
+data:
+  type: group
+  local_id: 1
+  id_space_shift: 8
+  description: Driver runtime data
+  children:
+    reading:
+      type: parameter
+      local_id: 1
+      primitive: f32
+      default: 0.0

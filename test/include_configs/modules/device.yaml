@@ -1,0 +1,16 @@
+type: group
+local_id: 1
+id_space_shift: 8
+description: Device-level config
+children:
+  name:
+    type: vector
+    local_id: 1
+    primitive: char
+    default: "generic"
+    max_elements: 64
+  color:
+    type: parameter
+    local_id: 2
+    primitive: rgb_color
+    default: { r: 0, g: 0, b: 0 }

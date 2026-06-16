@@ -1,0 +1,22 @@
+# Parameter tree for the ESP32 basic example.
+#
+# OD.c / OD.h are generated from this file at build time by odin_generate_c()
+# (declared in the top-level CMakeLists.txt) and dropped into the build tree,
+# so neither file is committed. Edit this YAML, rebuild, done.
+
+id_space_shift: 8
+
+parameters:
+  speed:
+    type: parameter
+    local_id: 1
+    description: Vehicle speed in cm/s
+    primitive: i32
+    default: 0
+
+  voltage:
+    type: parameter
+    local_id: 2
+    description: Battery voltage in mV
+    primitive: u16
+    default: 12000
