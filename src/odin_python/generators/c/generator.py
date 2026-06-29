@@ -82,9 +82,25 @@ class CGenerator(AbstractGenerator):
         cw.add_line("")
 
     def _distinct_custom_types(self, model_context: ModelContext) -> list[CustomDataType]:
-        """All distinct CUSTOM types referenced by a parameter (scalar, array or
-        vector), deduped by descriptor symbol (c_typename), in first-seen order."""
-        seen: dict[str, CustomDataType] = {}
+        """All distinct CUSTOM types whose descriptors must be emitted: every type
+        referenced by a parameter, plus the nested CUSTOM types of their fields
+        (so a field's `nested` descriptor pointer resolves). Returned in post-order
+        — a nested type before any type that references it — so the emitted C
+        descriptors compile without forward declarations."""
+        order: list[CustomDataType] = []
+        visited: set[str] = set()
+
+        def add(ct: CustomDataType) -> None:
+            sym = descriptor_symbol(ct)
+            if sym in visited:
+                return
+            visited.add(sym)
+            model = ct.model
+            if isinstance(model.root, dict):
+                for _, field_model in model.to_flat_dict(depth=0).items():
+                    if field_model.is_custom and isinstance(field_model.root, CustomDataType):
+                        add(field_model.root)  # nested first
+            order.append(ct)
 
         groups = [model_context.root_model]
         if model_context.collections is not None:
@@ -96,9 +112,9 @@ class CGenerator(AbstractGenerator):
                     continue
                 resolved = parameter._resolved_type
                 if isinstance(resolved, CustomDataType):
-                    seen.setdefault(descriptor_symbol(resolved), resolved)
+                    add(resolved)
 
-        return list(seen.values())
+        return order
 
     def generate_source(self, model_context: ModelContext, no_include: bool = False) -> str:
         cw = cc.CodeWriter()

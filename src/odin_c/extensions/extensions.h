@@ -40,14 +40,19 @@ typedef struct {
 // self-describing odin-stream) break a struct into its named, typed fields
 // without any external schema. `element_type` holds the ODIN_element_type_t
 // value as a byte to avoid an odin.h include cycle here.
+struct ODIN_type_descriptor;  // fwd decl for the nested-field back-reference below
+
 typedef struct {
     const char *name;      // field name, NUL-terminated
     uint8_t     element_type;  // ODIN_element_type_t value (primitive fields only)
     uint16_t    size;      // field size in bytes
     uint16_t    offset;    // byte offset of the field within the struct
+    // For a CUSTOM (nested-struct) field: that type's own descriptor, so a
+    // consumer can recurse into its fields. NULL for primitive fields.
+    const struct ODIN_type_descriptor *nested;
 } ODIN_field_descriptor_t;
 
-typedef struct {
+typedef struct ODIN_type_descriptor {
     const char                    *type_name;   // source-YAML type name
     uint16_t                       type_id;     // stable id (hash of name) for wire keying
     uint16_t                       size;        // total struct size in bytes
