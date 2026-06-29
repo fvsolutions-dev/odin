@@ -36,19 +36,38 @@ def _build_loader(current_dir: Path, include_stack: tuple[Path, ...]):
 
 
 def _construct_include(loader: OdinIncludeLoader, node: yaml.Node) -> Any:
-    if not isinstance(node, yaml.ScalarNode):
-        raise OdinIncludeError(
-            f"!include expects a scalar path, got {type(node).__name__} "
-            f"at {node.start_mark}"
-        )
+    # Scalar form:  key: !include path#fragment        -> substitutes the node.
+    # Mapping form: key: !include {path: ..., <overrides>}
+    #               -> loads `path`, then DEEP-MERGES the remaining keys over it
+    #                  (override wins; nested mappings merge recursively, scalars
+    #                  and lists replace). Lets a caller reuse a shared include and
+    #                  override just a nested field without forking the whole node.
+    if isinstance(node, yaml.ScalarNode):
+        raw = loader.construct_scalar(node)
+        if not isinstance(raw, str) or not raw:
+            raise OdinIncludeError(f"!include requires a non-empty path at {node.start_mark}")
+        return _resolve_include(loader, raw, node.start_mark)
 
-    raw = loader.construct_scalar(node)
-    if not isinstance(raw, str) or not raw:
-        raise OdinIncludeError(f"!include requires a non-empty path at {node.start_mark}")
+    if isinstance(node, yaml.MappingNode):
+        overrides = loader.construct_mapping(node, deep=True)
+        raw = overrides.pop("path", None)
+        if not isinstance(raw, str) or not raw:
+            raise OdinIncludeError(
+                f"!include mapping form requires a non-empty 'path' key at {node.start_mark}"
+            )
+        base = _resolve_include(loader, raw, node.start_mark)
+        return _deep_merge(base, overrides)
 
+    raise OdinIncludeError(
+        f"!include expects a scalar path or a mapping with a 'path' key, "
+        f"got {type(node).__name__} at {node.start_mark}"
+    )
+
+
+def _resolve_include(loader: OdinIncludeLoader, raw: str, mark: yaml.Mark) -> Any:
     raw_path, fragment = (raw.split("#", 1) + [""])[:2]
     if not raw_path:
-        raise OdinIncludeError(f"!include requires a path before '#' at {node.start_mark}")
+        raise OdinIncludeError(f"!include requires a path before '#' at {mark}")
 
     target = (loader._odin_current_dir / raw_path).resolve()
     parent_file = loader._odin_include_stack[-1] if loader._odin_include_stack else None
@@ -57,7 +76,7 @@ def _construct_include(loader: OdinIncludeLoader, node: yaml.Node) -> Any:
         parent_str = f" (from {parent_file})" if parent_file else ""
         raise OdinIncludeNotFoundError(
             f"!include cannot find '{raw_path}' resolved to '{target}'"
-            f"{parent_str} at {node.start_mark}"
+            f"{parent_str} at {mark}"
         )
 
     if target in loader._odin_include_stack:
@@ -66,8 +85,19 @@ def _construct_include(loader: OdinIncludeLoader, node: yaml.Node) -> Any:
 
     value = _load_file(target, loader._odin_include_stack)
     if fragment:
-        value = _resolve_fragment(value, fragment, target, node.start_mark)
+        value = _resolve_fragment(value, fragment, target, mark)
     return value
+
+
+def _deep_merge(base: Any, override: Any) -> Any:
+    """Recursively merge `override` onto `base`. Mappings merge key-by-key; any
+    non-mapping (scalar or list) on either side means `override` replaces `base`."""
+    if isinstance(base, dict) and isinstance(override, dict):
+        merged = dict(base)
+        for key, value in override.items():
+            merged[key] = _deep_merge(merged[key], value) if key in merged else value
+        return merged
+    return override
 
 
 def _resolve_fragment(value: Any, fragment: str, source: Path, mark: yaml.Mark) -> Any:
