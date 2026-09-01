@@ -24,8 +24,8 @@ set(ODIN_INCLUDE_DIR src/odin_c)
 # isolation.
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/OdinCodegen.cmake)
 
-# If ESP-IDF is reading this CMakeLists.txt, register it as an ESP-IDF component
-if(DEFINED ENV{IDF_PATH})
+# If ESP-IDF is reading this CMakeLists.txt, register it as an ESP-IDF component.
+if(ESP_PLATFORM)
   idf_component_register(
       SRCS ${ODIN_CORE_SRCS}
       INCLUDE_DIRS ${ODIN_INCLUDE_DIR}
