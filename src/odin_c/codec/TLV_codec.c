@@ -183,7 +183,7 @@ int ODIN_decode_bytes_to_parameter_group(const ODIN_parameter_group_t* group, co
         // Find the parameter
         const ODIN_parameter_t* parameter = ODIN_get_parameter_by_id(group, package->index, 0);
         if (parameter == NULL) {
-            printf("Parameter not found (index: %ld)", package->index);
+            printf("Parameter not found (index: %lu)", (unsigned long)package->index);
             return ODIN_ERROR_PARAMETER_NOT_FOUND;
         }
 

@@ -28,6 +28,15 @@ class CGenerator(AbstractGenerator):
         variables_name: str = "odin_variables"
         groups_name: str = "odin_store"
 
+        # Placed after the variables definition, e.g. a section attribute to put them in a
+        # specific memory region
+        data_attributes: str | None = None
+        # Define the variables without initial values (e.g. in no-init or shared memory); combine
+        # with default_object to keep the defaults available
+        no_init: bool = False
+        # Name of an extra const object with the default values, to (re)initialise the variables
+        default_object: str | None = None
+
         extra_includes: list[str] = Field(
             default_factory=list,
         )
@@ -121,8 +130,21 @@ class CGenerator(AbstractGenerator):
         initaliser = to_variable_initialiser(model_context.root_model)
 
         if initaliser is not None:
-            cw.add_variable_initialization(initaliser)  # type: ignore
+            if self.config.data_attributes:
+                initaliser.name += f" {self.config.data_attributes}"
+
+            if self.config.no_init:
+                cw.add_variable_declaration(initaliser)
+            else:
+                cw.add_variable_initialization(initaliser)  # type: ignore
             cw.add_line("")
+
+            if self.config.default_object is not None:
+                defaults = to_variable_initialiser(model_context.root_model)
+                defaults.qualifiers = ["const"]
+                defaults.name = self.config.default_object
+                cw.add_variable_initialization(defaults)  # type: ignore
+                cw.add_line("")
 
         value = to_object_initialiser(model_context.root_model)
 
@@ -186,6 +208,10 @@ class CGenerator(AbstractGenerator):
         initaliser = to_variable_initialiser(model_context.root_model)
         if initaliser is not None:
             cw.add_variable_declaration(initaliser, extern=True)
+            if self.config.default_object is not None:
+                initaliser.qualifiers = ["const"]
+                initaliser.name = self.config.default_object
+                cw.add_variable_declaration(initaliser, extern=True)
 
         value = to_object_initialiser(model_context.root_model)
         value.qualifiers = ["const"]

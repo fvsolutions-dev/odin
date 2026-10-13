@@ -124,6 +124,7 @@
                     "items": {
                         "discriminator": {
                             "mapping": {
+                                "composite": "#/$defs/CompositeExtension",
                                 "custom_io": "#/$defs/ReferenceIOExtension",
                                 "io_mapped_numner": "#/$defs/MappedNumberIOExtension",
                                 "string_codec_reference": "#/$defs/ReferenceStringCodecExtension",
@@ -143,6 +144,9 @@
                             },
                             {
                                 "$ref": "#/$defs/ReferenceIOExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/CompositeExtension"
                             }
                         ]
                     },
@@ -219,6 +223,27 @@
             "title": "CollectionDescriptionModel",
             "type": "object"
         },
+        "CompositeExtension": {
+            "description": "Attaches an ODIN_EXTENSION_TYPE_COMPOSITE extension to a CUSTOM-typed\nparameter. `descriptor_symbol` is the generated per-type\nODIN_type_descriptor_t emitted once before the OD (shared by every parameter\nof that type). ops is NULL \u2014 the descriptor lives in `.data`.",
+            "properties": {
+                "type": {
+                    "const": "composite",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "descriptor_symbol": {
+                    "description": "C symbol of the type descriptor",
+                    "title": "Descriptor Symbol",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "descriptor_symbol"
+            ],
+            "title": "CompositeExtension",
+            "type": "object"
+        },
         "ExpandedUserTypeModel": {
             "additionalProperties": false,
             "properties": {
@@ -253,6 +278,12 @@
                     "default": null,
                     "description": "The size of the data type in bytes, if not specified the size will be calculated from the type",
                     "title": "Elements"
+                },
+                "as_array": {
+                    "default": false,
+                    "description": "Whether the data type is an array, needed for defining bitmap types",
+                    "title": "As Array",
+                    "type": "boolean"
                 }
             },
             "required": [
@@ -481,7 +512,8 @@
                     "type": "object"
                 },
                 "id_space_shift": {
-                    "description": "Number of bits to shift the children ids",
+                    "default": 8,
+                    "description": "Number of bits to shift the children ids (default 8 = up to 256 children per level)",
                     "title": "Id Space Shift",
                     "type": "integer"
                 },
@@ -494,7 +526,6 @@
             "required": [
                 "local_id",
                 "children",
-                "id_space_shift",
                 "type"
             ],
             "title": "ParameterGroupModel",
@@ -536,6 +567,7 @@
                     "items": {
                         "discriminator": {
                             "mapping": {
+                                "composite": "#/$defs/CompositeExtension",
                                 "custom_io": "#/$defs/ReferenceIOExtension",
                                 "io_mapped_numner": "#/$defs/MappedNumberIOExtension",
                                 "string_codec_reference": "#/$defs/ReferenceStringCodecExtension",
@@ -555,6 +587,9 @@
                             },
                             {
                                 "$ref": "#/$defs/ReferenceIOExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/CompositeExtension"
                             }
                         ]
                     },
@@ -686,6 +721,7 @@
                     "items": {
                         "discriminator": {
                             "mapping": {
+                                "composite": "#/$defs/CompositeExtension",
                                 "custom_io": "#/$defs/ReferenceIOExtension",
                                 "io_mapped_numner": "#/$defs/MappedNumberIOExtension",
                                 "string_codec_reference": "#/$defs/ReferenceStringCodecExtension",
@@ -705,6 +741,9 @@
                             },
                             {
                                 "$ref": "#/$defs/ReferenceIOExtension"
+                            },
+                            {
+                                "$ref": "#/$defs/CompositeExtension"
                             }
                         ]
                     },
@@ -787,6 +826,35 @@
                     "default": "odin_store",
                     "title": "Groups Name",
                     "type": "string"
+                },
+                "data_attributes": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Data Attributes"
+                },
+                "no_init": {
+                    "default": false,
+                    "title": "No Init",
+                    "type": "boolean"
+                },
+                "default_object": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Default Object"
                 },
                 "extra_includes": {
                     "items": {
@@ -895,14 +963,14 @@
             "type": "object"
         },
         "id_space_shift": {
-            "description": "ID space shift for the parameters",
+            "default": 8,
+            "description": "ID space shift at the root (default 8 = up to 256 top-level parameters)",
             "title": "Id Space Shift",
             "type": "integer"
         }
     },
     "required": [
-        "parameters",
-        "id_space_shift"
+        "parameters"
     ],
     "title": "AdvancedLoaderModel",
     "type": "object"

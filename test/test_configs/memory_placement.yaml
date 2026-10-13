@@ -1,0 +1,17 @@
+# Variables in a dedicated memory section, without initial values, with a separate
+# const object holding the defaults (e.g. shared memory between two cores)
+config:
+  c_generator:
+    data_attributes: __attribute__((section(".shared")))
+    no_init: true
+    default_object: odin_defaults
+
+id_space_shift: 8
+
+parameters:
+  speed:
+    type: parameter
+    local_id: 1
+    description: Vehicle speed in cm/s
+    primitive: i32
+    default: 42
