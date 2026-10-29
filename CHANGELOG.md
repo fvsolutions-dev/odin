@@ -9,6 +9,8 @@ All notable changes to this project are documented here.
   place the variables in a memory section (e.g. shared memory between cores), define them
   without initial values, and emit the defaults as a separate const object to initialise
   them from
+- Arrays and vectors from a string (`ODIN_decode_string_to_parameter`): a text for elements of
+  type char (the quotes optional), `[a, b]` for the others; custom elements still unsupported
 
 ### Fixed
 - `printf` format warning in the TLV codec on 32-bit targets

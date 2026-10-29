@@ -1,7 +1,9 @@
 
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "extensions/extensions.h"
 #include "inttypes.h"
@@ -311,9 +313,114 @@ int ODIN_encode_parameter_to_string(const ODIN_parameter_t *parameter, char *out
 
     return ODIN_ERROR_NOT_SUPPORTED;
 }
+// Decode the elements of an array or vector from "[1, 2, 3]" (the brackets are optional, as
+// ODIN_encode_parameter_to_string prints them) into data. Returns the number of elements, or an
+// error.
+static int ODIN_string_to_elements(const ODIN_parameter_t *parameter, const char *input_buffer, uint8_t *data,
+                                   size_t data_size) {
+    const char *start = input_buffer;
+    const char *end = input_buffer + strlen(input_buffer);
+
+    while (start < end && isspace((unsigned char)*start)) {
+        start++;
+    }
+    while (end > start && isspace((unsigned char)end[-1])) {
+        end--;
+    }
+    if (start < end && *start == '[') {
+        if (end[-1] != ']') {
+            return ODIN_ERROR_INVALID_ARGUMENT;
+        }
+        start++;
+        end--;
+    }
+
+    int count = 0;
+    while (start < end) {
+        const char *comma = memchr(start, ',', (size_t)(end - start));
+        const char *element_end = comma != NULL ? comma : end;
+        char element[ODIN_PRINT_BUFFER_SIZE];
+        size_t len = (size_t)(element_end - start);
+
+        if (len >= sizeof(element)) {
+            return ODIN_ERROR_BUFFER_TOO_SMALL;
+        }
+        if ((size_t)(count + 1) * parameter->element_size > data_size) {
+            return ODIN_ERROR_SIZE_MISMATCH;
+        }
+        memcpy(element, start, len);
+        element[len] = '\0';
+
+        // One value per element: sscanf matched exactly one
+        int ret = ODIN_string_to_element(parameter, element, data + (size_t)count * parameter->element_size,
+                                         parameter->element_size);
+        if (ret < 0 && ret != EOF) {
+            return ret;
+        }
+        if (ret != 1) {
+            return ODIN_ERROR_INVALID_ARGUMENT;
+        }
+        count++;
+
+        if (comma == NULL) {
+            break;
+        }
+        start = comma + 1;
+    }
+    return count;
+}
+
+// Decode an array or vector: a text for elements of type char (the double quotes, as
+// ODIN_encode_parameter_to_string prints them, are optional), otherwise its elements. A vector
+// takes up to its max_elements; an array all its elements, a text shorter than the array padded
+// with zeros. Custom elements are not supported.
+static int ODIN_decode_string_to_elements(const ODIN_parameter_t *parameter, const char *input_buffer,
+                                          odin_access_group_t access_group) {
+    if (parameter->element_type == ODIN_ELEMENT_TYPE_CUSTOM) {
+        return ODIN_ERROR_NOT_SUPPORTED;
+    }
+
+    int max_size = ODIN_get_max_data_size(parameter);
+    if (max_size < 0) {
+        return max_size;
+    }
+    uint8_t data_buffer[ODIN_PRINT_BUFFER_SIZE] = {0};
+    if ((size_t)max_size > sizeof(data_buffer)) {
+        return ODIN_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    size_t size;
+    if (parameter->element_type == ODIN_ELEMENT_TYPE_CHAR) {
+        const char *text = input_buffer;
+        size_t len = strlen(text);
+        if (len >= 2 && text[0] == '"' && text[len - 1] == '"') {
+            text++;
+            len -= 2;
+        }
+        if (len > (size_t)max_size) {
+            return ODIN_ERROR_SIZE_MISMATCH;
+        }
+        memcpy(data_buffer, text, len);
+        size = parameter->odin_type == ODIN_TYPE_ARRAY ? (size_t)max_size : len;
+    } else {
+        int count = ODIN_string_to_elements(parameter, input_buffer, data_buffer, (size_t)max_size);
+        if (count < 0) {
+            return count;
+        }
+        size = (size_t)count * parameter->element_size;
+        if (parameter->odin_type == ODIN_TYPE_ARRAY && size != (size_t)max_size) {
+            return ODIN_ERROR_SIZE_MISMATCH;
+        }
+    }
+
+    return ODIN_parameter_write(parameter, data_buffer, size, access_group);
+}
+
 int ODIN_decode_string_to_parameter(const ODIN_parameter_t *parameter, const char *input_buffer,
                                     odin_access_group_t access_group) {
-    // Only support writing to parameters for now, not vectors and arrays
+    if (parameter->odin_type == ODIN_TYPE_VECTOR || parameter->odin_type == ODIN_TYPE_ARRAY) {
+        return ODIN_decode_string_to_elements(parameter, input_buffer, access_group);
+    }
     if (parameter->odin_type != ODIN_TYPE_PARAMETER) {
         return ODIN_ERROR_NOT_SUPPORTED;
     }

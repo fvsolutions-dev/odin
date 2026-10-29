@@ -310,6 +310,171 @@ void test_long_custom_elements_truncate_in_bounds(void)
     }
 }
 
+/* Decoding arrays and vectors: texts for char elements, "[a, b]" lists for the others */
+
+typedef struct {
+    size_t num_elements;
+    char data[8];
+} char_vector_t;
+
+static ODIN_parameter_t text_vector(char_vector_t *v)
+{
+    return (ODIN_parameter_t){
+        .odin_type = ODIN_TYPE_VECTOR,
+        .element_type = ODIN_ELEMENT_TYPE_CHAR,
+        .element_size = 1,
+        .max_elements = 8,
+        .data = v,
+        .name_and_description = "text",
+    };
+}
+
+void test_text_vector_from_string(void)
+{
+    char_vector_t v = {0};
+    ODIN_parameter_t p = text_vector(&v);
+
+    TEST_ASSERT_GREATER_OR_EQUAL(0, ODIN_decode_string_to_parameter(&p, "hello", INTERNAL));
+    TEST_ASSERT_EQUAL(5, v.num_elements);
+    TEST_ASSERT_EQUAL_MEMORY("hello", v.data, 5);
+
+    /* The quotes, as the encoder prints a text, are optional */
+    TEST_ASSERT_GREATER_OR_EQUAL(0, ODIN_decode_string_to_parameter(&p, "\"ab\"", INTERNAL));
+    TEST_ASSERT_EQUAL(2, v.num_elements);
+    TEST_ASSERT_EQUAL_MEMORY("ab", v.data, 2);
+
+    /* Empty */
+    TEST_ASSERT_GREATER_OR_EQUAL(0, ODIN_decode_string_to_parameter(&p, "\"\"", INTERNAL));
+    TEST_ASSERT_EQUAL(0, v.num_elements);
+}
+
+void test_text_vector_too_long_is_refused(void)
+{
+    char_vector_t v = {.num_elements = 2, .data = "ab"};
+    ODIN_parameter_t p = text_vector(&v);
+
+    TEST_ASSERT_EQUAL(ODIN_ERROR_SIZE_MISMATCH,
+                      ODIN_decode_string_to_parameter(&p, "123456789", INTERNAL));
+    TEST_ASSERT_EQUAL(2, v.num_elements); /* unchanged */
+}
+
+void test_text_round_trip(void)
+{
+    char_vector_t v = {0};
+    ODIN_parameter_t p = text_vector(&v);
+    char out[32];
+
+    TEST_ASSERT_GREATER_OR_EQUAL(0, ODIN_decode_string_to_parameter(&p, "net 5G", INTERNAL));
+    TEST_ASSERT_GREATER_THAN(0, ODIN_encode_parameter_to_string(&p, out, sizeof(out), INTERNAL));
+    TEST_ASSERT_EQUAL_STRING("\"net 5G\"", out);
+    TEST_ASSERT_GREATER_OR_EQUAL(0, ODIN_decode_string_to_parameter(&p, out, INTERNAL));
+    TEST_ASSERT_EQUAL(6, v.num_elements);
+    TEST_ASSERT_EQUAL_MEMORY("net 5G", v.data, 6);
+}
+
+void test_text_array_is_padded_with_zeros(void)
+{
+    char storage[6] = "xxxxx";
+    ODIN_parameter_t p = {
+        .odin_type = ODIN_TYPE_ARRAY,
+        .element_type = ODIN_ELEMENT_TYPE_CHAR,
+        .element_size = 1,
+        .max_elements = 6,
+        .data = storage,
+        .name_and_description = "text_array",
+    };
+
+    TEST_ASSERT_GREATER_OR_EQUAL(0, ODIN_decode_string_to_parameter(&p, "ab", INTERNAL));
+    TEST_ASSERT_EQUAL_MEMORY("ab\0\0\0\0", storage, 6);
+}
+
+void test_number_vector_from_string(void)
+{
+    u16_vector_t v = {0};
+    ODIN_parameter_t p = {
+        .odin_type = ODIN_TYPE_VECTOR,
+        .element_type = ODIN_ELEMENT_TYPE_UINT16,
+        .element_size = sizeof(uint16_t),
+        .max_elements = 8,
+        .data = &v,
+        .name_and_description = "vec",
+    };
+    char out[64];
+
+    TEST_ASSERT_GREATER_OR_EQUAL(0, ODIN_decode_string_to_parameter(&p, "[1, 2, 300]", INTERNAL));
+    TEST_ASSERT_EQUAL(3, v.num_elements);
+    TEST_ASSERT_EQUAL(300, v.data[2]);
+
+    /* Without brackets, and back to the encoder's form */
+    TEST_ASSERT_GREATER_OR_EQUAL(0, ODIN_decode_string_to_parameter(&p, " 7,8 ", INTERNAL));
+    TEST_ASSERT_EQUAL(2, v.num_elements);
+    TEST_ASSERT_GREATER_THAN(0, ODIN_encode_parameter_to_string(&p, out, sizeof(out), INTERNAL));
+    TEST_ASSERT_EQUAL_STRING("[7, 8]", out);
+
+    /* Empty */
+    TEST_ASSERT_GREATER_OR_EQUAL(0, ODIN_decode_string_to_parameter(&p, "[]", INTERNAL));
+    TEST_ASSERT_EQUAL(0, v.num_elements);
+}
+
+void test_number_vector_errors(void)
+{
+    u16_vector_t v = {.num_elements = 1, .data = {5}};
+    ODIN_parameter_t p = {
+        .odin_type = ODIN_TYPE_VECTOR,
+        .element_type = ODIN_ELEMENT_TYPE_UINT16,
+        .element_size = sizeof(uint16_t),
+        .max_elements = 8,
+        .data = &v,
+        .name_and_description = "vec",
+    };
+
+    TEST_ASSERT_EQUAL(ODIN_ERROR_INVALID_ARGUMENT,
+                      ODIN_decode_string_to_parameter(&p, "[1, x]", INTERNAL));
+    TEST_ASSERT_EQUAL(ODIN_ERROR_INVALID_ARGUMENT,
+                      ODIN_decode_string_to_parameter(&p, "[1, 2", INTERNAL));
+    TEST_ASSERT_EQUAL(ODIN_ERROR_INVALID_ARGUMENT,
+                      ODIN_decode_string_to_parameter(&p, "1,,2", INTERNAL));
+    TEST_ASSERT_EQUAL(ODIN_ERROR_SIZE_MISMATCH,
+                      ODIN_decode_string_to_parameter(&p, "1,2,3,4,5,6,7,8,9", INTERNAL));
+    TEST_ASSERT_EQUAL(1, v.num_elements); /* unchanged */
+    TEST_ASSERT_EQUAL(5, v.data[0]);
+}
+
+void test_number_array_needs_all_elements(void)
+{
+    uint16_t storage[4] = {0};
+    ODIN_parameter_t p = {
+        .odin_type = ODIN_TYPE_ARRAY,
+        .element_type = ODIN_ELEMENT_TYPE_UINT16,
+        .element_size = sizeof(uint16_t),
+        .max_elements = 4,
+        .data = storage,
+        .name_and_description = "arr",
+    };
+
+    TEST_ASSERT_GREATER_OR_EQUAL(0, ODIN_decode_string_to_parameter(&p, "[1, 2, 3, 4]", INTERNAL));
+    TEST_ASSERT_EQUAL(4, storage[3]);
+    TEST_ASSERT_EQUAL(ODIN_ERROR_SIZE_MISMATCH,
+                      ODIN_decode_string_to_parameter(&p, "[9, 9]", INTERNAL));
+    TEST_ASSERT_EQUAL(1, storage[0]); /* unchanged */
+}
+
+void test_custom_vector_from_string_is_not_supported(void)
+{
+    demo_step_vector_t v = {0};
+    ODIN_parameter_t p = {
+        .odin_type = ODIN_TYPE_VECTOR,
+        .element_type = ODIN_ELEMENT_TYPE_CUSTOM,
+        .element_size = sizeof(demo_step_t),
+        .max_elements = 8,
+        .data = &v,
+        .name_and_description = "steps",
+    };
+
+    TEST_ASSERT_EQUAL(ODIN_ERROR_NOT_SUPPORTED,
+                      ODIN_decode_string_to_parameter(&p, "[1]", INTERNAL));
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -322,5 +487,13 @@ int main(void)
     RUN_TEST(test_custom_scalar_extension_to_string);
     RUN_TEST(test_custom_vector_extension_to_string);
     RUN_TEST(test_long_custom_elements_truncate_in_bounds);
+    RUN_TEST(test_text_vector_from_string);
+    RUN_TEST(test_text_vector_too_long_is_refused);
+    RUN_TEST(test_text_round_trip);
+    RUN_TEST(test_text_array_is_padded_with_zeros);
+    RUN_TEST(test_number_vector_from_string);
+    RUN_TEST(test_number_vector_errors);
+    RUN_TEST(test_number_array_needs_all_elements);
+    RUN_TEST(test_custom_vector_from_string_is_not_supported);
     return UNITY_END();
 }
